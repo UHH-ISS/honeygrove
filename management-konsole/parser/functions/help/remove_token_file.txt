@@ -1,0 +1,7 @@
+---------------- remove_html_page----------------
+
+Entfernt Tokenfiles vom Honeypot
+
+Pflichtparameter:
+hid                         ID eines Honeypots
+[f]                         Name der Tokenfiles die entfernt werden sollen

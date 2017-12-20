@@ -1,0 +1,5 @@
+---------------- info ----------------
+Ausgeben der auf dem Honeypot gespeicherten info-Datei.
+
+Pflichtparameter
+hid             Honeypot Ids

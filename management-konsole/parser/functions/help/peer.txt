@@ -1,0 +1,12 @@
+---------------- peer ----------------
+Aufbauen einer PyBroker-peer Verbindung zwischen dieser Managementkonsole und einem Endpunkt oder einem Honeypot und einem Endpunkt.
+
+Pflichtparameter
+ip          Die ip des Endpunktes
+p           Der Port des Endpunktes
+
+Optionale Parameter
+hid [HoneypotIds]       Wird diese Option gesetzt wird kein peering zwischen dieser Managementkonsole und einem Broker Endpunkt aufgebaut, sondern die angegeben Honeypots mit der in ip und port angegebenen Adresse verbunden.
+
+
+select ist fuer diese Funkton deaktiviert.

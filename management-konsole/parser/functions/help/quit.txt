@@ -1,0 +1,2 @@
+------------------ quit ------------------
+Beendet das Programm

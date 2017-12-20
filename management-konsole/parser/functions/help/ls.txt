@@ -1,0 +1,9 @@
+---------------- ls ----------------
+Auflisten der aktiven Honeypots, ihrer Services und deren Konfigureationen.
+
+Parameter
+-keine-                 Auflisting aller aktiven Honeypots
+hid [Honeypot Ids]      Nur die angegeben Honeypots auflisten
+sid [Service Ids]       Wenn c gesetzt ist werden nur die Konfigurationen dieser Services angezeigt
+c                       Anzeigen der Konfiguration des jeweiligen Services
+s                       Listet alle auf dem Honeypot verfuegbaren Services auf

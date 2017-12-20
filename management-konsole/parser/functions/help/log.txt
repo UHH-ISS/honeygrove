@@ -1,0 +1,18 @@
+---------------- log ----------------
+Lokales ausgeben und speichern von Logmessages aus einem PyBroker Netzwerk.
+
+Parameter
+-keine-                 Auflisten der aktuellen Logging Vorgaenge
+freq [Sekunden]         Frequenz, mit der neue Lognachrichten abgerufen und verarbeitet werden. Diese Einstellung betrifft alle Loggingtasks.
+k [Keywords]            Schluesselwoerter, nach denen die Logs gefiltert werden
+                        Um einen neuen Logtask zu erstellen, muss Keywords gesetzt sein. Ist Keywords gesetztz, aber keine Parameter angegeben, werden alle Logs ausgewaehlt.
+                        Nur wenn die Option k gesetzt ist werden die Optionen f und o ausgewertet.
+f [Dateiname]           Dateiname der Ausgabedatei. Nur eine Ausgabedatei pro Loggingtask.
+o [Operator]            Logischer Operator, nach dem der Filter die Logs scannt.
+                        Verfügbare Operatoren: or,and
+                        or: Es muss mindestens ein Keyword im Log enthalten sein
+                        and: Es muessen alle Keywords im Log enthalten sein
+                        Standartoperator:or
+e [Logtask Id]          Logtask beenden, mehrere Id mit einem Funktionsaufruf moeglich
+
+

@@ -1,0 +1,9 @@
+---------------- peers ----------------
+Auflisten der derzeit vorhandenen PyBroker peer Verbinsungen.
+
+Parameter
+-keine-         Auflisten der peerings, die von dieser Managementkonsole ausgehen
+hid             Anzeigen des peering Verbindung, die derzeit von einem Honeypot ausgeht
+
+
+select ist fuer diese Funkton deaktiviert.

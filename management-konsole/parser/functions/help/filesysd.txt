@@ -1,0 +1,12 @@
+---------------- filesysd ----------------
+Downloaden von Dateisystemen von Honeypots.
+
+Die Heruntergeladenen xml-Dateien werden im Home-Verzeichnis des Benutzers/angegebenen Verzeichnis als [HoneypotID].xml gespeichert.
+Wenn die Datei bereits existiert, wird ein Zaehler an den Dateinamen angehaengt.
+
+
+Pflichtparameter
+hid [ids]               Liste von Honeypot IDs
+
+Optionale Parameter
+dir Dateipfad           Dateipfad, wo die Datei abgelegt wird

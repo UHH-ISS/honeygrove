@@ -1,0 +1,39 @@
+---------------- help ----------------
+Allgemeiner Aufbau eines Funktionsaufrufes:
+funktionsname -option1 parameter1 -option2 parameter2 parameter3
+
+Die Reihenfolge, in der die Argumente eingegeben werden ist irrelevant.
+
+Fuer detailiertere Informationen zu den Funktionen:
+help [Funktionsname]
+
+Funktionen:
+add_html_page       Hinzufuegen einer HTML Seite
+add_token_file      Hinzufuegen eines Token File
+config              Konfigurieren von Services
+filesysd            Downloaden der Dateisysteme
+filesysu            Uploaden von Dateisystemen
+get_html_pages      Herunterladen aller HTML Seiten
+get_token_files     Herunterladen aller Token Files
+help                Ohne Parameter wird diese Hilfe angezeigt
+info                Anzeigen der Informationen eines Honeypots
+log                 Lokales Logging
+ls                  Auflisten der aktiven Honeypots
+map                 Mappen von Namen auf Honeypot Ids
+peer                Erstellen von PyBroker-Peer Verbindungen
+peers               Auflisten, der aktiven PyBroker-Peer Verbindungen
+quit                Programm beenden (interaktiver Modus)
+remove_html_pages   Loeschen von HTML Seite
+remove_token_files  Loeschen von Token Files
+script              Ausfuehren eines Skripts
+select              Automatisieren der Honeypot ID Auswahl
+start               Starten eines Services
+stop                Beenden eines Services
+unpeer              Loesen einer PyBroker-Peer Verbindungen
+
+
+Erstellen neuer Funktionen:
+help new
+
+Benutzung der UI
+help ui

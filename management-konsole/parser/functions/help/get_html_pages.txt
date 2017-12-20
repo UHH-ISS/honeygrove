@@ -1,0 +1,6 @@
+---------------- get_html_pages ----------------
+
+Liest alle HTML Pages eines Honeypots aus und speichert diese.
+
+Pflichtparameter:
+hid                         ID eines Honeypots

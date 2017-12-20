@@ -1,0 +1,9 @@
+---------------- start ----------------
+Starten eines Services auf einem Honeypot mit default Einstellungen.
+
+Pflichtparameter
+hid [Honeypot IDs]  Honeypot ID
+sid [Servce IDs]    Services ID / Service Name
+
+Optionale Parameter
+-keine-

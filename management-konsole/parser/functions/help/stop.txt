@@ -1,0 +1,9 @@
+---------------- stop ----------------
+Beenden eines Services auf einem Honeypot.
+
+Pflichtparameter
+hid [Honeypot IDs]  Honeypot ID
+sid [Servce IDs]    Services ID / Service Name
+
+Optionale Parameter
+-keine-

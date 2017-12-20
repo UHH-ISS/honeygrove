@@ -1,0 +1,20 @@
+---------------- unpeer ----------------
+Beenden eine PyBroker Verbindung zwischen dieser Managementkonsole und einem Endpunkt oder einem Honeypot und dessen peering Partner.
+
+Mit peers kann eine Liste der aktiven Verbindungen aufgerufen werden.
+Jede dieser Verbidungen ist mit einer Nummer (Nr) versehen.
+Um eine Verbindung zu beenden muss dessen Nummer and unpeer uebergeben werden:
+Vor einem unpeer muss peers nicht aufgerufen, aber es ist die einzige moeglichkeit an die Nummern der Verbindungen zu kommen.
+
+Beispiel:
+>peers
+Nr.0    IP: 127.0.0.1    Port: 8888
+>unpeer 0
+0: Verbindung aufgeloest
+
+Optionale Parameter
+hid                 Honeypots, die ihre peer Verbindung beenden sollen. Bei dieser peer Verbindung handelt es sich nicht um die Verbinsung zwischen dieser Managementkonsole und dem Honeypot, sondern um die Verbindung, ueber die der Honeypot sich mit einem anderen Endpunkt verbindet.
+
+Es koennen beide Funktionsweisen von unpeer in einem Funktionsaufruf verwendet werden.
+
+select ist fuer diese Funkton deaktiviert.

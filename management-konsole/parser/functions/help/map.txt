@@ -1,0 +1,12 @@
+-------------- map ---------------
+Mit dieser Funktion koennen den Honeypt Ids Namen zugeordnet werden.
+Nach einem Mapping koenne in allen FUnktionsaufrufen unter der Option "hid" die Honeypots sowohl unter ihrer ID als auch dihrem Namen angegeben werden.
+Es ist moeglich mehrere Namen auf eine ID abzubilden, mehrere IDs auf einen Namen zu mappen ist hingegen nicht moeglich. Letzterer Fall kann ueber die Gruppierungsfunktion von select realisiert werden.
+
+Parameter
+-keine-             Auflisten des aktuellen Mappings
+auto                Automatisches Mapping. Es Werden von allen Honeypots die info-Datein abgefragt und, wenn vorgenden, der in der info enthaltene Name auf die ID des Honeypots gemappt.
+hid                 Honeypot ID. Muss in verbindung mit der OPtion "n" benutzt werden. Es kann nur ein Mapping zur zeit gesetzt werden.
+n                   Name. Werden "hid" und "n" gesetzt, wird ein Mapping des Namesn auf die Honeypot Id erzeugt.
+c                   Clear loescht alle mappings
+r [Name]            Remove loescht mappings anhand zugeordneten Namen

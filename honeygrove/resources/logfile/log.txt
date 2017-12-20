@@ -1,0 +1,150 @@
+2017-08-13T00:26:08.668105 - [INFO] - RAW Socket could not be created. You are root?
+2017-08-13T00:26:08.668419 - [ERROR] - TCPFlagSniffer wird nicht ordnungsgemäß ausgeführt werden!
+2017-08-13T00:26:08.668804 - [INFO] - Try StartService: HTTP
+2017-08-13T00:26:08.669764 - [INFO] - Try StartService: FTP
+2017-08-13T00:26:08.671255 - [INFO] - Try StartService: SSH
+2017-08-13T00:26:08.672043 - [INFO] - Try StartService: TCPFlagSniffer
+2017-08-13T00:26:08.672247 - [INFO] - Try StartService: LISTEN
+2017-08-13T00:26:16.837701 - [INFO] - RAW Socket could not be created. You are root?
+2017-08-13T00:26:16.838342 - [ERROR] - TCPFlagSniffer wird nicht ordnungsgemäß ausgeführt werden!
+2017-08-13T00:26:16.840876 - [INFO] - Try StartService: HTTP
+2017-08-13T00:26:16.841996 - [INFO] - Try StartService: FTP
+2017-08-13T00:26:16.842950 - [INFO] - Try StartService: SSH
+2017-08-13T00:26:16.844245 - [INFO] - Try StartService: TCPFlagSniffer
+2017-08-13T00:26:16.844530 - [INFO] - Try StartService: LISTEN
+2017-08-13T00:26:28.296070 - [INFO] - Try StartService: HTTP
+2017-08-13T00:26:28.297014 - [INFO] - Try StartService: FTP
+2017-08-13T00:26:28.300456 - [INFO] - Try StartService: SSH
+2017-08-13T00:26:28.301727 - [INFO] - Try StartService: TCPFlagSniffer
+2017-08-13T00:26:28.302246 - [INFO] - Try StartService: LISTEN
+2017-08-13T11:05:20.080853 - [INFO] - RAW Socket could not be created. You are root?
+2017-08-13T11:05:20.081400 - [ERROR] - TCPFlagSniffer wird nicht ordnungsgemäß ausgeführt werden!
+2017-08-13T11:05:20.085391 - [INFO] - Try StartService: HTTP
+2017-08-13T11:05:20.086992 - [INFO] - Try StartService: FTP
+2017-08-13T11:05:20.088467 - [INFO] - Try StartService: SSH
+2017-08-13T11:05:20.090211 - [INFO] - Try StartService: TCPFlagSniffer
+2017-08-13T11:05:20.090622 - [INFO] - Try StartService: LISTEN
+2017-08-13T11:06:14.697062 - [INFO] - RAW Socket could not be created. You are root?
+2017-08-13T11:06:14.697606 - [ERROR] - TCPFlagSniffer wird nicht ordnungsgemäß ausgeführt werden!
+2017-08-13T11:06:14.700654 - [INFO] - Try StartService: HTTP
+2017-08-13T11:06:14.701740 - [INFO] - Try StartService: FTP
+2017-08-13T11:06:14.702703 - [INFO] - Try StartService: SSH
+2017-08-13T11:06:14.703542 - [INFO] - Try StartService: TCPFlagSniffer
+2017-08-13T11:06:14.703714 - [INFO] - Try StartService: LISTEN
+2017-08-13T11:06:14.708919 - [Heartbeat]
+2017-08-13T11:07:00.241350 - [INFO] - Try StartService: HTTP
+2017-08-13T11:07:00.242081 - [INFO] - Try StartService: FTP
+2017-08-13T11:07:00.243079 - [INFO] - Try StartService: SSH
+2017-08-13T11:07:00.243933 - [INFO] - Try StartService: TCPFlagSniffer
+2017-08-13T11:07:00.244560 - [INFO] - Try StartService: LISTEN
+2017-08-13T11:07:00.245606 - [Heartbeat]
+2017-08-13T11:07:27.364134 - [INFO] - RAW Socket could not be created. You are root?
+2017-08-13T11:07:27.365406 - [ERROR] - TCPFlagSniffer wird nicht ordnungsgemäß ausgeführt werden!
+2017-08-13T11:07:27.367835 - [INFO] - Try StartService: HTTP
+2017-08-13T11:07:27.369320 - [INFO] - Try StartService: FTP
+2017-08-13T11:07:27.374433 - [INFO] - Try StartService: SSH
+2017-08-13T11:07:27.376694 - [INFO] - Try StartService: TCPFlagSniffer
+2017-08-13T11:07:27.377220 - [INFO] - Try StartService: LISTEN
+2017-08-13T11:07:27.381341 - [Heartbeat]
+2017-08-13T11:08:27.386967 - [Heartbeat]
+2017-08-13T11:08:55.728861 - [INFO] - Try StartService: HTTP
+2017-08-13T11:08:55.729517 - [INFO] - Try StartService: FTP
+2017-08-13T11:08:55.730480 - [INFO] - Try StartService: SSH
+2017-08-13T11:08:55.731304 - [INFO] - Try StartService: TCPFlagSniffer
+2017-08-13T11:08:55.731783 - [INFO] - Try StartService: LISTEN
+2017-08-13T11:08:55.732524 - [Heartbeat]
+2017-08-13T19:46:29.731334 - [INFO] - RAW Socket could not be created. You are root?
+2017-08-13T19:46:29.731800 - [ERROR] - TCPFlagSniffer wird nicht ordnungsgemäß ausgeführt werden!
+2017-08-13T19:46:29.734174 - [INFO] - Try StartService: HTTP
+2017-08-13T19:46:29.734756 - [INFO] - Try StartService: FTP
+2017-08-13T19:46:29.736412 - [INFO] - Try StartService: SSH
+2017-08-13T19:46:29.737406 - [INFO] - Try StartService: TCPFlagSniffer
+2017-08-13T19:46:29.740584 - [Heartbeat]
+2017-08-13T19:46:45.349172 - [INFO] - Try StartService: HTTP
+2017-08-13T19:46:45.349903 - [INFO] - Try StartService: FTP
+2017-08-13T19:46:45.350719 - [INFO] - Try StartService: SSH
+2017-08-13T19:46:45.351725 - [INFO] - Try StartService: TCPFlagSniffer
+2017-08-13T19:46:45.352958 - [Heartbeat]
+2017-08-22T14:06:05.046672 - [INFO] - RAW Socket could not be created. You are root?
+2017-08-22T14:06:05.047346 - [ERROR] - TCPFlagSniffer wird nicht ordnungsgemäß ausgeführt werden!
+2017-08-22T14:06:05.047758 - [INFO] - Try StartService: HTTP
+2017-08-22T14:06:05.048446 - [INFO] - Try StartService: FTP
+2017-08-22T14:06:05.049373 - [INFO] - Try StartService: SSH
+2017-08-22T14:06:05.050181 - [INFO] - Try StartService: TCPFlagSniffer
+2017-08-22T14:06:05.058069 - [Heartbeat]
+2017-08-22T15:47:40.377567 - [INFO] - RAW Socket could not be created. You are root?
+2017-08-22T15:47:40.378225 - [ERROR] - TCPFlagSniffer wird nicht ordnungsgemäß ausgeführt werden!
+2017-08-22T15:47:40.380797 - [INFO] - Try StartService: HTTP
+2017-08-22T15:47:40.381532 - [INFO] - Try StartService: FTP
+2017-08-22T15:47:40.382524 - [INFO] - Try StartService: SSH
+2017-08-22T15:47:40.383247 - [INFO] - Try StartService: TCPFlagSniffer
+2017-08-22T15:47:40.389290 - [Heartbeat]
+2017-11-29T19:23:37.164554 - [INFO] - RAW Socket could not be created. You are root?
+2017-11-29T19:23:37.165629 - [ERROR] - TCPFlagSniffer wird nicht ordnungsgemäß ausgeführt werden!
+2017-11-29T19:23:37.168060 - [INFO] - Try StartService: HTTP
+2017-11-29T19:23:37.169471 - [INFO] - Try StartService: FTP
+2017-11-29T19:23:37.171793 - [INFO] - Try StartService: SSH
+2017-11-29T19:23:37.173824 - [INFO] - Try StartService: TCPFlagSniffer
+2017-11-29T19:23:37.184912 - [Heartbeat]
+2017-11-29T19:24:37.188621 - [Heartbeat]
+2017-11-29T19:25:41.396880 - [INFO] - RAW Socket could not be created. You are root?
+2017-11-29T19:25:41.397614 - [ERROR] - TCPFlagSniffer wird nicht ordnungsgemäß ausgeführt werden!
+2017-11-29T19:25:41.400155 - [INFO] - Try StartService: HTTP
+2017-11-29T19:25:41.401103 - [INFO] - Try StartService: FTP
+2017-11-29T19:25:41.402236 - [INFO] - Try StartService: SSH
+2017-11-29T19:25:41.403076 - [INFO] - Try StartService: TCPFlagSniffer
+2017-11-29T19:25:41.404426 - [Heartbeat]
+2017-11-29T19:26:41.401946 - [Heartbeat]
+2017-11-29T19:26:58.061721 - [INFO] - RAW Socket could not be created. You are root?
+2017-11-29T19:26:58.062326 - [ERROR] - TCPFlagSniffer wird nicht ordnungsgemäß ausgeführt werden!
+2017-11-29T19:26:58.064726 - [INFO] - Try StartService: HTTP
+2017-11-29T19:27:21.304528 - [INFO] - RAW Socket could not be created. You are root?
+2017-11-29T19:27:21.304828 - [ERROR] - TCPFlagSniffer wird nicht ordnungsgemäß ausgeführt werden!
+2017-11-29T19:27:21.305274 - [INFO] - Try StartService: HTTP
+2017-11-29T19:27:21.305986 - [INFO] - Try StartService: FTP
+2017-11-29T19:27:21.306963 - [INFO] - Try StartService: SSH
+2017-11-29T19:27:21.307974 - [INFO] - Try StartService: TCPFlagSniffer
+2017-11-29T19:27:21.309036 - [Heartbeat]
+2017-11-29T19:27:40.335910 - [INFO] - Try StartService: HTTP
+2017-11-29T19:27:40.336629 - [INFO] - Try StartService: FTP
+2017-11-29T19:27:40.337519 - [INFO] - Try StartService: SSH
+2017-11-29T19:27:40.338270 - [INFO] - Try StartService: TCPFlagSniffer
+2017-11-29T19:27:40.339730 - [Heartbeat]
+2017-11-29T19:28:40.337014 - [Heartbeat]
+2017-11-29T19:30:41.179390 - [INFO] - RAW Socket could not be created. You are root?
+2017-11-29T19:30:41.180133 - [ERROR] - TCPFlagSniffer wird nicht ordnungsgemäß ausgeführt werden!
+2017-11-29T19:30:41.182666 - [INFO] - Try StartService: HTTP
+2017-11-29T19:30:41.183642 - [INFO] - Try StartService: FTP
+2017-11-29T19:30:41.184773 - [INFO] - Try StartService: SSH
+2017-11-29T19:30:41.185574 - [INFO] - Try StartService: TCPFlagSniffer
+2017-11-29T19:30:41.186793 - [Heartbeat]
+2017-11-29T19:30:55.325707 - [INFO] - Try StartService: HTTP
+2017-11-29T19:30:55.326889 - [INFO] - Try StartService: FTP
+2017-11-29T19:30:55.327872 - [INFO] - Try StartService: SSH
+2017-11-29T19:30:55.328754 - [INFO] - Try StartService: TCPFlagSniffer
+2017-11-29T19:30:55.330698 - [Heartbeat]
+2017-11-29T19:31:29.838363 - [INFO] - Try StartService: HTTP
+2017-11-29T19:31:29.839475 - [INFO] - Try StartService: FTP
+2017-11-29T19:31:29.840454 - [INFO] - Try StartService: SSH
+2017-11-29T19:31:29.841484 - [INFO] - Try StartService: TCPFlagSniffer
+2017-11-29T19:31:29.843346 - [Heartbeat]
+2017-11-29T19:32:29.850105 - [Heartbeat]
+2017-11-29T19:32:52.627225 - [INFO] - Try StartService: HTTP
+2017-11-29T19:32:52.628066 - [INFO] - Try StartService: FTP
+2017-11-29T19:32:52.629110 - [INFO] - Try StartService: SSH
+2017-11-29T19:32:52.630157 - [INFO] - Try StartService: TCPFlagSniffer
+2017-11-29T19:32:52.631062 - [Heartbeat]
+2017-11-29T19:39:48.801306 - [INFO] - RAW Socket could not be created. You are root?
+2017-11-29T19:39:48.802393 - [ERROR] - TCPFlagSniffer wird nicht ordnungsgemäß ausgeführt werden!
+2017-11-29T19:39:48.802803 - [INFO] - Try StartService: HTTP
+2017-11-29T19:39:48.803896 - [INFO] - Try StartService: FTP
+2017-11-29T19:39:48.806102 - [INFO] - Try StartService: SSH
+2017-11-29T19:39:48.807223 - [INFO] - Try StartService: TCPFlagSniffer
+2017-11-29T19:39:48.812346 - [Heartbeat]
+2017-11-29T19:40:48.821629 - [Heartbeat]
+2017-11-29T19:41:48.835565 - [Heartbeat]
+2017-11-30T20:41:30.179081 - [INFO] - Try StartService: HTTP
+2017-11-30T20:41:30.180596 - [INFO] - Try StartService: FTP
+2017-11-30T20:41:30.182179 - [INFO] - Try StartService: SSH
+2017-11-30T20:41:30.183060 - [INFO] - Try StartService: TCPFlagSniffer
+2017-11-30T20:41:30.192643 - [Heartbeat]

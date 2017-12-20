@@ -1,0 +1,14 @@
+---------------- config ----------------
+Konfigurieren von Services auf Honeypots.
+
+An allen Honeypotservice koennen folgende Einstellungen gesetzt werden:
+    ports: Der LISTEN Service kann auf beliebig vielen Ports gleichzeitig laufen. Alle anderen Servces nur auf einem zur Zeit.
+    token_probabilty: Wahrscheinlichtkeit, das ein nicht vorhandenes Token akzeptiert wird
+
+PFlichtparameter:
+hid [HoneypotIDs]       Liste von Honeypots, auf denen die Services konfiguriert werden sollen
+sid [ServiceID]         Service ID des zu bearbeitenden Services. Es kann nur ein Servce zur Zeit konfiguriert werden.
+
+Optionale Parameter
+p [Liste von Ports]     Port(s) auf denen der Service laufen soll. Wird bei einem anderen als dem LISTEN-Service eine Liste von Ports angegebe, wird der erste Eintrag der Liste genommen.
+tp [Float]            Tokenpropability

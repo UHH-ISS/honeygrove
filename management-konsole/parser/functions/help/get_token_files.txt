@@ -1,0 +1,6 @@
+---------------- get_token_files----------------
+
+Liest alle Tokens_files eines Honeypots aus und speichert diese.
+
+Pflichtparameter:
+hid                         ID eines Honeypots

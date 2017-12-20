@@ -1,0 +1,7 @@
+---------------- remove_html_page----------------
+
+Entfernt die HTML Seiten die unter den angegeben urls zu erreichen sind.
+
+Pflichtparameter:
+hid                         ID eines Honeypots
+[urls]                      Urls die entfernt werden sollen, ALL entfernt alle

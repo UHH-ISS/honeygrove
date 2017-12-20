@@ -1,0 +1,23 @@
+------------------ script --------------------
+Ausfuehren eines vordiffinierten Skriptes.
+
+
+Anforderungen and die Skriotdatei:
+    eine Anweisung pro Zeile
+    Kommentare mit "#" am Zeilenanfang
+    keine Kommentare am Zeilenende moeglich
+    Leerzeilen werden ignoriert
+    "quit" beendet das Script und Programm
+
+
+Ein Beispielskript:
+    select -all
+    ls
+    #starte auf allen Honeypots ssh
+    start -sid ssh
+
+Funktionsaufruf
+script [liste von Skriptdatein]
+
+Beispiel
+script test1.txt myscripts/test2.txt

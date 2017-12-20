@@ -1,0 +1,10 @@
+---------------- ui ----------------
+Allgemeines:
+-Umlaute werden nicht unterstuetzt
+-Waerend ein Kommando ausgefuehrt wird koennen das select und das Ausgabe Fenster nicht gescrollt werden
+
+
+Pfeiltasten auf/ab          Commandhistory
+Pfeiltasten links/rechts    Cursor in CMD Zeile
+Bild auf/ab                 Ausgabe scrollen
+Strg + Pfeiltasten auf/ab   Selected scrollen. Wird nicht von jedem Terminal unterstuetzt

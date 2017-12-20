@@ -1,0 +1,54 @@
+-------------------------- Erstellen einer neuen Funktion -------------------
+Erstellen einer neuen Parserfunktion: newfunction
+
+1.
+in mc/parser/functions
+    newfunction.py erstellen
+
+2.
+in newfunction.py
+    Funktionskopf:
+    def newfunction(parser,logic,logging,args=0):
+
+    parser  Referenz auf das Parser Modul
+            Statt Ein-/Ausgaben über Pythons standart print()/input() Funktionen sollen die Methoden parser.print() und parser.input() benutzt werden, da es sonst zu Problemen mit der Curses Ui kommt.
+            Bei parser.print und parser.input ist zu beachten, dass sie als Parameter nur einen String entgegennehmen.
+    logic   Referenz auf das Logic Modul
+    logging Referenz auf das Logging Modul
+
+    args ist ein Dictionary der Form:
+        {"optionsname1" : ["parameter1","parameter2"],
+        "optionsname2" : ["parameter1"]}
+    Die Optionsnamen sind ohne "-".
+    Die Parameter sind immer eine Liste, auch wenn diese nur einen Eintrag hat.
+    Bei Flags ist die Parameterliste leer: {option : []}
+    Das Zusammenfassen von Flags (z.B. -a -b zu -ab) wird vom Parser nicht unterstuetzt und musste in der Parserfunktion (newfunction) implementiert werden.
+
+    Bei Angaben von Parametern ohne Optiosnamen z.B.
+        script testscript.txt anderesscript.txt
+    args enthaelt dann:
+        {0 : ["testscript.txt","anderesscript.txt"]}
+    Der Key ist die Zahl Null als integer nicht als Zeichen.
+    Auch moeglich:
+        funktion para1 -option1 para2
+    args enthaelt dann:
+        {0 : ["para1"],
+        "option1" : ["para2"]}
+
+    Beim Funktionsaufruf:
+        -Leerzeichen innerhalb eines Optionsnamen oder Parameter sind nicht erlaubt
+        -Parameter werden durch Leerzeichen getrennt
+        -wird eine Option mehrfach gesetzt, werden die Parameter ueberschrieben 
+        
+
+3.(optional)
+Wenn select die Funktionsaufrufe von newfunction niemals verändern soll, muss in parser/functions/__init__.py newfunction in die Liste NO_SELECT eingetragen werden.
+
+4.(optional)
+in mc/parser/help
+    Neue Hielfedatei erstellen:
+    newfunction.txt
+
+    in help.txt
+    Neue Funktion zu den Verfuegbaren Funktionen hinzufuegen.
+

@@ -1,0 +1,12 @@
+---------------- add_html_page----------------
+
+Fuegt dem Honeypot eine neue HTML Seite als Login und optional eine neues Dashboard hinzu.
+Sie ist spaeter unter dem angegebenen Pfad zu erreichen.
+
+Pflichtparameter:
+hid                         ID eines Honeypots
+dir                         Speicherort des Loginpage
+url                         URL Pfad unter dem die Seite spaeter zu erreichen sein soll
+
+Optionaleparameter:
+dashdir                     Speicherort der Dashboardseite

@@ -1,0 +1,8 @@
+---------------- filesysu ----------------
+Uploaden von Dateisystemen zu Honeypots.
+Wenn mehrere Honeypot IDs aber nur ein Dateipfade angegeben wird, wird das Dateisystem an alle Honeypots gesendet.
+Werden mehrere Honeypot IDs und Dateipfade angegeben muessen die Listen gleich lang sein. In diesem fall wird parallel durch die Listen iteriert und jedem Honeypot die entsprechende Datei gesendet.
+
+Pflichtparameter
+hid [Honeypot IDs]      Liste von Honeypot IDs
+f [Dateipfade]          Liste von Dateipfaden zu den XML Dateisystemen

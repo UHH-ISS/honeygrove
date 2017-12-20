@@ -1,0 +1,7 @@
+---------------- add_token_file----------------
+
+Fuegt dem Honeypot ein neues Token file hinzu.
+
+Pflichtparameter:
+hid                         ID eines Honeypots
+dir                         Speicherort des Tokenfiles

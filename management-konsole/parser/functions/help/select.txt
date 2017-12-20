@@ -1,0 +1,43 @@
+--------------------- select ------------------------
+Mit select werden Listen verwaltet, die die Auswahl von Honeypots automatisiert.
+
+Kann nur im Dialogmodus benutzt werden, da select erst gesetzt werden muss.
+Alternativ koennten auch aus dem configfile der Konsole, falsvorhanden, die Standartwere von select eingelesen/ueberschrieben werden.(Nicht implementiert)
+
+Es ist moeglich mehrere Befehle zu kombinieren, dies ist jedoch nicht zu empfehlen, da die Reihenfolge, in der die Kommandis abgearbeitet werden nicht garantiert der Eingabereihenfolge entsprechen.
+Meistens / Python Version abhaengig:
+    >select -all
+    >select -r h3
+liefert das selbe Ergebnis, wie: 
+    >select -all -r h3
+
+select kann aktiviert und deaktiviert sein. Dieser Zustand hat keinen Einfluss auf den Inhalt der select Liste.
+
+Die Standarteinstellungen von select sind:
+select Liste ist Leer
+select ist deaktiviert
+Die "default" Gruppe ist ausgewaehlt
+
++ select wird aktiviert
+- select wird deaktiviert
+= aktivierung/deaktivierung wird nicht geaendert
+Parameter
+-keine-                 =           Ausgeben des aktuellen Status von select
+a [Honeypot IDs]        add,+       Hinzufuegen, von HIDs zur select Liste. es wird geprueft, ob die HIDs existieren
+                                    Es ist auch moeglich in Selectgruppennamen angegeben werden. In diesem fall werden die in der Gruppe enthaltenen Honeypots zur liste der aktuellen Gruppe hinzugefuegt.
+all                     all,+       Alle aktiven Honeypots werden in die Liste aufgenommen. Es werden dabei die Honeypot IDs benutzt.
+c                       clear,-     Loescht alle HIDs aus der select Liste, der ausgewaehlten Gruppe
+r [Honeypot IDs]        remove,+    Entfehrnt die IDs, wenn sie in der Liste sind
+on                      on,+        Aktiviert select
+off                     off,-       Deaktiviert select
+g [Gruppenname]         group,=     Auswaehlen einer Gruppe, ist die Gruppe noch nocht vorhanden, wird sie als Leere Gruppe erzeugt
+                                    Wird keine Gruppe gewaehlt, also -g ohne Parameter, wird die defult-Gruppe ausgewaehlt.
+d [Gruppenname]         delete,=    Loeschen einer Gruppe
+
+Beispiel
+    >select -a h3 h4
+    >ls
+    >start -sid ssh
+entspricht:
+    >ls -hid h3 h4
+    >start -hid h3 h4 -sid ssh
