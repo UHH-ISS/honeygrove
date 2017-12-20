@@ -1,0 +1,27 @@
+<!--0,0-->
+<dir name="C:">
+    <dir name="Benutzer">
+        <dir name="TestUser">
+            <dir name="Desktop">
+                <file name="wallpaper.jpg"/>
+            </dir>
+            <dir name="Dokumente">
+                <file name="brief.doc"/>
+            </dir>
+            <dir name="Downloads">
+            </dir>
+            <dir name="Bilder">
+                <file name="scan_01.jpg"/>
+                <file name="scan_02.jpg"/>
+                <file name="scan_03.jpg"/>
+            </dir>
+            <dir name="Musik">
+                <file name="asdf.mp3"/>
+            </dir>
+        </dir>
+    </dir>
+    <dir name="Programme">
+        <dir name="Firefox"/>
+        <dir name="ITunes"/>
+    </dir>
+</dir>

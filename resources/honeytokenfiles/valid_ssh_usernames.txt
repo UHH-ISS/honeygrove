@@ -1,0 +1,3 @@
+valid ssh-usernames:
+
+- attacker

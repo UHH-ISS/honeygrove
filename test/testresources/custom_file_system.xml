@@ -1,0 +1,8 @@
+<!--4, 0-->
+<dir name="neuer">
+	<dir name="sub1"/>
+	<dir name="sub2">
+		<file name="hi.txt"/>
+	</dir>
+	<dir name="sub3"/>
+</dir>

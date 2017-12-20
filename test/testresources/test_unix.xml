@@ -1,0 +1,40 @@
+<!--4, 0-->
+<dir name="/">
+    <dir name="bin"/>
+    <dir name="boot"/>
+    <dir name="dev"/>
+    <dir name="etc"/>
+    <dir name="home">
+        <dir name="root">
+            <dir name=".ssh">
+                <file name="id_rsa"/>
+                <file name="id_rsa.pub"/>
+            </dir>
+        </dir>
+    </dir>
+    <dir name="lib"/>
+    <dir name="media"/>
+    <dir name="mnt"/>
+    <dir name="opt"/>
+    <dir name="proc"/>
+    <dir name="root"/>
+    <dir name="sbin"/>
+    <dir name="srv"/>
+    <dir name="sys"/>
+    <dir name="tmp"/>
+    <dir name="unix"/>
+    <dir name="usr">
+        <dir name="bin"/>
+        <dir name="include"/>
+        <dir name="lib"/>
+        <dir name="libexec"/>
+        <dir name="local"/>
+        <dir name="share"/>
+    </dir>
+    <dir name="var">
+        <dir name="log"/>
+        <dir name="mail"/>
+        <dir name="spool"/>
+        <dir name="tmp"/>
+    </dir>
+</dir>
