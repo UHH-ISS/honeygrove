@@ -11,7 +11,7 @@ Honeygrove was tested on Ubuntu 16.4 and Debian 9.1. It may work on other distri
 
 * clone the repository or download and unzip it
 * copy the `/honeygrove` directory where you want to install it
-* run `honeygrove_install.sh` with root privileges to install the dependencies
+* run `honeygrove_install` with root privileges to install the dependencies
 
 For further information see our [wiki](https://github.com/UHH-ISS/honeygrove/wiki) (only in German at the moment).
 
