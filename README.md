@@ -24,3 +24,4 @@ Members of the project that agreed to be named are:
 * [Arne Büngener](https://github.com/4rne)
 * Alexandra Lindt
 * [Adrian Miska](https://github.com/AdrianMiska)
+*[Frieder Uhlig](https://github.com/Moshtart)
