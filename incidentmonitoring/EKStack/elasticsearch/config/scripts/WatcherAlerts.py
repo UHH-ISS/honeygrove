@@ -54,9 +54,9 @@ class WatcherAlerts():
                                 'Content-Type': 'application/json'},
                             'body': {
                                 'inline': {
-                                    'text': ':heavy_exclamation_mark: **Brute Force Alert:** \n '
-                                            'Innerhalb der letzen 10 Sekunden wurden **{{ctx.payload.hits.total}}** '
-                                            'Fehlgeschlagene Login Versuche am Service **HTTP** registriert.'}}}}}})
+                                    'text': ':heavy_exclamation_mark: **HTTP Brute Force Alert:** \n '
+                                            '**{{ctx.payload.hits.total}}** **failed login attempts** was/were registered in the last 10 seconds. \n'
+                                            'For an overview you can use the visualisations in **Kibana**.'}}}}}})
 
         # FTP brute force alert
         es.watcher.put_watch(
@@ -98,9 +98,9 @@ class WatcherAlerts():
                                 'Content-Type': 'application/json'},
                             'body': {
                                 'inline': {
-                                    'text': ':heavy_exclamation_mark: **Brute Force Alert:** \n '
-                                            'Innerhalb der letzen 10 Sekunden wurden **{{ctx.payload.hits.total}}** '
-                                            'Fehlgeschlagene Login Versuche am Service **FTP** registriert.'}}}}}})
+                                    'text': ':heavy_exclamation_mark: **FTP Brute Force Alert:** \n '
+                                            '**{{ctx.payload.hits.total}}** **failed login attempts** was/were registered in the last 10 seconds. \n'
+                                            'For an overview you can use the visualisations in **Kibana**.'}}}}}})
 
         # SSH brute force alert
         es.watcher.put_watch(
@@ -142,9 +142,9 @@ class WatcherAlerts():
                                 'Content-Type': 'application/json'},
                             'body': {
                                 'inline': {
-                                    'text': ':heavy_exclamation_mark: **Brute Force Alert:** \n '
-                                            'Innerhalb der letzen 10 Sekunden wurden **{{ctx.payload.hits.total}}** '
-                                            'Fehlgeschlagene Login Versuche am Service **SSH** registriert.'}}}}}})
+                                    'text': ':heavy_exclamation_mark: **SSH Brute Force Alert:** \n '
+                                            '**{{ctx.payload.hits.total}}** **failed login attempts** was/were registered in the last 10 seconds. \n'
+                                            'For an overview you can use the visualisations in **Kibana**.'}}}}}})
 
         # Malware alert
         es.watcher.put_watch(
@@ -190,9 +190,10 @@ class WatcherAlerts():
                             'body': {
                                 'inline': {
                                     'text': ':heavy_exclamation_mark: **Malware Alert:** \n'
-                                            'Es wurde/n **{{ctx.payload.hits.total}}** neue Malware File/s entdeckt. Weitere Infos im Kibana Dashboard.'}}}}}})
+                                            '**{{ctx.payload.hits.total}}** new **malware file(s)** was/were discovered in the last 10 seconds. \n'
+                                            'For an overview you can use the visualisations in **Kibana**.'}}}}}})
 
-        # SSH brute force alert
+        # honeytoken alert
         es.watcher.put_watch(
             id='honeytoken_alerts',
             body={
@@ -232,7 +233,8 @@ class WatcherAlerts():
                             'body': {
                                 'inline': {
                                     'text': ':heavy_exclamation_mark: **Honeytoken Alert:** \n'
-                                            'Es wurde/n **{{ctx.payload.hits.total}}** Honeytoken verwendet. Weitere Infos im Kibana Dashboard.'}}}}}})
+                                            '**{{ctx.payload.hits.total}}** **honeytokens** was/were used in the last 10 seconds. \n'
+                                            'For an overview you can use the visualisations in **Kibana**.'}}}}}})
 
         print('\033[94m'+'Watcher Alerts Complete.'+'\033[0m')
 
