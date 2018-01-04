@@ -28,6 +28,9 @@ class HoneyAdapter(object):
 
         BrokerEndpoint.startListening()
 
+        if config.init_peer:
+            BrokerEndpoint.peerTo(config.init_peer_ip, config.init_peer_port)
+
     @staticmethod
     def command_message_loop():
         while (True):
