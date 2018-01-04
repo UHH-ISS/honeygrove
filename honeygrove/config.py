@@ -9,6 +9,10 @@ machine_name = "hp1"
 hp_description = {"Ort" : "Moskau", "Name" : str(HPID), "Text" : "Special Honeypot 007"}
 resources = honeygrove.__path__._path[0] + "/resources"
 logpath = resources + "/logfile/log.txt"
+print_all = True
+print_alerts = True
+log_all = True
+log_alerts = True
 
 
 # Generic configuration:

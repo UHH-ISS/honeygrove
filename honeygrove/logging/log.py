@@ -7,7 +7,10 @@ from honeygrove.broker import BrokerEndpoint
 
 path = config.logpath
 ID = str(config.HPID)
-
+print_all = config.print_all
+print_alerts = config.print_alerts
+log_all = config.log_all
+log_alerts = config.log_alerts
 
 def write(message):
     """
@@ -30,8 +33,11 @@ def info(message):
 
     message = '{} - [INFO] - {}\n'.format(timestamp, message)
 
-    write(message)
-    print(message)
+    if log_all:
+        write(message)
+    
+    if print_all:
+        print(message)
 
 
 def err(message):
@@ -43,8 +49,11 @@ def err(message):
 
     message = '{} - [ERROR] - {}\n'.format(timestamp, message)
 
-    write(message)
-    print(message)
+    if log_all:
+        write(message)
+
+    if print_all:
+        print(message)
 
 
 def defer_login(result, *args):
@@ -93,8 +102,11 @@ def login(service, ip, port, successful, user, key=None, actual=None):
     BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage_index)
     BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
 
-    write(message)
-    print(message)
+    if log_all or log_alerts:
+        write(message)
+
+    if print_all or print_alerts:
+        print(message)
 
 
 def request(service, ip, port, request, user=None, request_type=None):
@@ -125,8 +137,11 @@ def request(service, ip, port, request, user=None, request_type=None):
     BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage_index)
     BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
 
-    write(message)
-    print(message)
+    if log_all or log_alerts:
+        write(message)
+
+    if print_all or print_alerts:
+        print(message)
 
 
 def response(service, ip, port, response, user=None, statusCode=None):
@@ -158,8 +173,11 @@ def response(service, ip, port, response, user=None, statusCode=None):
     BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage_index)
     BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
 
-    write(message)
-    print(message)
+    if log_all:
+        write(message)
+
+    if print_all:
+        print(message)
 
 
 def file(service, ip, filename, filepath=None, user=None):
@@ -186,8 +204,11 @@ def file(service, ip, filename, filepath=None, user=None):
     if filepath:  # Wenn kein Filepath übergeben wurde, wurde die Datei nicht gepeichert
         BrokerEndpoint.BrokerEndpoint.sendFile(filepath)
 
-    write(message)
-    print(message)
+    if log_all or log_alerts:
+        write(message)
+
+    if print_all or print_alerts:
+        print(message)
 
 
 def tcp_syn(ip, port):
@@ -207,8 +228,11 @@ def tcp_syn(ip, port):
     BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage_index)
     BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
 
-    write(message)
-    print(message)
+    if log_all or log_alerts:
+        write(message)
+
+    if print_all or print_alerts:
+        print(message)
 
 
 def heartbeat():
@@ -225,5 +249,8 @@ def heartbeat():
     BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage_index)
     BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
 
-    write(message)
-    print(message)
+    if log_all:
+        write(message)
+
+    if print_all:
+        print(message)
