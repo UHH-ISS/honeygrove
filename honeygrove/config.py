@@ -86,5 +86,10 @@ ip_addr = get_ip_address()
 BrokerComIP = ip_addr
 BrokerComPort = 8888
 
+# Opt. initial peering
+init_peer = False
+init_peer_ip = ""
+init_peer_port = 34445
+
 # HoneyAdapter: StartMode
 honeygrove_start = 'active'
