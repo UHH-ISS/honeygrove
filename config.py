@@ -10,6 +10,14 @@ hp_description = {"Ort" : "Moskau", "Name" : str(HPID), "Text" : "Special Honeyp
 resources = honeygrove.__path__._path[0] + "/resources"
 logpath = resources + "/logfile/log.txt"
 
+# Logfile and output configuration
+# Status: Inlcudes INFO-, HEARTBEAT-, RESPONSE- and ERROR-messages
+# Alerts: Inlcudes LOGIN-, REQUEST-, FILE-, and SYN-messages
+print_status = True
+print_alerts = True
+log_status = True
+log_alerts = True
+
 
 # Generic configuration:
 listenServicePorts = [r for r in range(1, 5000)]
