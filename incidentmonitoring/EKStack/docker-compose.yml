@@ -24,7 +24,7 @@ services:
       - "9300"
     environment:
       BM_ES_NODE_NAME: "es-data-1"
-      ES_JAVA_OPTS: "-Xms150m -Xmx150m"
+      ES_JAVA_OPTS: "-Xms2g -Xmx2g"
       BM_ES_MASTER: "false"
       BM_ES_DATA: "true"
     networks:
@@ -43,7 +43,7 @@ services:
       - "9300"
     environment:
       BM_ES_NODE_NAME: "es-data-2"
-      ES_JAVA_OPTS: "-Xms150m -Xmx150m"
+      ES_JAVA_OPTS: "-Xms2g -Xmx2g"
       BM_ES_MASTER: "false"
       BM_ES_DATA: "true"
     networks:
