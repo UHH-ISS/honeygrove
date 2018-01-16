@@ -1,0 +1,4 @@
+*.pyc
+.DS_Store
+honeygrove/resources/logfile/log.txt
+honeygrove/resources/honeytokendb/database.txt
