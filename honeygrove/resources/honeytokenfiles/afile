@@ -1,1 +1,0 @@
-Diese Datei dient dem Tracken des Ordners in Git.
