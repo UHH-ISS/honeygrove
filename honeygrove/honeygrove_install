@@ -19,7 +19,7 @@ while true; do
     read yn
     case $yn in
         [Yy]* ) install_broker=true; break;;
-        [Nn]* ) install_broker=false; break;;
+        [Nn]* ) install_broker=false; echo "Remember to adjust your configuration accordingly in config.py"; break;;
         * ) echo "Please answer yes or no.";;
     esac
 done
