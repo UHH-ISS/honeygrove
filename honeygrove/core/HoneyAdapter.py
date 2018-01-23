@@ -8,7 +8,10 @@ from xml.etree import ElementTree as ET
 
 import honeygrove.config as config
 import honeygrove.logging.log as log
-from honeygrove.broker.BrokerEndpoint import BrokerEndpoint
+
+if config.use_broker:
+    from honeygrove.broker.BrokerEndpoint import BrokerEndpoint
+
 from honeygrove.core.ServiceController import ServiceController
 from honeygrove.resources.http_resources import HTMLLoader
 
@@ -26,14 +29,15 @@ class HoneyAdapter(object):
             for service in config.startupList:
                 HoneyAdapter.controller.startService(service)
 
-        BrokerEndpoint.startListening()
+        if config.use_broker:
+            BrokerEndpoint.startListening()
 
-        if config.init_peer:
-            BrokerEndpoint.peerTo(config.init_peer_ip, config.init_peer_port)
+            if config.init_peer:
+                BrokerEndpoint.peerTo(config.init_peer_ip, config.init_peer_port)
 
     @staticmethod
     def command_message_loop():
-        while (True):
+        while (True) and config.use_broker:
             time.sleep(0.1)
             msg = BrokerEndpoint.getCommandMessage()
             if msg:
