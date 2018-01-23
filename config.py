@@ -10,6 +10,11 @@ hp_description = {"Ort" : "Moskau", "Name" : str(HPID), "Text" : "Special Honeyp
 resources = honeygrove.__path__._path[0] + "/resources"
 logpath = resources + "/logfile/log.txt"
 
+# Set this to False if you do not want to use broker or broker is
+# unavailable on your machine. Currently, the management-console
+# and the EKStack can not be used without communication via Broker.
+use_broker = True
+
 # Logfile and output configuration
 # Status: Inlcudes INFO-, HEARTBEAT-, RESPONSE- and ERROR-messages
 # Alerts: Inlcudes LOGIN-, REQUEST-, FILE-, and SYN-messages
