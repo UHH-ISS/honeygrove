@@ -3,7 +3,8 @@ import json
 from datetime import datetime
 
 from honeygrove import config
-from honeygrove.broker import BrokerEndpoint
+if config.use_broker:
+    from honeygrove.broker import BrokerEndpoint
 
 path = config.logpath
 ID = str(config.HPID)
@@ -94,13 +95,14 @@ def login(service, ip, port, successful, user, key=None, actual=None):
     else:
         successful = "false"
 
-    bmessage_index = json.dumps({'index': {'_type': 'login'}})
-    bmessage = json.dumps(
-        {'@timestamp': timestamp, 'service': service, 'ip': ip, 'port': str(port), 'successful': successful,
-         'user': user, 'key': key, 'actual': actual, 'honeypotID': ID})
+    if config.use_broker:
+        bmessage_index = json.dumps({'index': {'_type': 'login'}})
+        bmessage = json.dumps(
+            {'@timestamp': timestamp, 'service': service, 'ip': ip, 'port': str(port), 'successful': successful,
+             'user': user, 'key': key, 'actual': actual, 'honeypotID': ID})
 
-    BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage_index)
-    BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
+        BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage_index)
+        BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
 
     if log_alerts:
         write(message)
@@ -129,13 +131,15 @@ def request(service, ip, port, request, user=None, request_type=None):
         user = ""
     if not request_type:
         request_type = ""
-    bmessage_index = json.dumps({'index': {'_type': 'request'}})
-    bmessage = json.dumps(
-        {'@timestamp': timestamp, 'service': service, 'ip': ip, 'port': str(port), 'user': user, 'request': request,
-         'request_type': request_type, 'honeypotID': ID})
 
-    BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage_index)
-    BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
+    if config.use_broker:
+        bmessage_index = json.dumps({'index': {'_type': 'request'}})
+        bmessage = json.dumps(
+            {'@timestamp': timestamp, 'service': service, 'ip': ip, 'port': str(port), 'user': user, 'request': request,
+             'request_type': request_type, 'honeypotID': ID})
+
+        BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage_index)
+        BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
 
     if log_alerts:
         write(message)
@@ -165,13 +169,14 @@ def response(service, ip, port, response, user=None, statusCode=None):
     if not statusCode:
         statusCode = ""
 
-    bmessage_index = json.dumps({'index': {'_type': 'response'}})
-    bmessage = json.dumps(
-        {'@timestamp': timestamp, 'service': service, 'ip': ip, 'port': str(port), 'user': user, 'response': response,
-         'request_type': statusCode, 'honeypotID': ID})
+    if config.use_broker:
+        bmessage_index = json.dumps({'index': {'_type': 'response'}})
+        bmessage = json.dumps(
+            {'@timestamp': timestamp, 'service': service, 'ip': ip, 'port': str(port), 'user': user, 'response': response,
+             'request_type': statusCode, 'honeypotID': ID})
 
-    BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage_index)
-    BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
+        BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage_index)
+        BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
 
     if log_status:
         write(message)
@@ -195,13 +200,14 @@ def file(service, ip, filename, filepath=None, user=None):
 
     message = '{} - [FILE] - {}, {}, {}, {}\n'.format(timestamp, service, ip, filename, user)
 
-    bmessage_index = json.dumps({'index': {'_type': 'file'}})
-    bmessage = json.dumps({'@timestamp': timestamp, 'service': service, 'ip': ip, 'filename': filename, 'user': user, 'honeypotID': ID})
+    if config.use_broker:
+        bmessage_index = json.dumps({'index': {'_type': 'file'}})
+        bmessage = json.dumps({'@timestamp': timestamp, 'service': service, 'ip': ip, 'filename': filename, 'user': user, 'honeypotID': ID})
 
-    BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage_index)
-    BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
+        BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage_index)
+        BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
 
-    if filepath:  # Wenn kein Filepath übergeben wurde, wurde die Datei nicht gepeichert
+    if filepath and config.use_broker:  # Wenn kein Filepath übergeben wurde, wurde die Datei nicht gepeichert
         BrokerEndpoint.BrokerEndpoint.sendFile(filepath)
 
     if log_alerts:
@@ -222,11 +228,12 @@ def tcp_syn(ip, port):
 
     message = '{} - [SYN] - {}, {} + \n'.format(timestamp, ip, port)
 
-    bmessage_index = json.dumps({'index': {'_type': 'syn'}})
-    bmessage = json.dumps({'@timestamp': timestamp, 'ip': ip, 'port': port, 'honeypotID': ID})
+    if config.use_broker:
+        bmessage_index = json.dumps({'index': {'_type': 'syn'}})
+        bmessage = json.dumps({'@timestamp': timestamp, 'ip': ip, 'port': port, 'honeypotID': ID})
 
-    BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage_index)
-    BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
+        BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage_index)
+        BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
 
     if log_alerts:
         write(message)
@@ -243,11 +250,12 @@ def heartbeat():
 
     message = ('{} - [Heartbeat]'.format(timestamp) + '\n')
 
-    bmessage_index = json.dumps({'index': {'_type': 'heartbeat'}})
-    bmessage = json.dumps({'@timestamp': timestamp, 'honeypotID': ID})
+    if config.use_broker:
+        bmessage_index = json.dumps({'index': {'_type': 'heartbeat'}})
+        bmessage = json.dumps({'@timestamp': timestamp, 'honeypotID': ID})
 
-    BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage_index)
-    BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
+        BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage_index)
+        BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
 
     if log_status:
         write(message)
