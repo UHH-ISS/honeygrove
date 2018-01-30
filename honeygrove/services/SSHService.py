@@ -14,7 +14,9 @@ from twisted.conch import recvline, avatar, insults, error
 from twisted.conch.ssh import factory, keys, session, userauth, common
 from twisted.cred.portal import Portal
 from twisted.internet import reactor
+from twisted.internet.address import IPv4Address
 from twisted.python import components, failure
+from twisted.protocols.policies import WrappingFactory
 
 from honeygrove import config
 from honeygrove.core.FilesystemParser import FilesystemParser
@@ -37,6 +39,8 @@ class SSHService(ServiceBaseModel):
 
         self._fService = factory.SSHFactory()
         self._fService.services[b'ssh-userauth'] = groveUserAuth
+        
+        self._limiter = Limiter(self._fService)        
 
         self._fService.portal = p
 
@@ -70,12 +74,35 @@ class SSHService(ServiceBaseModel):
 
     def startService(self):
         self._stop = False
-        self._transport = reactor.listenTCP(self._port, self._fService)
+        self._transport = reactor.listenTCP(self._port, self._limiter)
 
     def stopService(self):
         self._stop = True
         self._transport.stopListening()
 
+
+class Limiter(WrappingFactory):
+
+    maxConnectionsPerPeer = config.SSH_conn_per_host
+
+    def startFactory(self):
+        self.peerConnections = {}
+
+    def buildProtocol(self, addr):
+        peerHost = addr.host
+        connectionCount = self.peerConnections.get(peerHost, 0)
+        if connectionCount >= self.maxConnectionsPerPeer:
+            info_message = str(peerHost) + ": Peer exeeds maximum SSH connections, no connection will be established..."
+            log.info(info_message)
+            return None
+        self.peerConnections[peerHost] = connectionCount + 1
+        return WrappingFactory.buildProtocol(self, addr)
+
+    def unregisterProtocol(self, p):
+        peerHost = p.getPeer().host
+        self.peerConnections[peerHost] -= 1
+        if self.peerConnections[peerHost] == 0:
+           del self.peerConnections[peerHost]
 
 class SSHProtocol(recvline.HistoricRecvLine):
     def connectionMade(self):

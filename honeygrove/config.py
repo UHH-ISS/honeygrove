@@ -53,6 +53,7 @@ httpName = "HTTP"
 sshPort = 22
 sshName = "SSH"
 ssh_real_shell = False
+SSH_conn_per_host = 1
 
 # FTP configuration:
 ftpPort = 21
