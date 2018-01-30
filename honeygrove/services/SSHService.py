@@ -14,16 +14,14 @@ from twisted.conch import recvline, avatar, insults, error
 from twisted.conch.ssh import factory, keys, session, userauth, common
 from twisted.cred.portal import Portal
 from twisted.internet import reactor
-from twisted.internet.address import IPv4Address
 from twisted.python import components, failure
-from twisted.protocols.policies import WrappingFactory
 
 from honeygrove import config
 from honeygrove.core.FilesystemParser import FilesystemParser
 from honeygrove.core.HoneytokenDB import HoneytokenDataBase
 from honeygrove.logging import log
 from honeygrove.services.ServiceBaseModel import ServiceBaseModel
-
+from honeygrove.services.ServiceBaseModel import Limiter
 
 class SSHService(ServiceBaseModel):
     c = HoneytokenDataBase(servicename=config.sshName)
@@ -40,7 +38,7 @@ class SSHService(ServiceBaseModel):
         self._fService = factory.SSHFactory()
         self._fService.services[b'ssh-userauth'] = groveUserAuth
         
-        self._limiter = Limiter(self._fService)        
+        self._limiter = Limiter(self._fService, config.sshName, config.SSH_conn_per_host)        
 
         self._fService.portal = p
 
@@ -80,28 +78,6 @@ class SSHService(ServiceBaseModel):
         self._stop = True
         self._transport.stopListening()
 
-
-class Limiter(WrappingFactory):
-
-    maxConnectionsPerPeer = config.SSH_conn_per_host
-
-    def startFactory(self):
-        self.peerConnections = {}
-
-    def buildProtocol(self, addr):
-        peerHost = addr.host
-        connectionCount = self.peerConnections.get(peerHost, 0)
-        if connectionCount >= self.maxConnectionsPerPeer:
-            log.limit_reached(config.sshName, peerHost)
-            return None
-        self.peerConnections[peerHost] = connectionCount + 1
-        return WrappingFactory.buildProtocol(self, addr)
-
-    def unregisterProtocol(self, p):
-        peerHost = p.getPeer().host
-        self.peerConnections[peerHost] -= 1
-        if self.peerConnections[peerHost] == 0:
-           del self.peerConnections[peerHost]
 
 class SSHProtocol(recvline.HistoricRecvLine):
     def connectionMade(self):
