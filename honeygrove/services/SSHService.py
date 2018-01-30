@@ -92,8 +92,7 @@ class Limiter(WrappingFactory):
         peerHost = addr.host
         connectionCount = self.peerConnections.get(peerHost, 0)
         if connectionCount >= self.maxConnectionsPerPeer:
-            info_message = str(peerHost) + ": Peer exeeds maximum SSH connections, no connection will be established..."
-            log.info(info_message)
+            log.limit_reached(config.sshName, peerHost)
             return None
         self.peerConnections[peerHost] = connectionCount + 1
         return WrappingFactory.buildProtocol(self, addr)
