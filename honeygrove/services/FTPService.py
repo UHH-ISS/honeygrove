@@ -6,6 +6,7 @@ from twisted.cred.portal import Portal
 from twisted.protocols.ftp import *
 from twisted.protocols.ftp import _FileReader as FR
 from twisted.protocols.ftp import _FileWriter as FW
+from twisted.protocols.policies import WrappingFactory
 
 from honeygrove import config
 from honeygrove.core.FilesystemParser import FilesystemParser
@@ -29,6 +30,8 @@ class FTPService(ServiceBaseModel):
 
         self._fService = FTPFactory(portal)
 
+        self._limiter = Limiter(self._fService)
+
         self.protocol = FTPProtocol
         self._fService.protocol = self.protocol
 
@@ -37,12 +40,33 @@ class FTPService(ServiceBaseModel):
 
     def startService(self):
         self._stop = False
-        self._transport = reactor.listenTCP(self._port, self._fService)
+        self._transport = reactor.listenTCP(self._port, self._limiter)
 
     def stopService(self):
         self._stop = True
         self._transport.stopListening()
 
+class Limiter(WrappingFactory):
+
+    maxConnectionsPerPeer = config.FTP_conn_per_host
+
+    def startFactory(self):
+        self.peerConnections = {}
+
+    def buildProtocol(self, addr):
+        peerHost = addr.host
+        connectionsCount = self.peerConnections.get(peerHost, 0)
+        if connectionsCount >= self.maxConnectionsPerPeer:
+            logging.limit_reached(config.ftpName, peerHost)
+            return None
+        self.peerConnections[peerHost] = connectionsCount + 1
+        return WrappingFactory.buildProtocol(self, addr)
+
+    def unregisterProtocol(self, p):
+        peerHost = p.getPeer().host
+        self.peerConnections[peerHost] -= 1
+        if self.peerConnections[peerHost] == 0:
+            del self.peerConnections[peerHost]
 
 class FTPProtocol(FTP):
     overwritten_commands_whitelist = ['CWD', 'DELE', 'LIST', 'MDTM', 'MKD',
