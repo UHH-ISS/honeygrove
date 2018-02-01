@@ -53,12 +53,12 @@ httpName = "HTTP"
 sshPort = 22
 sshName = "SSH"
 ssh_real_shell = False
-SSH_conn_per_host = 1
+SSH_conn_per_host = 100
 
 # FTP configuration:
 ftpPort = 21
 ftpName = "FTP"
-FTP_conn_per_host = 1
+FTP_conn_per_host = 100
 
 # Path to Filesystem all services are using
 path_to_filesys = resources + '/parser_resources' +'/unix.xml'
