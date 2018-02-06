@@ -21,7 +21,7 @@ from honeygrove.core.FilesystemParser import FilesystemParser
 from honeygrove.core.HoneytokenDB import HoneytokenDataBase
 from honeygrove.logging import log
 from honeygrove.services.ServiceBaseModel import ServiceBaseModel
-
+from honeygrove.services.ServiceBaseModel import Limiter
 
 class SSHService(ServiceBaseModel):
     c = HoneytokenDataBase(servicename=config.sshName)
@@ -37,6 +37,8 @@ class SSHService(ServiceBaseModel):
 
         self._fService = factory.SSHFactory()
         self._fService.services[b'ssh-userauth'] = groveUserAuth
+        
+        self._limiter = Limiter(self._fService, config.sshName, config.SSH_conn_per_host)        
 
         self._fService.portal = p
 
@@ -70,7 +72,7 @@ class SSHService(ServiceBaseModel):
 
     def startService(self):
         self._stop = False
-        self._transport = reactor.listenTCP(self._port, self._fService)
+        self._transport = reactor.listenTCP(self._port, self._limiter)
 
     def stopService(self):
         self._stop = True

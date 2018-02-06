@@ -3,7 +3,10 @@
 from abc import ABC, abstractmethod
 
 from twisted.internet.protocol import Factory
+from twisted.protocols.policies import WrappingFactory
+from twisted.internet.address import IPv4Address
 
+from honeygrove.logging import log
 
 class ServiceBaseModel(ABC):
     def __init__(self):
@@ -46,3 +49,30 @@ class ServiceBaseModel(ABC):
         self.stopService()
         self._port = port
         self.startService()
+
+
+class Limiter(WrappingFactory):
+
+    def __init__(self, service, name, config):
+        super(Limiter, self).__init__(service)
+        self._maxConnectionsPerPeer = config
+        self._name = name
+
+    def startFactory(self):
+        self.peerConnections = {}
+
+    def buildProtocol(self, addr):
+        peerHost = addr.host
+        connectionCount = self.peerConnections.get(peerHost, 0)
+        if connectionCount >= self._maxConnectionsPerPeer:
+            log.limit_reached(self._name, peerHost)
+            return None
+        self.peerConnections[peerHost] = connectionCount + 1
+        return WrappingFactory.buildProtocol(self, addr)
+
+    def unregisterProtocol(self, p):
+        peerHost = p.getPeer().host
+        self.peerConnections[peerHost] -= 1
+        if self.peerConnections[peerHost] == 0:
+           del self.peerConnections[peerHost]
+

@@ -12,7 +12,7 @@ from honeygrove.core.FilesystemParser import FilesystemParser
 from honeygrove.core.HoneytokenDB import HoneytokenDataBase
 from honeygrove.logging import log as logging
 from honeygrove.services.ServiceBaseModel import ServiceBaseModel
-
+from honeygrove.services.ServiceBaseModel import Limiter
 
 class FTPService(ServiceBaseModel):
 
@@ -29,15 +29,17 @@ class FTPService(ServiceBaseModel):
 
         self._fService = FTPFactory(portal)
 
-        self.protocol = FTPProtocol
-        self._fService.protocol = self.protocol
-
         self._name = config.ftpName
         self._port = config.ftpPort
 
+        self._limiter = Limiter(self._fService, self._name, config.FTP_conn_per_host)
+
+        self.protocol = FTPProtocol
+        self._fService.protocol = self.protocol
+
     def startService(self):
         self._stop = False
-        self._transport = reactor.listenTCP(self._port, self._fService)
+        self._transport = reactor.listenTCP(self._port, self._limiter)
 
     def stopService(self):
         self._stop = True

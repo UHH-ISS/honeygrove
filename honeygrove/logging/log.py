@@ -242,6 +242,31 @@ def tcp_syn(ip, port):
         print(message)
 
 
+def limit_reached(service, ip):
+    """
+    Log function to be called when the maximum of connections per host for a service is reached
+    
+    :param service: the concerning service
+    :param ip: attacker's IP-Address
+    """
+    timestamp = datetime.utcnow().isoformat()
+
+    message = '{} - [LIMIT REACHED] - {}, {}\n'.format(timestamp, service, ip)
+
+    if config.use_broker:
+        bmessage_index = json.dumps({'index': {'_type': 'limit_reached'}})
+        bmessage = json.dumps(
+            {'@timestamp': timestamp, 'service': service, 'ip': ip, 'honeypotID': ID})
+
+        BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage_index)
+        BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
+
+    if log_alerts:
+        write(message)
+
+    if print_alerts:
+        print(message)
+
 def heartbeat():
     """
     Log function to be called when sending a heartbeat
