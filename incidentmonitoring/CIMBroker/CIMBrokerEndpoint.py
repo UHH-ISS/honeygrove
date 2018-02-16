@@ -90,17 +90,13 @@ class CIMBrokerEndpoint:
                         outfile.write(str(entry))
                         outfile.write('\n')
 
-                # if the connection is restored the user will be informed to push the logs.json into Elasticsearch manually.                # Die JSON wird danach wieder gelöscht.
                 else:
                     try:
                         # send logs into Elasticsearch
-                        es.index(index='honeygrove', doc_type=t, body=output_logs)
+                        month = datetime.utcnow().strftime("%Y-%m")
+                        indexname = "honeygrove-" + month
+                        es.index(index=indexname, doc_type=t, body=output_logs)
 
-                        # check if json.file is available
-                        if os.path.isfile('./incidentmonitoring/ressources/logs.json'):
-                            print('\033[91m' + "A json file was found! \n"
-                                               "For more informations, read the configuration part in the developer's "
-                                               "handbook." + '\033[0m')
                     except Exception:
                         pass
 

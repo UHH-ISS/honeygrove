@@ -2,5 +2,5 @@
 
 cd ..
 
-echo "Start CIMBrokerEndpoint..."
+echo "Starting CIMBrokerEndpoint..."
 python3 -m incidentmonitoring "$@"
