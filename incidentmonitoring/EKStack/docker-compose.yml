@@ -55,19 +55,6 @@ services:
       - es-master:es-master
     depends_on:
       - es-master
-#  logstash:
-#    build: logstash/
-#    command: -f /etc/logstash/conf.d/
-#    volumes:
-#      - ./logstash/config:/etc/logstash/conf.d/
-#      - /var/honeygrove/log:/var/honeygrove/log
-#      - /var/honeygrove/log/logstash:/var/log/logstash
-#    networks:
-#      - docker_elk
-#    depends_on:
-#      - es-master
-#    links:
-#      - es-master:elasticsearch
   kibana:
     build: kibana/
     volumes:
