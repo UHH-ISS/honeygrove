@@ -1,0 +1,44 @@
+[
+  {
+    "_id": "eb9c49b0-7e93-11e7-8fd2-8ba07ce53543",
+    "_type": "search",
+    "_source": {
+      "title": "syn scan",
+      "description": "",
+      "hits": 0,
+      "columns": [
+        "service",
+        "_type"
+      ],
+      "sort": [
+        "@timestamp",
+        "desc"
+      ],
+      "version": 1,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\n  \"index\": \"AWGZuu1yxDzb8RPw9Nsk\",\n  \"highlightAll\": true,\n  \"version\": true,\n  \"query\": {\n    \"query_string\": {\n      \"query\": \"_type:syn\",\n      \"analyze_wildcard\": true\n    }\n  },\n  \"filter\": []\n}"
+      }
+    }
+  },
+  {
+    "_id": "0d05fed0-7e11-11e7-b516-5fc904579a97",
+    "_type": "search",
+    "_source": {
+      "title": "active honeypots",
+      "description": "",
+      "hits": 0,
+      "columns": [
+        "honeypotID",
+        "@timestamp"
+      ],
+      "sort": [
+        "@timestamp",
+        "desc"
+      ],
+      "version": 1,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\n  \"index\": \"AWGZuu1yxDzb8RPw9Nsk\",\n  \"highlightAll\": true,\n  \"version\": true,\n  \"query\": {\n    \"query_string\": {\n      \"query\": \"@timestamp:*\",\n      \"analyze_wildcard\": true\n    }\n  },\n  \"filter\": []\n}"
+      }
+    }
+  }
+]
