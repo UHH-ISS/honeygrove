@@ -119,15 +119,12 @@ def login(service, ip, port, successful, user, key=None, actual=None):
         message = '{} - [LOGIN] - {}, {}, {}, {}, {}, {}, {}\n'.format(timestamp, service, ip, port, successful, user, key, actual)
 
     if config.use_broker:
-        bmessage_index = json.dumps({'index': {'_type': 'login'}})
-
         if coordinates:
-            bmessage = json.dumps({'@timestamp': timestamp, 'service': service, 'ip': ip, 'port': str(port), 'successful': str(successful), 'user': user, 'key': key, 'actual': actual, 'coordinates': '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1]), 'honeypotID': ID})
+            bmessage = json.dumps({'event_type': 'login', '@timestamp': timestamp, 'service': service, 'ip': ip, 'port': str(port), 'successful': str(successful), 'user': user, 'key': key, 'actual': actual, 'coordinates': '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1]), 'honeypotID': ID})
 
         else:
-            bmessage = json.dumps({'@timestamp': timestamp, 'service': service, 'ip': ip, 'port': str(port), 'successful': str(successful), 'user': user, 'key': key, 'actual': actual, 'honeypotID': ID})
+            bmessage = json.dumps({'event_type': 'login', '@timestamp': timestamp, 'service': service, 'ip': ip, 'port': str(port), 'successful': str(successful), 'user': user, 'key': key, 'actual': actual, 'honeypotID': ID})
 
-        BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage_index)
         BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
 
     if log_alerts:
@@ -164,15 +161,12 @@ def request(service, ip, port, request, user=None, request_type=None):
         message = '{} - [REQUEST] - {}, {}, {}, {}, {}\n'.format(timestamp, service, ip, request, user, request_type)
 
     if config.use_broker:
-        bmessage_index = json.dumps({'index': {'_type': 'request'}})
-
         if coordinates:
-            bmessage = json.dumps({'@timestamp': timestamp, 'service': service, 'ip': ip, 'port': str(port), 'user': user, 'request': request, 'request_type': request_type, 'coordinates': '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1]), 'honeypotID': ID})
+            bmessage = json.dumps({'event_type': 'request', '@timestamp': timestamp, 'service': service, 'ip': ip, 'port': str(port), 'user': user, 'request': request, 'request_type': request_type, 'coordinates': '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1]), 'honeypotID': ID})
 
         else:
-            bmessage = json.dumps({'@timestamp': timestamp, 'service': service, 'ip': ip, 'port': str(port), 'user': user, 'request': request, 'request_type': request_type, 'honeypotID': ID})
+            bmessage = json.dumps({'event_type': 'request','@timestamp': timestamp, 'service': service, 'ip': ip, 'port': str(port), 'user': user, 'request': request, 'request_type': request_type, 'honeypotID': ID})
 
-        BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage_index)
         BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
 
     if log_alerts:
@@ -209,14 +203,11 @@ def response(service, ip, port, response, user=None, statusCode=None):
         message = '{} - [RESPONSE] - {}, {}, {}, {}, {}\n'.format(timestamp, service, ip, response, user, statusCode)
 
     if config.use_broker:
-        bmessage_index = json.dumps({'index': {'_type': 'response'}})
-
         if coordinates:
-            bmessage = json.dumps({'@timestamp': timestamp, 'service': service, 'ip': ip, 'port': str(port), 'user': user, 'response': response, 'request_type': statusCode, 'coordinates': '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1]), 'honeypotID': ID})
+            bmessage = json.dumps({'event_type': 'response', '@timestamp': timestamp, 'service': service, 'ip': ip, 'port': str(port), 'user': user, 'response': response, 'request_type': statusCode, 'coordinates': '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1]), 'honeypotID': ID})
         else:
-            bmessage = json.dumps({'@timestamp': timestamp, 'service': service, 'ip': ip, 'port': str(port), 'user': user, 'response': response, 'request_type': statusCode, 'honeypotID': ID})
+            bmessage = json.dumps({'event_type': 'response', '@timestamp': timestamp, 'service': service, 'ip': ip, 'port': str(port), 'user': user, 'response': response, 'request_type': statusCode, 'honeypotID': ID})
 
-        BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage_index)
         BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
 
     if log_status:
@@ -248,15 +239,12 @@ def file(service, ip, filename, filepath=None, user=None):
         message = '{} - [FILE] - {}, {}, {}, {}\n'.format(timestamp, service, ip, filename, user)
 
     if config.use_broker:
-        bmessage_index = json.dumps({'index': {'_type': 'file'}})
-
         if coordinates:
-            bmessage = json.dumps({'@timestamp': timestamp, 'service': service, 'ip': ip, 'filename': filename, 'user': user, 'coordinates': '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1]), 'honeypotID': ID})
+            bmessage = json.dumps({'event_type': 'file', '@timestamp': timestamp, 'service': service, 'ip': ip, 'filename': filename, 'user': user, 'coordinates': '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1]), 'honeypotID': ID})
 
         else:
-            bmessage = json.dumps({'@timestamp': timestamp, 'service': service, 'ip': ip, 'filename': filename, 'user': user, 'honeypotID': ID})
+            bmessage = json.dumps({'event_type': 'file', '@timestamp': timestamp, 'service': service, 'ip': ip, 'filename': filename, 'user': user, 'honeypotID': ID})
 
-        BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage_index)
         BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
 
     if filepath and config.use_broker:
@@ -287,15 +275,12 @@ def tcp_syn(ip, port):
         message = '{} - [SYN] - {}, {}\n'.format(timestamp, ip, port)
 
     if config.use_broker:
-        bmessage_index = json.dumps({'index': {'_type': 'syn'}})
-
         if coordinates:
-            bmessage = json.dumps({'@timestamp': timestamp, 'ip': ip, 'port': port, 'coordinates': '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1]), 'honeypotID': ID})
+            bmessage = json.dumps({'event_type': 'syn', '@timestamp': timestamp, 'ip': ip, 'port': port, 'coordinates': '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1]), 'honeypotID': ID})
 
         else:
-            bmessage = json.dumps({'@timestamp': timestamp, 'ip': ip, 'port': port, 'honeypotID': ID})
+            bmessage = json.dumps({'event_type': 'syn', '@timestamp': timestamp, 'ip': ip, 'port': port, 'honeypotID': ID})
 
-        BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage_index)
         BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
 
     if log_alerts:
@@ -323,15 +308,12 @@ def limit_reached(service, ip):
         message = '{} - [LIMIT REACHED] - {}, {}\n'.format(timestamp, service, ip)
 
     if config.use_broker:
-        bmessage_index = json.dumps({'index': {'_type': 'limit_reached'}})
-
         if coordinates:
-            bmessage = json.dumps({'@timestamp': timestamp, 'service': service, 'ip': ip, 'coordinates': '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1]), 'honeypotID': ID})
+            bmessage = json.dumps({'event_type': 'limit_reached', '@timestamp': timestamp, 'service': service, 'ip': ip, 'coordinates': '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1]), 'honeypotID': ID})
 
         else:
-            bmessage = json.dumps({'@timestamp': timestamp, 'service': service, 'ip': ip, 'honeypotID': ID})
+            bmessage = json.dumps({'event_type': 'limit_reached', '@timestamp': timestamp, 'service': service, 'ip': ip, 'honeypotID': ID})
 
-        BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage_index)
         BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
 
     if log_alerts:
@@ -349,10 +331,8 @@ def heartbeat():
     message = ('{} - [Heartbeat]'.format(timestamp) + '\n')
 
     if config.use_broker:
-        bmessage_index = json.dumps({'index': {'_type': 'heartbeat'}})
-        bmessage = json.dumps({'@timestamp': timestamp, 'honeypotID': ID})
+        bmessage = json.dumps({'event_type': 'heartbeat', '@timestamp': timestamp, 'honeypotID': ID})
 
-        BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage_index)
         BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
 
     if log_status:
