@@ -1,9 +1,10 @@
+import json
 import time
 import socket
 import signal
 from datetime import datetime
 from CIMBroker.CIMBrokerConfig import es, ElasticIp, ElasticPort
-from EKStack.elasticsearch.config.scripts import WatcherAlerts
+from PrepareES.WatcherAlerts import WatcherAlerts
 
 # Check if Elasticsearch on port 9200 is reachable
 def check_ping():
@@ -19,10 +20,11 @@ def check_ping():
 # Define the mapping and load it into the Elasticsearch index
 def loadMapping():
     mapping = '''{
-        "template": "honeygrove-*",
+        "index_patterns": "honeygrove-*",
         "mappings": {
-            "_default_": {
+            "log_event": {
                 "properties": {
+                    "event_type": {"type": "keyword"},
                     "@timestamp": {"type": "date", "format": "yyyy-MM-dd'T'HH:mm:ss.SSSSSS"},
                     "actual": {"type": "keyword"},
                     "filename": {"type": "keyword"},
@@ -47,7 +49,7 @@ def loadMapping():
     }'''
 
     # Create a template with the mapping that is applied to all indices starting with "honeygrove-"
-    es.indices.put_template(name='template_honeygrove', body=mapping)
+    es.indices.put_template(name='log_event', body=json.loads(mapping))
 
 
 # Start with mapping if Elasticsearch is reachable and cluster status is ready ("yellow")
@@ -63,7 +65,7 @@ def readyToMap():
 
                     # Execute Watcher alerts script
                     print('\033[94m' + "Start Watcher Alerts..." + '\033[0m')
-                    WatcherAlerts.WatcherAlerts.putWatch()
+                    WatcherAlerts.putWatch()
 
                 else:
                     print('\033[91m' + "es-master cluster state is red, trying again in 10s..." + '\033[0m')
@@ -76,14 +78,5 @@ def readyToMap():
             readyToMap()
 
     except:
-        # Retry after an Exception every 30 seconds (Exception message can be ignored)
-        print('\033[91m' + "an error occurred, trying again in 10s..." + '\033[0m')
-        time.sleep(10)
-        readyToMap()
-
-
-if __name__ == '__main__':
-
-    # Start the mapping process
-    print('\033[94m'+"Start Mapping..."+'\033[0m')
-    readyToMap()
+        print('\033[91m' + "an error occurred, please try again later..." + '\033[0m')
+        print('\033[91m' + "aborting..." + '\033[0m')

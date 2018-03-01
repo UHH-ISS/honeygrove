@@ -1,6 +1,4 @@
 #!/bin/bash
 
-cd ..
-
 echo "Starting CIMBrokerEndpoint..."
-python3 -m incidentmonitoring "$@"
+python3 -m CIMBroker "$@"

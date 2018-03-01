@@ -1,6 +1,1 @@
-FROM kibana:5.4.0
-
-
-RUN kibana-plugin install x-pack
-
-# use the official upstream repo from elastic.co. NO TROUBLE! :)
+FROM docker.elastic.co/kibana/kibana:6.2.2
