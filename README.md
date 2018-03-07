@@ -15,7 +15,7 @@ Honeygrove was tested on Ubuntu 16.4 and Debian 9.1. It may work on other distri
 * choose if you want to install broker
 * remember to look at config.py before you start the honeypot for the first time
 
-For further information see our [wiki](https://github.com/UHH-ISS/honeygrove/wiki) (only in German at the moment).
+For further information see our [wiki](https://github.com/UHH-ISS/honeygrove/wiki) (currently only the user guide for honeygrove is available in english).
 
 
 ### History
