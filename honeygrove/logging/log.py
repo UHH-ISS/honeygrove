@@ -5,13 +5,19 @@ from datetime import datetime
 from honeygrove import config
 if config.use_broker:
     from honeygrove.broker import BrokerEndpoint
+if config.use_geoip:
+    import geoip2.database
 
 path = config.logpath
+geodatabasepath = config.geodatabasepath
 ID = str(config.HPID)
 print_status = config.print_status
 print_alerts = config.print_alerts
 log_status = config.log_status
 log_alerts = config.log_alerts
+
+if config.use_geoip:
+    reader = geoip2.database.Reader(geodatabasepath)
 
 def write(message):
     """
@@ -22,6 +28,23 @@ def write(message):
     file = open(path, 'a')
     file.write(message)
     file.close()
+
+def get_coordinates(ipaddress):
+    """
+    Gets the Location Information for given IP Address
+    from Location Database. Returns False if location
+    lookup is disabled
+
+    :param ipaddress: the address out of a log entry
+    """
+
+    if config.use_geoip:
+        response = reader.city(ipaddress)
+        lat = float(response.location.latitude)
+        lon = float(response.location.longitude)
+        return [lat, lon]
+    else:
+        return False
 
 
 def info(message):
@@ -82,26 +105,26 @@ def login(service, ip, port, successful, user, key=None, actual=None):
 
     timestamp = datetime.utcnow().isoformat()
 
-    message = ('{} - [LOGIN] - {}, {}, {}, {}, {}'.format(timestamp, service, ip, port, successful, user)
-               + ((', ' + key) if key else ', ') + ((', ' + actual) if actual else ', ') + '\n')
+    coordinates = get_coordinates(ip)
 
     if not key:
         key = ""
     if not actual:
         actual = ""
 
-    if successful:
-        successful = "true"
+    if coordinates:
+        message = '{} - [LOGIN] - {}, {}, Latitude: {:.4f}, Longitude: {:.4f}, {}, {}, {}, {}, {}\n'.format(timestamp, service, ip, coordinates[0], coordinates[1], port, successful, user, key, actual)
+
     else:
-        successful = "false"
+        message = '{} - [LOGIN] - {}, {}, {}, {}, {}, {}, {}\n'.format(timestamp, service, ip, port, successful, user, key, actual)
 
     if config.use_broker:
-        bmessage_index = json.dumps({'index': {'_type': 'login'}})
-        bmessage = json.dumps(
-            {'@timestamp': timestamp, 'service': service, 'ip': ip, 'port': str(port), 'successful': successful,
-             'user': user, 'key': key, 'actual': actual, 'honeypotID': ID})
+        if coordinates:
+            bmessage = json.dumps({'event_type': 'login', '@timestamp': timestamp, 'service': service, 'ip': ip, 'port': str(port), 'successful': str(successful), 'user': user, 'key': key, 'actual': actual, 'coordinates': '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1]), 'honeypotID': ID})
 
-        BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage_index)
+        else:
+            bmessage = json.dumps({'event_type': 'login', '@timestamp': timestamp, 'service': service, 'ip': ip, 'port': str(port), 'successful': str(successful), 'user': user, 'key': key, 'actual': actual, 'honeypotID': ID})
+
         BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
 
     if log_alerts:
@@ -124,21 +147,26 @@ def request(service, ip, port, request, user=None, request_type=None):
     """
     timestamp = datetime.utcnow().isoformat()
 
-    message = ('{} - [REQUEST] - {}, {}, {}'.format(timestamp, service, ip, request)
-               + ((', ' + user) if user else ', ') + ((', ' + request_type) if request_type else ', ') + '\n')
+    coordinates = get_coordinates(ip)
 
     if not user:
         user = ""
     if not request_type:
         request_type = ""
 
-    if config.use_broker:
-        bmessage_index = json.dumps({'index': {'_type': 'request'}})
-        bmessage = json.dumps(
-            {'@timestamp': timestamp, 'service': service, 'ip': ip, 'port': str(port), 'user': user, 'request': request,
-             'request_type': request_type, 'honeypotID': ID})
+    if coordinates:
+        message = '{} - [REQUEST] - {}, {}, Latitude: {:.4f}, Longitude: {:.4f}, {}, {}, {}\n'.format(timestamp, service, ip, coordinates[0], coordinates[1], request, user, request_type)
 
-        BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage_index)
+    else:
+        message = '{} - [REQUEST] - {}, {}, {}, {}, {}\n'.format(timestamp, service, ip, request, user, request_type)
+
+    if config.use_broker:
+        if coordinates:
+            bmessage = json.dumps({'event_type': 'request', '@timestamp': timestamp, 'service': service, 'ip': ip, 'port': str(port), 'user': user, 'request': request, 'request_type': request_type, 'coordinates': '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1]), 'honeypotID': ID})
+
+        else:
+            bmessage = json.dumps({'event_type': 'request','@timestamp': timestamp, 'service': service, 'ip': ip, 'port': str(port), 'user': user, 'request': request, 'request_type': request_type, 'honeypotID': ID})
+
         BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
 
     if log_alerts:
@@ -161,21 +189,25 @@ def response(service, ip, port, response, user=None, statusCode=None):
     """
     timestamp = datetime.utcnow().isoformat()
 
-    message = ('{} - [RESPONSE] - {}, {}, {}'.format(timestamp, service, ip, response)
-               + ((', ' + user) if user else ', ') + ((', ' + statusCode) if statusCode else ', ') + '\n')
-
     if not user:
         user = ""
     if not statusCode:
         statusCode = ""
 
-    if config.use_broker:
-        bmessage_index = json.dumps({'index': {'_type': 'response'}})
-        bmessage = json.dumps(
-            {'@timestamp': timestamp, 'service': service, 'ip': ip, 'port': str(port), 'user': user, 'response': response,
-             'request_type': statusCode, 'honeypotID': ID})
+    coordinates = get_coordinates(ip)
 
-        BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage_index)
+    if coordinates:
+        message = '{} - [RESPONSE] - {}, {}, Latitude: {:.4f}, Longitude: {:.4f}, {}, {}, {}\n'.format(timestamp, service, ip, coordinates[0], coordinates[1], response, user, statusCode)
+
+    else:
+        message = '{} - [RESPONSE] - {}, {}, {}, {}, {}\n'.format(timestamp, service, ip, response, user, statusCode)
+
+    if config.use_broker:
+        if coordinates:
+            bmessage = json.dumps({'event_type': 'response', '@timestamp': timestamp, 'service': service, 'ip': ip, 'port': str(port), 'user': user, 'response': response, 'request_type': statusCode, 'coordinates': '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1]), 'honeypotID': ID})
+        else:
+            bmessage = json.dumps({'event_type': 'response', '@timestamp': timestamp, 'service': service, 'ip': ip, 'port': str(port), 'user': user, 'response': response, 'request_type': statusCode, 'honeypotID': ID})
+
         BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
 
     if log_status:
@@ -198,16 +230,24 @@ def file(service, ip, filename, filepath=None, user=None):
 
     timestamp = datetime.utcnow().isoformat()
 
-    message = '{} - [FILE] - {}, {}, {}, {}\n'.format(timestamp, service, ip, filename, user)
+    coordinates = get_coordinates(ip)
+
+    if coordinates:
+        message = '{} - [FILE] - {}, {}, Latitude: {:.4f}, Longitude: {:.4f}, {}, {}\n'.format(timestamp, service, ip, coordinates[0], coordinates[1], filename, user)
+
+    else:
+        message = '{} - [FILE] - {}, {}, {}, {}\n'.format(timestamp, service, ip, filename, user)
 
     if config.use_broker:
-        bmessage_index = json.dumps({'index': {'_type': 'file'}})
-        bmessage = json.dumps({'@timestamp': timestamp, 'service': service, 'ip': ip, 'filename': filename, 'user': user, 'honeypotID': ID})
+        if coordinates:
+            bmessage = json.dumps({'event_type': 'file', '@timestamp': timestamp, 'service': service, 'ip': ip, 'filename': filename, 'user': user, 'coordinates': '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1]), 'honeypotID': ID})
 
-        BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage_index)
+        else:
+            bmessage = json.dumps({'event_type': 'file', '@timestamp': timestamp, 'service': service, 'ip': ip, 'filename': filename, 'user': user, 'honeypotID': ID})
+
         BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
 
-    if filepath and config.use_broker:  # Wenn kein Filepath übergeben wurde, wurde die Datei nicht gepeichert
+    if filepath and config.use_broker:
         BrokerEndpoint.BrokerEndpoint.sendFile(filepath)
 
     if log_alerts:
@@ -226,13 +266,21 @@ def tcp_syn(ip, port):
 
     timestamp = datetime.utcnow().isoformat()
 
-    message = '{} - [SYN] - {}, {} + \n'.format(timestamp, ip, port)
+    coordinates = get_coordinates(ip)
+
+    if coordinates:
+        message = '{} - [SYN] - {}, Latitude: {:.4f}, Longitude: {:.4f}, {}\n'.format(timestamp, ip, coordinates[0], coordinates[1], port)
+
+    else:
+        message = '{} - [SYN] - {}, {}\n'.format(timestamp, ip, port)
 
     if config.use_broker:
-        bmessage_index = json.dumps({'index': {'_type': 'syn'}})
-        bmessage = json.dumps({'@timestamp': timestamp, 'ip': ip, 'port': port, 'honeypotID': ID})
+        if coordinates:
+            bmessage = json.dumps({'event_type': 'syn', '@timestamp': timestamp, 'ip': ip, 'port': port, 'coordinates': '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1]), 'honeypotID': ID})
 
-        BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage_index)
+        else:
+            bmessage = json.dumps({'event_type': 'syn', '@timestamp': timestamp, 'ip': ip, 'port': port, 'honeypotID': ID})
+
         BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
 
     if log_alerts:
@@ -251,14 +299,21 @@ def limit_reached(service, ip):
     """
     timestamp = datetime.utcnow().isoformat()
 
-    message = '{} - [LIMIT REACHED] - {}, {}\n'.format(timestamp, service, ip)
+    coordinates = get_coordinates(ip)
+
+    if coordinates:
+        message = '{} - [LIMIT REACHED] - {}, {}, Latitude: {:.4f}, Longitude: {:.4f}\n'.format(timestamp, service, ip, coordinates[0], coordinates[1])
+
+    else:
+        message = '{} - [LIMIT REACHED] - {}, {}\n'.format(timestamp, service, ip)
 
     if config.use_broker:
-        bmessage_index = json.dumps({'index': {'_type': 'limit_reached'}})
-        bmessage = json.dumps(
-            {'@timestamp': timestamp, 'service': service, 'ip': ip, 'honeypotID': ID})
+        if coordinates:
+            bmessage = json.dumps({'event_type': 'limit_reached', '@timestamp': timestamp, 'service': service, 'ip': ip, 'coordinates': '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1]), 'honeypotID': ID})
 
-        BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage_index)
+        else:
+            bmessage = json.dumps({'event_type': 'limit_reached', '@timestamp': timestamp, 'service': service, 'ip': ip, 'honeypotID': ID})
+
         BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
 
     if log_alerts:
@@ -276,10 +331,8 @@ def heartbeat():
     message = ('{} - [Heartbeat]'.format(timestamp) + '\n')
 
     if config.use_broker:
-        bmessage_index = json.dumps({'index': {'_type': 'heartbeat'}})
-        bmessage = json.dumps({'@timestamp': timestamp, 'honeypotID': ID})
+        bmessage = json.dumps({'event_type': 'heartbeat', '@timestamp': timestamp, 'honeypotID': ID})
 
-        BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage_index)
         BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
 
     if log_status:

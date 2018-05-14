@@ -9,11 +9,16 @@ machine_name = "hp1"
 hp_description = {"Ort" : "Moskau", "Name" : str(HPID), "Text" : "Special Honeypot 007"}
 resources = honeygrove.__path__._path[0] + "/resources"
 logpath = resources + "/logfile/log.txt"
+geodatabasepath = resources + "/path/to/database"
 
 # Set this to False if you do not want to use broker or broker is
 # unavailable on your machine. Currently, the management-console
 # and the EKStack can not be used without communication via Broker.
 use_broker = True
+
+# Set this to False if you do not want to use geoip or no database
+# is available on your machine.
+use_geoip = False
 
 # Logfile and output configuration
 # Status: Inlcudes INFO-, HEARTBEAT-, RESPONSE- and ERROR-messages
