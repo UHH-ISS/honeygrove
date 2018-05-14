@@ -1,4 +1,4 @@
-from incidentmonitoring.CIMBroker.CIMBrokerConfig import es
+from CIMBroker.CIMBrokerConfig import es
 from elasticsearch_watcher import WatcherClient
 
 

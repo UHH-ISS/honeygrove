@@ -1,14 +1,11 @@
-import sys, os
-sys.path.append(os.path.abspath(__file__ + "/../../.."))
-
 from pybroker import *
-import incidentmonitoring.CIMBroker.CIMBrokerConfig as CIMBrokerConfig
-from incidentmonitoring.CIMBroker.CIMBrokerConfig import es
+import CIMBroker.CIMBrokerConfig as CIMBrokerConfig
+from CIMBroker.CIMBrokerConfig import es
 import json
 import base64
 from datetime import datetime
-from incidentmonitoring.MHR.MalwareLookup import MalwareLookup
-from incidentmonitoring.EKStack.elasticsearch.config.scripts import ElasticsearchMapping
+from MHR.MalwareLookup import MalwareLookup
+from PrepareES import PrepareES
 
 
 class CIMBrokerEndpoint:
@@ -51,7 +48,7 @@ class CIMBrokerEndpoint:
         timestamp = datetime.utcnow().isoformat()
         for msg in fileQueue:
             for m in msg:
-                with open('./incidentmonitoring/ressources/%s.file' % timestamp, 'wb') as afile:
+                with open('./ressources/%s.file' % timestamp, 'wb') as afile:
                     afile.write(base64.b64decode(str(m))) 
             MalwareLookup.hashingFile()
 
@@ -69,19 +66,8 @@ class CIMBrokerEndpoint:
                 "{0}".format(entry)
                 print("Log: ",entry)
 
-                # allows us to keep the doc_types of our logs to distinguish them later in Kibana.
-                # Otherwise we would have to use a common doc_type. With an doc_type you can partition the index.
-                output_logs = json.loads(str(entry))  # the JSON-String logs
-                if 'index' not in output_logs:
-                    pass
-                elif 'index' in output_logs:
-                    i = (output_logs['index'])
-                    if '_type' in i:
-                        global t
-                        t = (i['_type'])
-
                 # if connection to Elasticsearch is interrupted, cache logs into logs.json to prevent data loss.
-                if not ElasticsearchMapping.check_ping():
+                if not PrepareES.check_ping():
                     print('\033[91m' + "The logs will be saved in the logs.json under "
                                        "/incidentmonitoring/ressources." + '\033[0m')
                     with open(
@@ -90,17 +76,14 @@ class CIMBrokerEndpoint:
                         outfile.write(str(entry))
                         outfile.write('\n')
 
-                # if the connection is restored the user will be informed to push the logs.json into Elasticsearch manually.                # Die JSON wird danach wieder gelöscht.
                 else:
                     try:
+                        output_logs = json.loads(str(entry))                        
                         # send logs into Elasticsearch
-                        es.index(index='honeygrove', doc_type=t, body=output_logs)
+                        month = datetime.utcnow().strftime("%Y-%m")
+                        indexname = "honeygrove-" + month
+                        es.index(index=indexname, doc_type="log_event", body=output_logs)
 
-                        # check if json.file is available
-                        if os.path.isfile('./incidentmonitoring/ressources/logs.json'):
-                            print('\033[91m' + "A json file was found! \n"
-                                               "For more informations, read the configuration part in the developer's "
-                                               "handbook." + '\033[0m')
                     except Exception:
                         pass
 

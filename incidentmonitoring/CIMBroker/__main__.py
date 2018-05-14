@@ -1,7 +1,10 @@
+import sys, os
+sys.path.append(os.path.abspath(__file__ + "/.."))
+
 import threading
 import time
 
-from incidentmonitoring.CIMBroker.CIMBrokerEndpoint import CIMBrokerEndpoint
+from CIMBrokerEndpoint import CIMBrokerEndpoint
 
 
 if __name__ == '__main__':

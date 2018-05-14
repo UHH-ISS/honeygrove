@@ -1,12 +1,10 @@
-import sys, os
-sys.path.append(os.path.abspath(__file__ + "/../../../../../.."))
-
+import json
 import time
 import socket
 import signal
 from datetime import datetime
-from incidentmonitoring.CIMBroker.CIMBrokerConfig import es, ElasticIp, ElasticPort
-from incidentmonitoring.EKStack.elasticsearch.config.scripts import WatcherAlerts
+from CIMBroker.CIMBrokerConfig import es, ElasticIp, ElasticPort
+from PrepareES.WatcherAlerts import WatcherAlerts
 
 # Check if Elasticsearch on port 9200 is reachable
 def check_ping():
@@ -16,15 +14,17 @@ def check_ping():
         pingstatus = True
     else:
         pingstatus = False
-        print('\033[91m' + "The connection to Elasticsearch is interrupted" + '\033[0m')
+        print('\033[91m' + "The connection to Elasticsearch is interrupted..." + '\033[0m')
     return pingstatus
 
 # Define the mapping and load it into the Elasticsearch index
 def loadMapping():
     mapping = '''{
+        "index_patterns": "honeygrove-*",
         "mappings": {
-            "_default_": {
+            "log_event": {
                 "properties": {
+                    "event_type": {"type": "keyword"},
                     "@timestamp": {"type": "date", "format": "yyyy-MM-dd'T'HH:mm:ss.SSSSSS"},
                     "actual": {"type": "keyword"},
                     "filename": {"type": "keyword"},
@@ -41,14 +41,15 @@ def loadMapping():
                     "response": {"type": "keyword"},
                     "service": {"type": "keyword"},
                     "successful": {"type": "keyword"},
-                    "user": {"type": "keyword"}
+                    "user": {"type": "keyword"},
+                    "coordinates": {"type": "geo_point"}
                 }
             }
         }
     }'''
 
-    # Create an index with our mapping
-    es.indices.create(index='honeygrove', ignore=400, body=mapping)
+    # Create a template with the mapping that is applied to all indices starting with "honeygrove-"
+    es.indices.put_template(name='log_event', body=json.loads(mapping))
 
 
 # Start with mapping if Elasticsearch is reachable and cluster status is ready ("yellow")
@@ -64,10 +65,10 @@ def readyToMap():
 
                     # Execute Watcher alerts script
                     print('\033[94m' + "Start Watcher Alerts..." + '\033[0m')
-                    WatcherAlerts.WatcherAlerts.putWatch()
+                    WatcherAlerts.putWatch()
 
                 else:
-                    print('\033[91m' + "es-master cluster state is red" + '\033[0m')
+                    print('\033[91m' + "es-master cluster state is red, trying again in 10s..." + '\033[0m')
                     # Wait 10 seconds and retry checking cluster state
                     time.sleep(10)
                     readyToMap()
@@ -77,47 +78,5 @@ def readyToMap():
             readyToMap()
 
     except:
-        # Retry after an Exception every 30 seconds (Exception message can be ignored)
-        print("")
-        time.sleep(60)
-        readyToMap()
-
-
-# Load first log with timestamp to show the @timestamp in the Time-field name and prevent
-# error messages on the Kibana Honeygrove Dashboard.
-def loadFirstLogs():
-    firstlog = {'@timestamp': datetime.utcnow().isoformat(),
-                'actual': '',
-                'filename': '',
-                'found_date': datetime.utcnow().isoformat(),
-                'hash': '',
-                'honeypotID': '',
-                'infolink': '',
-                'ip': '127.0.0.1',
-                'key': '',
-                'percent': '',
-                'port': '22',
-                'request': '',
-                'request_type': '',
-                'response': '',
-                'service': 'HTTP',
-                'successful': '',
-                'user': ''}
-    es.index(index="honeygrove", doc_type='mapping', body=firstlog)
-
-# Handler for system signals (Exit mapping with Ctr + C)
-def signalHandler(signal, frame):
-    sys.exit(0)
-
-
-if __name__ == '__main__':
-
-    signal.signal(signal.SIGINT, signalHandler)
-
-    # Let Docker build up containers and try mapping after 60 seconds.
-    time.sleep(1)
-
-    # Start the mapping process
-    print('\033[94m'+"Start Mapping..."+'\033[0m')
-    readyToMap()
-    loadFirstLogs()
+        print('\033[91m' + "an error occurred, please try again later..." + '\033[0m')
+        print('\033[91m' + "aborting..." + '\033[0m')

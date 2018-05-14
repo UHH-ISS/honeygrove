@@ -13,8 +13,10 @@ services:
       ES_JAVA_OPTS: "-Xms250m -Xmx250m"
       BM_ES_MASTER: "true"
       BM_ES_DATA: "false"
-    volumes:
-      - ./elasticsearch/config:/usr/share/elasticsearch/config
+      action.auto_create_index: "true"
+      discovery.zen.ping.unicast.hosts: "es-master"
+      discovery.zen.minimum_master_nodes: 1
+      xpack.security.enabled: "false"
     networks:
       - docker_elk
   es-data-1:
@@ -27,6 +29,10 @@ services:
       ES_JAVA_OPTS: "-Xms2g -Xmx2g"
       BM_ES_MASTER: "false"
       BM_ES_DATA: "true"
+      action.auto_create_index: "true"
+      discovery.zen.ping.unicast.hosts: "es-master"
+      discovery.zen.minimum_master_nodes: 1
+      xpack.security.enabled: "false"
     networks:
       - docker_elk
     links:
@@ -34,7 +40,6 @@ services:
     depends_on:
       - es-master
     volumes:
-      - ./elasticsearch/config:/usr/share/elasticsearch/config
       - /var/honeygrove/cim-data/data-1:/usr/share/elasticsearch/data
   es-data-2:
     build: elasticsearch/
@@ -46,34 +51,24 @@ services:
       ES_JAVA_OPTS: "-Xms2g -Xmx2g"
       BM_ES_MASTER: "false"
       BM_ES_DATA: "true"
+      action.auto_create_index: "true"
+      discovery.zen.ping.unicast.hosts: "es-master"
+      discovery.zen.minimum_master_nodes: 1
+      xpack.security.enabled: "false"
     networks:
       - docker_elk
     volumes:
-      - ./elasticsearch/config:/usr/share/elasticsearch/config
       - /var/honeygrove/cim-data/data-2:/usr/share/elasticsearch/data
     links:
       - es-master:es-master
     depends_on:
       - es-master
-#  logstash:
-#    build: logstash/
-#    command: -f /etc/logstash/conf.d/
-#    volumes:
-#      - ./logstash/config:/etc/logstash/conf.d/
-#      - /var/honeygrove/log:/var/honeygrove/log
-#      - /var/honeygrove/log/logstash:/var/log/logstash
-#    networks:
-#      - docker_elk
-#    depends_on:
-#      - es-master
-#    links:
-#      - es-master:elasticsearch
   kibana:
     build: kibana/
-    volumes:
-      - ./kibana/config/:/opt/kibana/config/
     ports:
       - "127.0.0.1:5601:5601"
+    environment:
+      xpack.security.enabled: "false"
     networks:
       - docker_elk
     depends_on:
