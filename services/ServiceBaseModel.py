@@ -22,6 +22,7 @@ class ServiceBaseModel(ABC):
         self._name = None
         self._port = None
         self._stop = True
+        # _status wird anscheinend bisher nicht verwendet!
         self._status = None
         self._transport = None
 
@@ -53,6 +54,8 @@ class ServiceBaseModel(ABC):
 
 class Limiter(WrappingFactory):
 
+    # name = freier Name des Services
+    # config = maxConnection
     def __init__(self, service, name, config):
         super(Limiter, self).__init__(service)
         self._maxConnectionsPerPeer = config
@@ -70,6 +73,7 @@ class Limiter(WrappingFactory):
         self.peerConnections[peerHost] = connectionCount + 1
         return WrappingFactory.buildProtocol(self, addr)
 
+    # p = "protocol"?
     def unregisterProtocol(self, p):
         peerHost = p.getPeer().host
         self.peerConnections[peerHost] -= 1

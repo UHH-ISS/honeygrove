@@ -11,10 +11,15 @@ from urllib import request
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from twisted.conch import recvline, avatar, insults, error
-from twisted.conch.ssh import factory, keys, session, userauth, common
+from twisted.conch.ssh import factory, keys, session, userauth, common, transport
+from honeygrove import config
+transport.SSHTransportBase.ourVersionString = config.sshBanner
+
 from twisted.cred.portal import Portal
 from twisted.internet import reactor
 from twisted.python import components, failure
+
+from honeygrove.resources.ssh_resources import database
 
 from honeygrove import config
 from honeygrove.core.FilesystemParser import FilesystemParser
@@ -25,6 +30,7 @@ from honeygrove.services.ServiceBaseModel import Limiter
 
 class SSHService(ServiceBaseModel):
     c = HoneytokenDataBase(servicename=config.sshName)
+
 
     def __init__(self):
         super(SSHService, self).__init__()
@@ -80,6 +86,7 @@ class SSHService(ServiceBaseModel):
 
 
 class SSHProtocol(recvline.HistoricRecvLine):
+
     def connectionMade(self):
         """
         Initializes the session
@@ -94,16 +101,39 @@ class SSHProtocol(recvline.HistoricRecvLine):
         self.userIP = self.user.conn.transport.transport.client[0]
         self.l = log
         self.current_dir = expanduser("~")
+        
+        load = self.loadLoginTime(self.userName)
+        if load == False:
+            # Zufällige, plausible last login time
+            tdelta = timedelta(days=ri(1, 365), seconds=ri(0, 60), minutes=ri(0, 60), hours=ri(0, 24))
+            now = datetime.now()
+            login = now - tdelta
+            loginStr = str(login.ctime())
+        else:
+            loginStr = load
 
-        # Zufällige, plausible last login time
-        tdelta = timedelta(days=ri(1, 365), seconds=ri(0, 60), minutes=ri(0, 60), hours=ri(0, 24))
-        now = datetime.now()
-        login = now - tdelta
-
-        self.terminal.write("Last login: " + str(login.ctime()))
+        self.saveLoginTime(self.userName)
+        self.terminal.write("Last login: " + loginStr)
         self.terminal.nextLine()
 
         self.showPrompt()
+
+
+    def saveLoginTime(self, username):
+        # limits number of saved "user profiles" to keep an attacker from filling the memory 
+        if len(database.lastLoginTime) <= 10000:
+            if config.use_utc:
+                database.lastLoginTime[username] = str(datetime.utcnow().ctime())
+            else:
+                database.lastLoginTime[username] = str(datetime.now().ctime())
+
+
+    def loadLoginTime(self, username):
+        if username in database.lastLoginTime:
+            return database.lastLoginTime[username]
+        else:
+            return False
+
 
     def print(self, lines, log=None):
         """
@@ -142,7 +172,7 @@ class SSHProtocol(recvline.HistoricRecvLine):
         """
         helptext = ""
         append = False
-        with open(config.resources + "/ssh_resources/helptexts") as helps:
+        with open(config.resources_dir + "ssh_resources/helptexts") as helps:
             for line in helps:
                 if append and re.match("^\S", line):
                     return helptext
@@ -245,7 +275,7 @@ class SSHProtocol(recvline.HistoricRecvLine):
 
         gnuhelp = []
 
-        with open(config.resources + "/ssh_resources/gnuhelp") as file:
+        with open(config.resources_dir + "ssh_resources/gnuhelp") as file:
             for line in file:
                 gnuhelp.append(line)
 
