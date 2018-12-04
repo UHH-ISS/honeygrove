@@ -7,6 +7,7 @@ if config.use_broker:
     from honeygrove.broker import BrokerEndpoint
 if config.use_geoip:
     import geoip2.database
+    from geoip2.errors import *
 
 path = config.logpath
 geodatabasepath = config.geodatabasepath
@@ -17,7 +18,11 @@ log_status = config.log_status
 log_alerts = config.log_alerts
 
 if config.use_geoip:
-    reader = geoip2.database.Reader(geodatabasepath)
+    try:
+        reader = geoip2.database.Reader(geodatabasepath)
+    except FileNotFoundError:
+        print("\nGeoIP database file not found, disabled GeoIP!\n")
+        config.use_geoip = False
 
 def write(message):
     """
@@ -52,6 +57,8 @@ def get_time():
     else:
         return datetime.now()
 
+def format_time(intime):
+    return intime.isoformat()
 
 def info(message):
     """
@@ -59,7 +66,7 @@ def info(message):
     
     :param message: the message text
     """
-    timestamp = datetime.utcnow().isoformat()
+    timestamp = format_time(get_time())
 
     message = '{} - [INFO] - {}\n'.format(timestamp, message)
 
@@ -75,7 +82,7 @@ def err(message):
     Log function for exceptions
     :param message: the exception message
     """
-    timestamp = datetime.utcnow().isoformat()
+    timestamp = format_time(get_time())
 
     message = '{} - [ERROR] - {}\n'.format(timestamp, message)
 
@@ -109,7 +116,7 @@ def login(service, ip, port, successful, user, key=None, actual=None):
     :param actual: the services where the login would have actually been valid (used for tracking honeytoken usage)
     """
 
-    timestamp = datetime.utcnow().isoformat()
+    timestamp = format_time(get_time())
 
     coordinates = get_coordinates(ip)
 
@@ -151,7 +158,7 @@ def request(service, ip, port, request, user=None, request_type=None):
     :param user: the user whose session invoked the alert
     :param request_type: for HTTP if the request is a GET or a POST request
     """
-    timestamp = datetime.utcnow().isoformat()
+    timestamp = format_time(get_time())
 
     coordinates = get_coordinates(ip)
 
@@ -193,7 +200,7 @@ def response(service, ip, port, response, user=None, statusCode=None):
     :param user: the user whose session invoked the alert
     :param statusCode: the status code send
     """
-    timestamp = datetime.utcnow().isoformat()
+    timestamp = format_time(get_time())
 
     if not user:
         user = ""
@@ -234,7 +241,7 @@ def file(service, ip, filename, filepath=None, user=None):
     :param user: the user whose session invoked the alert 
     """
 
-    timestamp = datetime.utcnow().isoformat()
+    timestamp = format_time(get_time())
 
     coordinates = get_coordinates(ip)
 
@@ -271,7 +278,7 @@ def tcp_scan(ip, port, intime, scan_type)
     :param time: time of attack
     """
 
-    timestamp = datetime.utcnow().isoformat()
+    timestamp = datetime.utcnow().format_time(get_time())
 
     coordinates = get_coordinates(ip)
 
@@ -304,7 +311,7 @@ def limit_reached(service, ip):
     :param service: the concerning service
     :param ip: attacker's IP-Address
     """
-    timestamp = datetime.utcnow().isoformat()
+    timestamp = format_time(get_time())
 
     coordinates = get_coordinates(ip)
 
@@ -333,7 +340,7 @@ def heartbeat():
     """
     Log function to be called when sending a heartbeat
     """
-    timestamp = datetime.utcnow().isoformat()
+    timestamp = format_time(get_time())
 
     message = ('{} - [Heartbeat]'.format(timestamp) + '\n')
 

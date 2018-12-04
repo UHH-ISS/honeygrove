@@ -15,7 +15,7 @@ geodatabasepath = resources_dir + "/path/to/database"
 # Set this to False if you do not want to use broker or broker is
 # unavailable on your machine. Currently, the management-console
 # and the EKStack can not be used without communication via Broker.
-use_broker = True
+use_broker = False
 
 # Set this to False if you do not want to use geoip or no database
 # is available on your machine.
@@ -156,11 +156,11 @@ def get_ip_address():
     s.connect(("8.8.8.8", 80))
     return s.getsockname()[0]
 
-# Needed that Broker listens on right IP
-# change ip_addr (str) for custom ip
-ip_addr = get_ip_address()
-BrokerComIP = ip_addr
-BrokerComPort = 8888
+# Needed for Broker to listen on correct IP - change "ip_addr" (string) for custom IP
+if (use_broker):
+    ip_addr = get_ip_address()
+    BrokerComIP = ip_addr
+    BrokerComPort = 8888
 
 # Opt. initial peering
 init_peer = False
