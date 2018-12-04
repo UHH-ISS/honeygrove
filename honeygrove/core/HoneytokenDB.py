@@ -2,6 +2,7 @@ import os
 import random
 import shutil
 import tempfile
+import hashlib
 
 import twisted.conch.error as concherror
 from twisted.conch.ssh import keys
@@ -12,7 +13,7 @@ from twisted.internet import defer
 from twisted.python import failure
 from zope.interface import implementer
 
-from honeygrove.config import honeytokendbGenerating, honeytokendbProbabilities, tokenDatabase
+from honeygrove import config
 from honeygrove.logging import log
 
 @implementer(ICredentialsChecker)
@@ -29,7 +30,7 @@ class HoneytokenDataBase():
     passwordField = 2
     publicKeyField = 3
 
-    filepath = tokenDatabase
+    filepath = config.tokenDatabase
     sep = ':'
 
     credentialInterfaces = (credentials.IUsernamePassword,
@@ -44,7 +45,7 @@ class HoneytokenDataBase():
         """
         self.servicename = servicename
         self.temp_copy_path = self.create_temporary_copy(self.filepath)
-        self.randomAcceptProbability = 0.1
+        
 
     def create_temporary_copy(self, path):
         temp_dir = tempfile.gettempdir()
@@ -61,10 +62,12 @@ class HoneytokenDataBase():
 
         for line in lines:
             if iskey:
+#login mit ssh key
                 pw = keys.Key.fromString(data=pw).toString("OPENSSH").decode()
                 if line[1] == user and line[3] == pw:
                     res.extend(line[0])
             else:
+#login ohne ssh key
                 if isinstance(pw, bytes):
                     pw = pw.decode()
                 if line[1] == user and line[2] == pw:
@@ -106,6 +109,9 @@ class HoneytokenDataBase():
         for line in file:
             line = line.rstrip()
             parts = line.split(self.sep)
+
+
+
 
             if len(parts) == 4:
                 res.append((parts[self.scopeField].split(','),
@@ -153,6 +159,25 @@ class HoneytokenDataBase():
         else:
             return failure.Failure(error.UnauthorizedLogin())
 
+    def randomAccept(self, username, password, randomAcceptProbability):
+        if (len(password) <= config.pc_maxLength) and (len(password) >= config.pc_minLength)  and (len(username) <= config.nc_maxLength) and (len(username) >= config.nc_minLength) and (not b":" in username) and (not b":" in password):
+            if config.hashAccept:
+                hashbau = username + config.hashSeed + password
+                hash1 = hashlib.sha1(hashbau).hexdigest()
+                i = 0
+                for x in range(0,39):
+                    i = i+(int(hash1[x],16))
+                if (i % 10 <= randomAcceptProbability * 10 - 1):
+                    return True
+                else: 
+                    return False
+            elif random.random() <= randomAcceptProbability:
+                return True
+            else:
+                return False
+        else:
+            return False
+
     def requestAvatarId(self, c):
 
         try:
@@ -165,12 +190,12 @@ class HoneytokenDataBase():
         except KeyError:
 
             # accept random
-            if self.servicename in honeytokendbProbabilities.keys():
-                self.randomAcceptProbability = honeytokendbProbabilities[self.servicename]
+            if self.servicename in config.honeytokendbProbabilities.keys():
+                randomAcceptProbability = config.honeytokendbProbabilities[self.servicename]
 
-            if random.random() <= self.randomAcceptProbability and hasattr(c, 'password'):
-                if self.servicename in honeytokendbGenerating.keys():
-                    self.writeToDatabase(c.username, c.password, ",".join(honeytokendbGenerating[self.servicename]))
+            if self.randomAccept(c.username,c.password,randomAcceptProbability) and hasattr(c, 'password'):
+                if self.servicename in config.honeytokendbGenerating.keys():
+                    self.writeToDatabase(c.username, c.password, ",".join(config.honeytokendbGenerating[self.servicename]))
                     return defer.succeed(c.username)
 
             return defer.fail(error.UnauthorizedLogin())
