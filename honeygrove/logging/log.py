@@ -278,7 +278,7 @@ def tcp_scan(ip, port, intime, scan_type)
     :param time: time of attack
     """
 
-    timestamp = datetime.utcnow().format_time(get_time())
+    timestamp = format_time(get_time())
 
     coordinates = get_coordinates(ip)
 
