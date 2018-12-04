@@ -1,8 +1,18 @@
 #!/bin/sh
 
-echo "installing pyBroker..."
+echo "installing Broker..."
 sudo apt-get update
-pybroker_install.sh
+cd /tmp/
+mkdir broker
+cd broker
+git clone --recursive https://github.com/bro/broker ./broker-git --branch v1.0.1 
+cd broker-git
+./configure --with-python=/usr/bin/python3
+make -j4 
+sudo make install
+cd ../..
+rm -rf broker
+
 
 echo "installing docker & docker-compose..."
 sudo apt-get -y remove docker docker-engine

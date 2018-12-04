@@ -1,5 +1,5 @@
 ---------------- peers ----------------
-Auflisten der derzeit vorhandenen PyBroker peer Verbinsungen.
+Auflisten der derzeit vorhandenen Broker peer Verbindungen.
 
 Parameter
 -keine-         Auflisten der peerings, die von dieser Managementkonsole ausgehen

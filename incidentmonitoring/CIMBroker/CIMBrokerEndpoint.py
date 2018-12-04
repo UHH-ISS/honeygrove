@@ -1,4 +1,4 @@
-from pybroker import *
+import broker
 import CIMBroker.CIMBrokerConfig as CIMBrokerConfig
 from CIMBroker.CIMBrokerConfig import es
 import json
@@ -10,32 +10,31 @@ from PrepareES import PrepareES
 
 class CIMBrokerEndpoint:
     # endpoint
-    # Need Global Scope due multihop Broker
-    listenEndpoint = endpoint("listenEndpoint")
+    listenEndpoint = broker.Endpoint()
 
     # "logs" and "files" are the Topics we subscribe.
-    logsQueue = message_queue("logs", listenEndpoint, GLOBAL_SCOPE)
-    fileQueue = message_queue("files", listenEndpoint, GLOBAL_SCOPE)
+    logsQueue = listenEndpoint.make_subscriber("logs")
+    fileQueue = listenEndpoint.make_subscriber("files")
 
     @staticmethod
     def connectEndpoints():
         # for peering
-        CIMBrokerEndpoint.listenEndpoint.listen(CIMBrokerConfig.BrokerComport, CIMBrokerConfig.BrokerComIP)
-
+        CIMBrokerEndpoint.listenEndpoint.listen(CIMBrokerConfig.BrokerComIP, CIMBrokerConfig.BrokerComport)
+    
     @staticmethod
     def getLogs():
         """
         receives logs what were send over the logstopic
         :return:
         """
-        return CIMBrokerEndpoint.logsQueue.want_pop()
+        return CIMBrokerEndpoint.logsQueue.poll()
 
     @staticmethod
     def getFile():
         """
         receives a file that was sent over the filestopic
         """
-        return CIMBrokerEndpoint.fileQueue.want_pop()
+        return CIMBrokerEndpoint.fileQueue.poll()
 
     @staticmethod
     def processMalwareFile(fileQueue):

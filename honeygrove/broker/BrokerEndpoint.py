@@ -1,6 +1,6 @@
 import base64
 
-from pybroker import *
+import broker
 
 from honeygrove import config
 
@@ -11,12 +11,11 @@ class BrokerEndpoint:
     You can send and retrive messages here.
     """
 
-    # Creates endpoint and sets flags
-    flags = AUTO_ADVERTISE | AUTO_PUBLISH | AUTO_ROUTING
-    listenEndpoint = endpoint("listenEndpoint", flags)
-
+    #Creates endpoint
+    #global listenEndpoint
+    listenEndpoint = broker.Endpoint()
     # commands and settings are topics we subscribed to. (GLOBAL SCOPE for multihop)
-    commandsQueue = message_queue("commands", listenEndpoint, GLOBAL_SCOPE)
+    commandsQueue = listenEndpoint.make_subscriber("commands")
 
     # peering objects. needet for unpeering
     peerings = [0, 0, None]
@@ -28,7 +27,7 @@ class BrokerEndpoint:
         Gets a message from the command message_queue
         :return: Broker Message
         """
-        return BrokerEndpoint.commandsQueue.want_pop()
+        return BrokerEndpoint.commandsQueue.poll()
 
     @staticmethod
     def sendLogs(jsonString):
@@ -36,14 +35,14 @@ class BrokerEndpoint:
         Sends a Broker message containing a JSON string.
         :param jsonString: Json string.
         """
-        BrokerEndpoint.listenEndpoint.send("logs", message([data(jsonString)]))
+        BrokerEndpoint.listenEndpoint.publish("logs", [jsonString])
 
     @staticmethod
     def startListening():
         """
         Start listening on ip
         """
-        BrokerEndpoint.listenEndpoint.listen(config.BrokerComPort, config.BrokerComIP)
+        BrokerEndpoint.listenEndpoint.listen(config.BrokerComIP, config.BrokerComPort)
 
     @staticmethod
     def peerTo(ip, port):
@@ -79,7 +78,7 @@ class BrokerEndpoint:
         :param topic: string with topic
         :param msg: can be str, int, double
         """
-        BrokerEndpoint.listenEndpoint.send(topic, message([data(msg)]))
+        BrokerEndpoint.listenEndpoint.publish(topic, [msg])
 
     @staticmethod
     def sendFile(filepath):
@@ -90,5 +89,5 @@ class BrokerEndpoint:
         with open(filepath, "rb") as file:
             content = file.read()
             b64content = base64.b64encode(content)
-            BrokerEndpoint.listenEndpoint.send("files", message([data(b64content.decode(encoding="utf-8"))]))
+            BrokerEndpoint.listenEndpoint.publish("files", [b64content.decode(encoding="utf-8")])
 
