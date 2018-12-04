@@ -7,9 +7,10 @@ from honeygrove.resources.http_resources import HTMLLoader
 HPID = "HP1"
 machine_name = "hp1"
 hp_description = {"Ort" : "Moskau", "Name" : str(HPID), "Text" : "Special Honeypot 007"}
-resources = honeygrove.__path__._path[0] + "/resources"
-logpath = resources + "/logfile/log.txt"
-geodatabasepath = resources + "/path/to/database"
+base_dir = honeygrove.__path__._path[0] + "/"
+resources_dir = base_dir + "resources/"
+logpath = resources_dir + "logfile/log.txt"
+geodatabasepath = resources_dir + "/path/to/database"
 
 # Set this to False if you do not want to use broker or broker is
 # unavailable on your machine. Currently, the management-console
@@ -27,6 +28,8 @@ print_status = True
 print_alerts = True
 log_status = True
 log_alerts = True
+# True = use UTC, False = use System Time
+use_utc = False
 
 
 # Generic configuration:
@@ -48,7 +51,7 @@ httpResponseHeader = {'Last-Modified': "Sun, 07 Aug 2016 08:02:22 GMT",
 # to have a login field with the name "log" and a password field
 # with the name of "pwd"
 httpHTMLDictionary = HTMLLoader.load_HTMLDictionary()
-httpResources = resources + "/http_resources/"
+httpResources = resources_dir + "/http_resources/"
 
 # HTTP configuration:
 httpPort = 80
@@ -57,42 +60,95 @@ httpName = "HTTP"
 # SSH configuration:
 sshPort = 22
 sshName = "SSH"
+# must start with "SSH-2.0-"
+sshBanner = b'SSH-2.0-uhh'
 ssh_real_shell = False
 SSH_conn_per_host = 100
+
+# Telnet configuration:
+telnetPort = 23
+telnetName = "Telnet"
+telnet_real_shell = False
+Telnet_conn_per_host = 100
 
 # FTP configuration:
 ftpPort = 21
 ftpName = "FTP"
 FTP_conn_per_host = 100
 
-# Path to Filesystem all services are using
-path_to_filesys = resources + '/parser_resources' +'/unix.xml'
+# TLS server certificate used for email services
+TLSeMailKey = base_dir + "keys/server.key"
+TLSeMailCrt = base_dir + "keys/server.crt"
 
+# SMTP configuration:
+smtpPort = 25
+smtpName = "SMTP"
+SMTP_conn_per_host = 100
+
+# SMTPS (SMTP + TLS) configuration:
+smtpsPort = 587
+smtpsName = "SMTPS"
+SMTPS_conn_per_host = 100
+
+# CRAM-MD5 and SCRAM-SHA-1 aren't yet implemented! (using them anyway crashes the connection)
+SMTPAuthMethods = {"PLAIN": True, "LOGIN": True, "CRAM-MD5": False, "SCRAM-SHA-1": False}
+
+# POP3 configuration:
+pop3Port = 110
+pop3Name = "POP3"
+POP3_conn_per_host = 100
+
+# POP3S (POP3 + TLS) configuration:
+pop3sPort = 995
+pop3sName = "POP3S"
+POP3S_conn_per_host = 100
+
+# IMAP configuration:
+imapPort = 143
+imapName = "IMAP"
+IMAP_conn_per_host = 100
+
+# IMAPS (IMAP + TLS) configuration:
+imapsPort = 993
+imapsName = "IMAPS"
+IMAPS_conn_per_host = 100
+
+# Path to Filesystem all services are using
+path_to_filesys = resources_dir + '/parser_resources' +'/unix.xml'
 
 # Honeytoken Directory
-tokendir = resources + '/honeytokenfiles'
+tokendir = resources_dir + '/honeytokenfiles'
 
 # HoneytokenDB configuration:
-tokenDatabase = resources + "/honeytokendb/database.txt"
+tokenDatabase = resources_dir + "/honeytokendb/database.txt"
 honeytokendbGenerating = {"SSH": ["SSH", "FTP", "HTTP"], "HTTP": ["HTTP", "SSH"], "FTP": ["FTP"]}
 honeytokendbProbabilities = {"SSH": 0.5, "FTP": 0.1, "HTTP": 0.9, "Telnet": 0.8}
+# hashAccept True: password acceptance over hash, False: random acceptance
+hashAccept = True
+hashSeed = b'Honey'
 
+# password criteria
+pc_minLength = 6
+pc_maxLength = 24
+
+# username criteria
+nc_minLength = 6
+nc_maxLength = 24
 
 # Malware configuration
 sshAcceptsFiles = True
 ftpAcceptsFiles = True
-quarantineDir = honeygrove.__path__._path[0] + "/resources/quarantine"
-
+quarantineDir = resources_dir + "/quarantine"
 
 # Startup
-startupList = [httpName, ftpName, sshName, tcpFlagSnifferName]
+startupList = [httpName, ftpName, sshName, tcpFlagSnifferName, smtpName, smtpsName, pop3Name, pop3sName, imapName, imapsName, telnetName]
 
-# Services die nicht an einen Port gebunden sind
+# Services, die nicht an einen Port gebunden sind
 noPortSpecificService = [listenServiceName, tcpFlagSnifferName]
 
-# Zeitraum in der ein ACK packet nach ACK - SYN zurückommen soll
+# Zeitraum, in welchen ein ACK-Paket beim Verbindungsaufbau zurückkommen soll
+# (Timeout zur Unterscheidung von Scans gegenüber einem ernsthaften Verbindungsaufbau)
 tcpTimeout = 5
-
 
 # Broker Config
 def get_ip_address():

@@ -1,6 +1,7 @@
 import socket
 import threading
 import time
+from datetime import datetime
 from struct import *
 
 import honeygrove.config as config
@@ -9,6 +10,9 @@ from honeygrove.services.ServiceBaseModel import ServiceBaseModel
 
 SYN_FLAG = 0b10
 ACK_FLAG = 0b10000
+NULL_FLAG = 0b0
+FIN_FLAG = 0b1
+XMAS_FLAG = 0b101001
 
 
 class TCPDataStruct():
@@ -19,6 +23,7 @@ class TCPDataStruct():
         self.sourceIP = sourceIP
         self.destPort = destPort
         self.inTime = time.time()
+        self.timeStamp = log.get_time()
 
 
 class TCPFlagSniffer(ServiceBaseModel):
@@ -30,6 +35,8 @@ class TCPFlagSniffer(ServiceBaseModel):
         super(TCPFlagSniffer, self).__init__()
         self._name = config.tcpFlagSnifferName
         self.synConnections = dict([])
+        self.finConnections = dict([])
+        self.xmasConnections = dict([])
 
         self.reInstanceThreads()
 
@@ -42,6 +49,7 @@ class TCPFlagSniffer(ServiceBaseModel):
             log.info("RAW Socket could not be created. You are root?")
             log.err("TCPFlagSniffer wird nicht ordnungsgemäß ausgeführt werden!")
             self.rootStatus = False
+
 
     def reInstanceThreads(self):
         """
@@ -80,9 +88,25 @@ class TCPFlagSniffer(ServiceBaseModel):
                     self.synConnections[str(sourceAddress) + str(destPort)] = TCPDataStruct(sourceIP=sourceAddress,
                                                                                             destPort=destPort)
 
+            elif flags == FIN_FLAG:
+                    self.finConnections[str(sourceAddress) + str(destPort)] = TCPDataStruct(sourceIP=sourceAddress,
+                                                                                            destPort=destPort)
+
+            elif flags == XMAS_FLAG:
+                    self.xmasConnections[str(sourceAddress) + str(destPort)] = TCPDataStruct(sourceIP=sourceAddress,
+                                                                                            destPort=destPort)
+
             elif flags == ACK_FLAG:
                 with self.synConnectionsLock:
                     self.synConnections.pop(str(sourceAddress) + str(destPort), None)
+                    self.finConnections.pop(str(sourceAddress) + str(destPort), None)
+                    self.xmasConnections.pop(str(sourceAddress) + str(destPort), None)
+
+            elif flags == NULL_FLAG:
+                with self.synConnectionsLock:
+                    log.tcp_scan(sourceAddress, destPort, log.get_time(), 'null')
+					
+					
 
     def getTCPPacketInformation(self, packet):
         """
@@ -128,7 +152,18 @@ class TCPFlagSniffer(ServiceBaseModel):
             with self.synConnectionsLock:
                 for _, item in self.synConnections.copy().items():
                     if (time.time() - item.inTime) > config.tcpTimeout:
-                        log.tcp_syn(item.sourceIP, item.destPort)
+                        log.tcp_scan(item.sourceIP, item.destPort, item.timeStamp, 'syn')
                         self.synConnections.pop(str(item.sourceIP) + str(item.destPort), None)
-            time.sleep(10)
+
+                for _, item in self.finConnections.copy().items():
+                    if (time.time() - item.inTime) > config.tcpTimeout:
+                        log.tcp_scan(item.sourceIP, item.destPort, item.timeStamp, 'fin')
+                        self.finConnections.pop(str(item.sourceIP) + str(item.destPort), None)
+
+                for _, item in self.xmasConnections.copy().items():
+                    if (time.time() - item.inTime) > config.tcpTimeout:
+                        log.tcp_scan(item.sourceIP, item.destPort, item.timeStamp, 'xmas')
+                        self.xmasConnections.pop(str(item.sourceIP) + str(item.destPort), None)
+
+            time.sleep(0.5)
 

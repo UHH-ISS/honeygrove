@@ -46,6 +46,12 @@ def get_coordinates(ipaddress):
     else:
         return False
 
+def get_time():
+    if config.use_utc:
+        return datetime.utcnow()
+    else:
+        return datetime.now()
+
 
 def info(message):
     """
