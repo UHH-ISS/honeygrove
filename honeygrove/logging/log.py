@@ -269,8 +269,7 @@ def file(service, ip, filename, filepath=None, user=None):
     if print_alerts:
         print(message)
 
-
-def tcp_scan(ip, port, intime, scan_type)
+def tcp_scan(ip, port, intime, scan_type):
     """
     Log function to be called when a scan is detected
     :param ip: attacker's IP
