@@ -28,27 +28,13 @@ if $install_broker; then
 	cd /tmp/
 	mkdir broker
 	cd broker
-	sudo apt-get -y install build-essential cmake curl git librocksdb-dev python python-dev python-pip swig git curl python3-pip
-	sudo curl -LO https://github.com/actor-framework/actor-framework/archive/0.14.5.tar.gz
-	tar -xzf 0.14.5.tar.gz
-	cd actor-framework-0.14.5
-	sudo ./configure
-	sudo make -j4 install
-	cd ..
-	git clone --recursive  https://github.com/bro/broker ./broker-git
+	git clone --recursive https://github.com/bro/broker ./broker-git --branch v1.0.1 
 	cd broker-git
-	git checkout topic/mfischer/broker-multihop
-	sudo git submodule update
-	git checkout master -- bindings/python/CMakeLists.txt
-	git checkout master -- bindings/python/pybroker.i
-	sudo echo -e "set(Python_ADDITIONAL_VERSIONS 3)\n$(cat bindings/python/CMakeLists.txt)" > bindings/python/CMakeLists.txt
-	cd cmake/
-	git checkout master -- FindPythonDev.cmake
-	cd ..
-	sudo ./configure
-	sudo make -j4 install
+	./configure --with-python=/usr/bin/python3
+	make -j4 
+	sudo make install
 	cd ../..
-	sudo rm -rf broker
+	rm -rf broker
 	echo "=== Broker Installation finished ==="
 fi
 

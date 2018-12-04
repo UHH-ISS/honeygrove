@@ -7,7 +7,7 @@ from pathlib import Path
 class Logic(object):
 
     def __init__(self):
-        """ Implemantation of the pybroker messages """
+        """ Implemantation of the broker messages """
         self.network = Network()
         self.home_dir = os.path.expanduser('~')
 

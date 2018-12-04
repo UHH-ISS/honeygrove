@@ -26,7 +26,7 @@ parser = Parser(logic,logging)
 if len(sys.argv) > 1 and sys.argv[1] != "-cli":
     logging.start()
     parser.default_script()
-    sleep(0.1) #wait for pybroker connection
+    sleep(0.1) #wait for broker connection
     parser.print(">".join(sys.argv[1:]))
     parser.parse(" ".join(sys.argv[1:]))
     if sys.argv[1] == "log":

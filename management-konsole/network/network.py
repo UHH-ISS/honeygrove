@@ -1,4 +1,4 @@
-import pybroker
+import broker
 import time
 import random
 
@@ -6,10 +6,9 @@ class Network(object):
     def __init__(self):
         """ Manage the connection the broker network """
         self.mc_id = "mc-" + str(random.randint(100000,9999999))
-        flags = pybroker.AUTO_ADVERTISE | pybroker.AUTO_PUBLISH | pybroker.AUTO_ROUTING
-        self.endpoint = pybroker.endpoint(self.mc_id,flags)
-        self.answerQueue = pybroker.message_queue("answer", self.endpoint,pybroker.GLOBAL_SCOPE)
-        self.logsQueue = pybroker.message_queue("logs", self.endpoint,pybroker.GLOBAL_SCOPE)
+        self.endpoint = broker.Endpoint()
+        self.answerQueue = self.endpoint.make_subscriber("answer")
+        self.logsQueue = self.endpoint.make_subscriber("logs")
 
         #increments if new peering is created
         #used to identify peerings
@@ -43,7 +42,7 @@ class Network(object):
         :return:
         """
         if connectionName in self.conncection_dic.keys():
-            value = self.endpoint.unpeer(self.conncection_dic[connectionName][2])
+            value = self.endpoint.unpeer(*self.conncection_dic[connectionName][0:2])
             del self.conncection_dic[connectionName]
             return value
         else:
@@ -76,7 +75,7 @@ class Network(object):
         """
         answer = []
         while True:
-            msg = queue.want_pop()
+            msg = queue.poll()
             if msg:
                 for x in msg:
                     for y in x:
@@ -119,5 +118,5 @@ class Network(object):
         Send a message to the commands topic
         :param msg:
         """
-        self.endpoint.send("commands", pybroker.message([pybroker.data(msg)]))
+        self.endpoint.publish("commands", [msg])
 
