@@ -46,6 +46,12 @@ def get_coordinates(ipaddress):
     else:
         return False
 
+def get_time():
+    if config.use_utc:
+        return datetime.utcnow()
+    else:
+        return datetime.now()
+
 
 def info(message):
     """
@@ -257,11 +263,12 @@ def file(service, ip, filename, filepath=None, user=None):
         print(message)
 
 
-def tcp_syn(ip, port):
+def tcp_scan(ip, port, intime, scan_type):
     """
-    Log function to be called when a syn is received without a following ack
+    Log function to be called when a scan is detected
     :param ip: attacker's IP
     :param port: attacked port
+    :param time: time of attack
     """
 
     timestamp = datetime.utcnow().isoformat()
@@ -269,17 +276,17 @@ def tcp_syn(ip, port):
     coordinates = get_coordinates(ip)
 
     if coordinates:
-        message = '{} - [SYN] - {}, Latitude: {:.4f}, Longitude: {:.4f}, {}\n'.format(timestamp, ip, coordinates[0], coordinates[1], port)
+        message = '{} - [{}-scan] - {}, Latitude: {:.4f}, Longitude: {:.4f}, {}\n'.format(timestamp, scan_type, ip, coordinates[0], coordinates[1], port)
 
     else:
-        message = '{} - [SYN] - {}, {}\n'.format(timestamp, ip, port)
+        message = '{} - [{}-scan] - {}, {}\n'.format(timestamp, scan_type, ip, port)
 
     if config.use_broker:
         if coordinates:
-            bmessage = json.dumps({'event_type': 'syn', '@timestamp': timestamp, 'ip': ip, 'port': port, 'coordinates': '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1]), 'honeypotID': ID})
+            bmessage = json.dumps({'event_type': scan_type, '@timestamp': timestamp, 'ip': ip, 'port': port, 'coordinates': '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1]), 'honeypotID': ID})
 
         else:
-            bmessage = json.dumps({'event_type': 'syn', '@timestamp': timestamp, 'ip': ip, 'port': port, 'honeypotID': ID})
+            bmessage = json.dumps({'event_type': scan_type, '@timestamp': timestamp, 'ip': ip, 'port': port, 'honeypotID': ID})
 
         BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
 

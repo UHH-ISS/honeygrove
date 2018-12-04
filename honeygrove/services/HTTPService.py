@@ -32,7 +32,7 @@ class HTTPService(ServiceBaseModel):
     notFoundStatus = "HTTP/1.1 404 Not Found"
     htdb = HoneytokenDataBase("HTTP")
     port = ""
-    resourceLocation = config.resources + '/http_resources/'
+    resourceLocation = config.resources_dir + 'http_resources/'
     supportedSites = []
 
     def __init__(self):
@@ -50,7 +50,7 @@ class HTTPService(ServiceBaseModel):
 
             self.peerOfAttacker = ""
             self.page = ""
-            self.path = config.resources
+            self.path = config.resources_dir
             self.attackingSite = ""
             self.loginSuccessfulSite = ""
             self.notFoundSite = ""
