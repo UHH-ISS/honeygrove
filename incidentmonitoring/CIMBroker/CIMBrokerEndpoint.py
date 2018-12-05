@@ -60,8 +60,8 @@ class CIMBrokerEndpoint:
         :param logQueue:
         """
 
-        for msg in logQueue:
-            for entry in msg:
+        for (topic, data) in logQueue:
+            for entry in [data]:
                 "{0}".format(entry)
                 print("Log: ",entry)
 
@@ -88,10 +88,11 @@ class CIMBrokerEndpoint:
 
     @staticmethod
     def messageHandling():
+        CIMBrokerEndpoint.connectEndpoints()
+        
         while True:
             msgs = CIMBrokerEndpoint.getLogs()
             msgs1 = CIMBrokerEndpoint.getFile()
 
-            CIMBrokerEndpoint.connectEndpoints()
             CIMBrokerEndpoint.processMalwareFile(msgs1)
             CIMBrokerEndpoint.processLogFiles(msgs)

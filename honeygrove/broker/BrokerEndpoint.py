@@ -35,7 +35,7 @@ class BrokerEndpoint:
         Sends a Broker message containing a JSON string.
         :param jsonString: Json string.
         """
-        BrokerEndpoint.listenEndpoint.publish("logs", [jsonString])
+        BrokerEndpoint.listenEndpoint.publish("logs", jsonString)
 
     @staticmethod
     def startListening():
@@ -78,7 +78,7 @@ class BrokerEndpoint:
         :param topic: string with topic
         :param msg: can be str, int, double
         """
-        BrokerEndpoint.listenEndpoint.publish(topic, [msg])
+        BrokerEndpoint.listenEndpoint.publish(topic, msg)
 
     @staticmethod
     def sendFile(filepath):
@@ -89,5 +89,5 @@ class BrokerEndpoint:
         with open(filepath, "rb") as file:
             content = file.read()
             b64content = base64.b64encode(content)
-            BrokerEndpoint.listenEndpoint.publish("files", [b64content.decode(encoding="utf-8")])
+            BrokerEndpoint.listenEndpoint.publish("files", b64content.decode(encoding="utf-8"))
 
