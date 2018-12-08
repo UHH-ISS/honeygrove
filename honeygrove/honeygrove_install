@@ -24,6 +24,8 @@ while true; do
     esac
 done
 
+sudo apt-get install build-essential libssl-dev libffi-dev python-dev
+
 if $install_broker; then
 	cd /tmp/
 	mkdir broker
@@ -40,6 +42,7 @@ fi
 
 sudo pip3 install -U Twisted
 sudo pip3 install -U cryptography
+sudo pip3 install -U pyopenssl
 
 echo "=== Python Dependencies satisfied ==="
 echo ""
