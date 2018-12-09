@@ -1,7 +1,10 @@
 #!/bin/sh
-
+# cancel installation if any command fails
+# in case the script fails, some manual cleanup may be necessary (like rm -rf /tmp/broker)
+set -e
 echo "installing Broker..."
 sudo apt-get update
+sudo apt-get install build-essential libssl-dev libffi-dev python-dev cmake
 cd /tmp/
 mkdir broker
 cd broker
@@ -31,14 +34,16 @@ sudo systemctl start docker.service
 sudo systemctl enable docker.service
 sudo docker run hello-world
 sudo apt -y install docker-compose
+# vagrant is the user that docker uses to run the elasticsearch containers
+# this prevents the data nodes from crashing immediately because they could not write to this directory
+sudo chown -R vagrant /var/honeygrove
 
 echo "installing important packages..."
 sudo apt-get install curl
 sudo apt-get install whois
 sudo apt install python3-pip
-sudo pip3 install twisted
+sudo pip3 install -U twisted
 sudo pip3 install -U cryptography
-sudo pip3 install hashlib
-sudo pip3 install elasticsearch
+sudo pip3 install "elasticsearch>=6.0.0,<7.0.0"
 sudo pip3 install elasticsearch-watcher
 sudo apt-get update
