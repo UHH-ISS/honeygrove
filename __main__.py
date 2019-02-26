@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
     HoneyAdapter.init()
     commandThread = threading.Thread(target=HoneyAdapter.command_message_loop, args=())
-    heartbeatThread = threading.Thread(target=HoneyAdapter.hearbeat, args=())
+    heartbeatThread = threading.Thread(target=HoneyAdapter.heartbeat, args=())
 
     commandThread.name = "CommandThread"
     heartbeatThread.name = "HeartbeatThread"

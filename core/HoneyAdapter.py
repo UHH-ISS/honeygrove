@@ -45,7 +45,7 @@ class HoneyAdapter(object):
                     HoneyAdapter.handle_messages(msg)
 
     @staticmethod
-    def hearbeat():
+    def heartbeat():
         while (True):
             log.heartbeat()
             time.sleep(60)
