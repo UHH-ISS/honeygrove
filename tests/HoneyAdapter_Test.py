@@ -1,14 +1,11 @@
-import os
-import unittest
-from os.path import join, isfile
+from honeygrove.tests.testresources import testconfig as config
+from honeygrove.tests.testresources.honeyadaptertest import incoming_messages as messages, outgoing_messages as answers
+from honeygrove.tests.testresources.honeyadaptertest.DummyAdapter import BrokerEndpoint, DummyAdapter as HoneyAdapter
 
 import mock
-
-import honeygrove.tests.testresources.honeyadaptertest.incoming_messages as messages
-import honeygrove.tests.testresources.honeyadaptertest.outgoing_messages as answers
-import honeygrove.tests.testresources.testconfig as config
-from honeygrove.tests.testresources.honeyadaptertest.DummyAdapter import BrokerEndpoint
-from honeygrove.tests.testresources.honeyadaptertest.DummyAdapter import DummyAdapter as HoneyAdapter
+import os
+from os.path import join, isfile
+import unittest
 
 
 class HoneyAdapter_Test(unittest.TestCase):

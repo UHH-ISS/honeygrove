@@ -1,12 +1,9 @@
-# Listen-Service
+from honeygrove import config, log
+from honeygrove.services.ServiceBaseModel import ServiceBaseModel
 
 from twisted.internet import reactor
 from twisted.internet.error import CannotListenError
 from twisted.internet.protocol import Factory, Protocol
-
-from honeygrove import config
-from honeygrove.logging import log as l
-from honeygrove.services.ServiceBaseModel import ServiceBaseModel
 
 
 class ListenService(ServiceBaseModel):
@@ -43,7 +40,7 @@ class ListenService(ServiceBaseModel):
             self._active = True
 
         except Exception as e:
-            l.err(e)
+            log.err(e)
             self._stop = True
 
     def startOnPort(self, port):
@@ -73,10 +70,10 @@ class ListenService(ServiceBaseModel):
             try:
                 self._transport[port].connectionLost("Force close/cleanup due to next service scheduling")
             except AttributeError:
-                l.err("ListenService connectionLost wirft AttributeError!", port)
+                log.err("ListenService connectionLost wirft AttributeError!", port)
             self._transport.pop(port, None)
             # Dict is Empty
-            if self._transport == False:
+            if not self._transport:
                 self._stop = True
 
     def stopService(self):
@@ -89,7 +86,7 @@ class ListenService(ServiceBaseModel):
                 try:
                     self._transport[key].connectionLost("Force close/cleanup due to next service scheduling")
                 except AttributeError:
-                    l.err("ListenService connectionLost wirft AttributeError!", key)
+                    log.err("ListenService connectionLost wirft AttributeError!", key)
 
         self._stop = True
         self._active = False
@@ -101,4 +98,4 @@ class ListenProtocol(Protocol):
         Called when the attacker sends data.
         :param data: The received data
         """
-        l.request(config.listenServiceName, self.transport.getPeer().host, self.transport.getHost().port, data.decode())
+        log.request(config.listenServiceName, self.transport.getPeer().host, self.transport.getHost().port, data.decode())

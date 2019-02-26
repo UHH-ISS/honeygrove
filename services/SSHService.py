@@ -1,36 +1,32 @@
-# SSH-Service
-import os
-import re
-import subprocess
-import time
-from datetime import datetime, timedelta
-from os.path import expanduser, exists, dirname
-from random import randint as ri
-from urllib import request
+from honeygrove import config, log
+from honeygrove.resources.ssh_resources import database
+from honeygrove.core.FilesystemParser import FilesystemParser
+from honeygrove.core.HoneytokenDB import HoneytokenDataBase
+from honeygrove.services.ServiceBaseModel import Limiter, ServiceBaseModel
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from twisted.conch import recvline, avatar, insults, error
 from twisted.conch.ssh import factory, keys, session, userauth, common, transport
-from honeygrove import config
-transport.SSHTransportBase.ourVersionString = config.sshBanner
 
 from twisted.cred.portal import Portal
 from twisted.internet import reactor
 from twisted.python import components, failure
 
-from honeygrove.resources.ssh_resources import database
+from datetime import datetime, timedelta
+import os
+from os.path import expanduser, exists, dirname
+from random import randint
+import re
+import subprocess
+import time
+from urllib import request
 
-from honeygrove import config
-from honeygrove.core.FilesystemParser import FilesystemParser
-from honeygrove.core.HoneytokenDB import HoneytokenDataBase
-from honeygrove.logging import log
-from honeygrove.services.ServiceBaseModel import ServiceBaseModel
-from honeygrove.services.ServiceBaseModel import Limiter
+transport.SSHTransportBase.ourVersionString = config.sshBanner
+
 
 class SSHService(ServiceBaseModel):
     c = HoneytokenDataBase(servicename=config.sshName)
-
 
     def __init__(self):
         super(SSHService, self).__init__()
@@ -43,8 +39,8 @@ class SSHService(ServiceBaseModel):
 
         self._fService = factory.SSHFactory()
         self._fService.services[b'ssh-userauth'] = groveUserAuth
-        
-        self._limiter = Limiter(self._fService, config.sshName, config.SSH_conn_per_host)        
+
+        self._limiter = Limiter(self._fService, config.sshName, config.SSH_conn_per_host)
 
         self._fService.portal = p
 
@@ -101,11 +97,11 @@ class SSHProtocol(recvline.HistoricRecvLine):
         self.userIP = self.user.conn.transport.transport.client[0]
         self.l = log
         self.current_dir = expanduser("~")
-        
+
         load = self.loadLoginTime(self.userName)
-        if load == False:
+        if not load:
             # Zufällige, plausible last login time
-            tdelta = timedelta(days=ri(1, 365), seconds=ri(0, 60), minutes=ri(0, 60), hours=ri(0, 24))
+            tdelta = timedelta(days=randint(1, 365), seconds=randint(0, 60), minutes=randint(0, 60), hours=randint(0, 24))
             now = datetime.now()
             login = now - tdelta
             loginStr = str(login.ctime())
@@ -118,22 +114,19 @@ class SSHProtocol(recvline.HistoricRecvLine):
 
         self.showPrompt()
 
-
     def saveLoginTime(self, username):
-        # limits number of saved "user profiles" to keep an attacker from filling the memory 
+        # limits number of saved "user profiles" to keep an attacker from filling the memory
         if len(database.lastLoginTime) <= 10000:
             if config.use_utc:
                 database.lastLoginTime[username] = str(datetime.utcnow().ctime())
             else:
                 database.lastLoginTime[username] = str(datetime.now().ctime())
 
-
     def loadLoginTime(self, username):
         if username in database.lastLoginTime:
             return database.lastLoginTime[username]
         else:
             return False
-
 
     def print(self, lines, log=None):
         """
@@ -260,7 +253,7 @@ class SSHProtocol(recvline.HistoricRecvLine):
 
     def ssh_help(self, cmd=''):
         """
-        Prints the GNU bash help for cmd or the universal help text if cmd is not given 
+        Prints the GNU bash help for cmd or the universal help text if cmd is not given
         :param cmd: the command
         """
 
@@ -322,7 +315,7 @@ class SSHProtocol(recvline.HistoricRecvLine):
 
     def ssh_ls(self, *args):
         """
-        Lists the content of the given directory in faked filesystem 
+        Lists the content of the given directory in faked filesystem
         or of the current one if no path is given in args
         :param args: arguments and path
         """
@@ -330,7 +323,7 @@ class SSHProtocol(recvline.HistoricRecvLine):
 
         try:
             lines = self._parser.ls(path).split("\n")[:-1]  # Split puts an empty string after the last "/n"
-        except:
+        except Exception:
             return "ls: " + path + ": No such file or directory."
 
         for line in lines:
@@ -344,7 +337,7 @@ class SSHProtocol(recvline.HistoricRecvLine):
         """
         Creates a directory in the fake filesystem
         :param args: path to be created
-        :return: 
+        :return:
         """
         return self._parser.mkdir(args[-1])
 
@@ -359,7 +352,7 @@ class SSHProtocol(recvline.HistoricRecvLine):
         """
         removes whatever is at the specified path
         :param args: arguments and path
-        :return: 
+        :return:
         """
         path, arguments = self.handle_arguments(args)
 
@@ -367,7 +360,7 @@ class SSHProtocol(recvline.HistoricRecvLine):
             time.sleep(4)
             self.ssh_exit()  # r e a l i s m
             return
-        if self._parser.valid_directory(path) and not "r" in arguments:
+        if self._parser.valid_directory(path) and "r" not in arguments:
             return "rm: " + args[-1] + ": is a directory"
 
         return self._parser.delete(path)

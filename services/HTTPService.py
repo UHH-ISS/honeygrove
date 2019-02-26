@@ -1,10 +1,6 @@
-# coding=utf-8
-
-
-import time
-from datetime import datetime
-# from scipy.optimize.tests.test_minpack import test_self
-from wsgiref.handlers import format_date_time
+from honeygrove import config, log
+from honeygrove.core.HoneytokenDB import HoneytokenDataBase
+from honeygrove.services.ServiceBaseModel import ServiceBaseModel
 
 from twisted.conch import avatar
 from twisted.cred import error
@@ -13,10 +9,9 @@ from twisted.internet.defer import Deferred
 from twisted.internet.protocol import Protocol
 from twisted.python import failure
 
-from honeygrove import config
-from honeygrove.core.HoneytokenDB import HoneytokenDataBase
-from honeygrove.logging import log
-from honeygrove.services.ServiceBaseModel import ServiceBaseModel
+from datetime import datetime
+import time
+from wsgiref.handlers import format_date_time
 
 
 class HTTPService(ServiceBaseModel):
@@ -58,13 +53,12 @@ class HTTPService(ServiceBaseModel):
             self.short = ""
 
         def connectionMade(self):
-            # Aktuelle Verbindung zum Dict hinzufügen
-            self.factory.clients[self] = ("<" + str(self.transport.getPeer().host) + ":" \
+            # Add connection to dictionary
+            self.factory.clients[self] = ("<" + str(self.transport.getPeer().host) + ":"
                                           + str(self.transport.getPeer().port) + ">")
             self.peerOfAttacker = self.transport.getPeer().host
 
         def dataReceived(self, data):
-            from honeygrove.services.HTTPService import HTTPService
 
             data = data.decode('utf-8')
 
@@ -92,10 +86,8 @@ class HTTPService(ServiceBaseModel):
             if pageNotFound:
                 self.notFoundSite = HTTPService.resourceLocation + config.httpHTMLDictionary['404'][0]
 
-            # Beantwortung von GET Requests
-            if self.requestType == "GET" and (
-                                                '.gif' in self.page or '.png' in self.page or '/dashboard_files/' in self.page or
-                                        '.jpg' in self.page or '.woff' in self.page or '.ttf' in self.page or '.svg' in self.page):
+            # Handle GETs
+            if self.requestType == "GET" and ('.gif' in self.page or '.png' in self.page or '/dashboard_files/' in self.page or '.jpg' in self.page or '.woff' in self.page or '.ttf' in self.page or '.svg' in self.page):
                 message = HTTPService.notFoundStatus + "\n"
                 for k in HTTPService.responseHeadersNotFound.keys():
                     message = message + k + ": " + HTTPService.responseHeadersNotFound[k] + "\n"
@@ -110,7 +102,7 @@ class HTTPService(ServiceBaseModel):
                 for k in HTTPService.responseHeadersOkStatus.keys():
                     message = message + k + ": " + HTTPService.responseHeadersOkStatus[k] + "\n"
 
-                with  open(self.attackingSite, encoding='utf8') as file:
+                with open(self.attackingSite, encoding='utf8') as file:
                     message = message + "\n" + file.read()
 
                 self.transport.write(message.encode('UTF-8'))
@@ -119,7 +111,7 @@ class HTTPService(ServiceBaseModel):
 
                 self.transport.loseConnection()
 
-            # Beantwortung von POST Requests
+            # Handle POSTs
             elif (self.requestType == "POST" and self.page in HTTPService.supportedSites):
                 self.page = data[data.find("POST ") + 5: data.find(" HTTP/1.1")]
                 login_string = ""

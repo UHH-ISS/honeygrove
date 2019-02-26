@@ -1,6 +1,6 @@
+from honeygrove import config, log
+
 import json
-from honeygrove import config
-from honeygrove.logging import log    
 dbfilePath = config.resources_dir + "ssh_resources/database.json"
 
 lastLoginTime = dict()
@@ -15,7 +15,7 @@ def restore():
     else:
         try:
             lastLoginTime = json.loads(file.read())
-        except:
+        except Exception:
             # e.g. damaged json encoding
             log.err("Failed to load lastLoginTime from existing file \""+str(dbfilePath)+"\"")
 
@@ -25,6 +25,6 @@ def save():
         file = open(dbfilePath, 'w')
         file.write(json.dumps(lastLoginTime))
         file.close()
-    except:
+    except Exception:
         # e.g. insufficient write permissions, io error etc.
         log.err("Failed to write lastLoginTime to file \""+str(dbfilePath)+"\"")

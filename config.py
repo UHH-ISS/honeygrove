@@ -1,4 +1,3 @@
-import uuid
 import honeygrove
 import socket
 from honeygrove.resources.http_resources import HTMLLoader
@@ -7,7 +6,8 @@ from honeygrove.resources.http_resources import HTMLLoader
 HPID = "HP1"
 machine_name = "hp1"
 hp_description = {"Ort" : "Moskau", "Name" : str(HPID), "Text" : "Special Honeypot 007"}
-base_dir = honeygrove.__path__._path[0] + "/"
+print(vars(honeygrove))
+base_dir = honeygrove.__path__[0] + "/"
 resources_dir = base_dir + "resources/"
 logpath = resources_dir + "logfile/log.txt"
 geodatabasepath = resources_dir + "/path/to/database"

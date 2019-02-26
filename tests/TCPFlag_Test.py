@@ -1,6 +1,6 @@
+from honeygrove.services.TCPFlagService import TCPFlagSniffer, ACK_FLAG, SYN_FLAG
+
 import unittest
-from honeygrove.services.TCPFlagService import TCPFlagSniffer
-import honeygrove.services.TCPFlagService as TCPInfo
 import time
 
 
@@ -31,7 +31,7 @@ class TCPFlagTest(unittest.TestCase):
 
         flag, destPort, sourceIP = TCPFlagTest.sniffer.getTCPPacketInformation(TCPFlagTest.ACKPacket)
 
-        self.assertEqual(flag,TCPInfo.ACK_FLAG)
+        self.assertEqual(flag, ACK_FLAG)
         self.assertEqual(destPort, 57092)
         self.assertEqual(sourceIP, "173.194.69.138")
 
@@ -41,7 +41,7 @@ class TCPFlagTest(unittest.TestCase):
         """
         flag, destPort, sourceIP = TCPFlagTest.sniffer.getTCPPacketInformation(TCPFlagTest.SYNPacket)
 
-        self.assertEqual(flag, TCPInfo.SYN_FLAG)
+        self.assertEqual(flag, SYN_FLAG)
         self.assertEqual(destPort, 8888)
         self.assertEqual(sourceIP, "127.0.0.1")
 

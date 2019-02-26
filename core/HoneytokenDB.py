@@ -1,20 +1,19 @@
-import os
-import random
-import shutil
-import tempfile
-import hashlib
+from honeygrove import config, log
 
 import twisted.conch.error as concherror
 from twisted.conch.ssh import keys
-from twisted.cred import credentials
-from twisted.cred import error
+from twisted.cred import credentials, error
 from twisted.cred.checkers import ICredentialsChecker
 from twisted.internet import defer
 from twisted.python import failure
 from zope.interface import implementer
 
-from honeygrove import config
-from honeygrove.logging import log
+import hashlib
+import os
+import random
+import shutil
+import tempfile
+
 
 @implementer(ICredentialsChecker)
 class HoneytokenDataBase():
@@ -45,7 +44,6 @@ class HoneytokenDataBase():
         """
         self.servicename = servicename
         self.temp_copy_path = self.create_temporary_copy(self.filepath)
-        
 
     def create_temporary_copy(self, path):
         temp_dir = tempfile.gettempdir()
@@ -62,12 +60,12 @@ class HoneytokenDataBase():
 
         for line in lines:
             if iskey:
-#login mit ssh key
+                # login via ssh key
                 pw = keys.Key.fromString(data=pw).toString("OPENSSH").decode()
                 if line[1] == user and line[3] == pw:
                     res.extend(line[0])
             else:
-#login ohne ssh key
+                # login without ssh key
                 if isinstance(pw, bytes):
                     pw = pw.decode()
                 if line[1] == user and line[2] == pw:
@@ -101,7 +99,7 @@ class HoneytokenDataBase():
             with open(self.temp_copy_path, "r") as file:
                 res = self.readLinesFromFile(file)
                 return res
-        except IOError as e:
+        except IOError as e:  # noqa
             raise error.UnauthorizedLogin()
 
     def readLinesFromFile(self, file):
@@ -109,9 +107,6 @@ class HoneytokenDataBase():
         for line in file:
             line = line.rstrip()
             parts = line.split(self.sep)
-
-
-
 
             if len(parts) == 4:
                 res.append((parts[self.scopeField].split(','),
@@ -136,7 +131,7 @@ class HoneytokenDataBase():
 
         try:
             with open(self.filepath, "a") as file:
-                log.info("Begin Honeytoken creation: {} : {}".format(user, pw)) #TODO make this a proper log type
+                log.info("Begin Honeytoken creation: {} : {}".format(user, pw))  # TODO make this a proper log type
                 file.write("\n" + services + self.sep + user + self.sep + pw + self.sep)
         except Exception as e:
             log.err("Honeytoken DB write exception: {}".format(e))
@@ -160,16 +155,16 @@ class HoneytokenDataBase():
             return failure.Failure(error.UnauthorizedLogin())
 
     def randomAccept(self, username, password, randomAcceptProbability):
-        if (len(password) <= config.pc_maxLength) and (len(password) >= config.pc_minLength)  and (len(username) <= config.nc_maxLength) and (len(username) >= config.nc_minLength) and (not b":" in username) and (not b":" in password):
+        if (len(password) <= config.pc_maxLength) and (len(password) >= config.pc_minLength) and (len(username) <= config.nc_maxLength) and (len(username) >= config.nc_minLength) and b":" not in username and b":" not in password:
             if config.hashAccept:
                 hashbau = username + config.hashSeed + password
                 hash1 = hashlib.sha1(hashbau).hexdigest()
                 i = 0
-                for x in range(0,39):
-                    i = i+(int(hash1[x],16))
+                for x in range(0, 39):
+                    i = i+(int(hash1[x], 16))
                 if (i % 10 <= randomAcceptProbability * 10 - 1):
                     return True
-                else: 
+                else:
                     return False
             elif random.random() <= randomAcceptProbability:
                 return True
@@ -193,7 +188,7 @@ class HoneytokenDataBase():
             if self.servicename in config.honeytokendbProbabilities.keys():
                 randomAcceptProbability = config.honeytokendbProbabilities[self.servicename]
 
-            if self.randomAccept(c.username,c.password,randomAcceptProbability) and hasattr(c, 'password'):
+            if self.randomAccept(c.username, c.password, randomAcceptProbability) and hasattr(c, 'password'):
                 if self.servicename in config.honeytokendbGenerating.keys():
                     self.writeToDatabase(c.username, c.password, ",".join(config.honeytokendbGenerating[self.servicename]))
                     return defer.succeed(c.username)

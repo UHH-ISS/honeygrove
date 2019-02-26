@@ -1,11 +1,10 @@
+from honeygrove import config, log
+from honeygrove.services import ServiceBaseModel
+from honeygrove.tests.testresources import serviceControllerTestPkg  # Actually used
+
 import threading
 
 from twisted.internet import reactor
-
-from honeygrove import config
-from honeygrove.logging import log
-from honeygrove.tests.testresources import serviceControllerTestPkg  # Actually used
-from honeygrove.services import ServiceBaseModel
 
 
 class ServiceController():
@@ -25,15 +24,13 @@ class ServiceController():
         self.listen = self.serviceDict[config.listenServiceName]
         self.runningServicesDict = dict([])
 
-
-
     def startService(self, name):
-        """ 
+        """
         Starts the given service and adds it to threadDict
         :param name: Name of the service (str)
         """
-        if (self.serviceDict[name]._port != None):
-            log.info("Try StartService: " + name + " (port "+ str(self.serviceDict[name]._port) + ")")
+        if self.serviceDict[name]._port is not None:
+            log.info("Try StartService: " + name + " (port " + str(self.serviceDict[name]._port) + ")")
         else:
             log.info("Try StartService: " + name)
         if name not in self.runningServicesDict:
@@ -46,7 +43,7 @@ class ServiceController():
             return False
 
     def stopService(self, name):
-        """ 
+        """
         Stops the given service and removes it from threadDict
         :param name: Name of the service (str)
         """

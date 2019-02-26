@@ -1,20 +1,16 @@
-# Telnet-Service
-from twisted.internet import reactor
-
-from honeygrove.services.ServiceBaseModel import ServiceBaseModel, Limiter
-from honeygrove import config
+from honeygrove import config, log
+from honeygrove.services.ServiceBaseModel import Limiter, ServiceBaseModel
 
 from twisted.conch.telnet import TelnetTransport, StatefulTelnetProtocol
-from twisted.internet import protocol
-
-from honeygrove.logging import log
+from twisted.internet import reactor, protocol
 
 import time
+
 
 class TelnetService(ServiceBaseModel):
     def __init__(self):
         super(TelnetService, self).__init__()
-        
+
         self._name = config.telnetName
         self._port = config.telnetPort
 
@@ -29,6 +25,7 @@ class TelnetService(ServiceBaseModel):
     def stopService(self):
         self._stop = True
         self._transport.stopListening()
+
 
 class TelnetProtocol(StatefulTelnetProtocol):
     state = "User"
@@ -57,5 +54,7 @@ class TelnetProtocol(StatefulTelnetProtocol):
         self.transport.write(response.encode("UTF-8"))
         return "Password"
 
+
 class TelnetFactory(protocol.ServerFactory):
-    protocol = lambda a: TelnetTransport(TelnetProtocol)
+    def protocol(_):
+        return TelnetTransport(TelnetProtocol)

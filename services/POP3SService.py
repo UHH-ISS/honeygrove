@@ -1,16 +1,9 @@
-# POP3S-Service
-
-from twisted.internet import ssl, reactor
-from twisted.internet.error import CannotListenError
-from twisted.internet.protocol import Factory, Protocol
-
 from honeygrove import config
 from honeygrove.services.POP3Service import POP3Protocol
-from honeygrove.services.ServiceBaseModel import ServiceBaseModel
-from honeygrove.services.ServiceBaseModel import Limiter
+from honeygrove.services.ServiceBaseModel import Limiter, ServiceBaseModel
 
-from enum import Enum
-import re, hashlib, time
+from twisted.internet import ssl, reactor
+
 
 class POP3SService(ServiceBaseModel):
     def __init__(self):

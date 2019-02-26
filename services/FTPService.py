@@ -1,19 +1,19 @@
-# FTP-Service
-import random
+from honeygrove import config, log
+from honeygrove.core.FilesystemParser import FilesystemParser
+from honeygrove.core.HoneytokenDB import HoneytokenDataBase
+from honeygrove.services.ServiceBaseModel import Limiter, ServiceBaseModel
+
 from datetime import datetime as dt
+import random
 
 from twisted.cred.portal import Portal
 from twisted.protocols.ftp import *
 from twisted.protocols.ftp import _FileReader as FR
 from twisted.protocols.ftp import _FileWriter as FW
 
-from honeygrove import config
-from honeygrove.core.FilesystemParser import FilesystemParser
-from honeygrove.core.HoneytokenDB import HoneytokenDataBase
-from honeygrove.logging import log as logging
-from honeygrove.services.ServiceBaseModel import ServiceBaseModel
-from honeygrove.services.ServiceBaseModel import Limiter
 
+# flake8: noqa
+# Disable flake8 to hide start-import related imports
 class FTPService(ServiceBaseModel):
 
     credchecker = HoneytokenDataBase("FTP")
@@ -73,7 +73,7 @@ class FTPProtocol(FTP):
     def __init__(self):
         self._parser = FilesystemParser()
         self.user = "anonymous"
-        self.l = logging
+        self.l = log
 
     def ftp_PWD(self):
         """
@@ -82,7 +82,7 @@ class FTPProtocol(FTP):
         self.l.request(FTPService._name, self.transport.getPeer().host, FTPService._port, "PWD", self.user, "PWD")
         cur = " " + self._parser.get_formatted_path()
         self.l.response(FTPService._name, self.transport.getPeer().host, FTPService._port, cur, self.user, "PWD")
-        return (PWD_REPLY, cur)
+        return PWD_REPLY, cur
 
     def ftp_CWD(self, path):
         """
@@ -243,7 +243,7 @@ class FTPProtocol(FTP):
             response = random.randint(100, 30000)
         self.l.response(FTPService._name, self.transport.getPeer().host, FTPService._port, FILE_STATUS + " " + str(response),
                         self.user, "SIZE")
-        return (FILE_STATUS, response)
+        return FILE_STATUS, response
 
     def ftp_STOR(self, path):
         """
@@ -291,7 +291,7 @@ class FTPProtocol(FTP):
             log.err(err, "Unexpected error received while opening file:")
             self.l.response(FTPService._name, self.transport.getPeer().host, FTPService._port, RESPONSE.get(FILE_NOT_FOUND),
                             self.user, "STOR")
-            return (FILE_NOT_FOUND, path)
+            return FILE_NOT_FOUND, path
 
         def cbConsumer(cons):
             """
@@ -369,7 +369,7 @@ class FTPProtocol(FTP):
         if not (self._parser.valid_file(path) and path in honeytoken_filenames):
             self.l.response(FTPService._name, self.transport.getPeer().host, FTPService._port, FILE_NOT_FOUND, self.user,
                             "RETR")
-            return (FILE_NOT_FOUND, path)
+            return FILE_NOT_FOUND, path
 
         self.setTimeout(None)
 
@@ -412,7 +412,7 @@ class FTPProtocol(FTP):
             if err.check(FTPCmdError):
                 return (err.value.errorCode, path)
             self.l.response(FTPService._name, self.transport.getPeer().host, FTPService._port, FILE_NOT_FOUND, self.user, "RETR")
-            return (FILE_NOT_FOUND, path)
+            return FILE_NOT_FOUND, path
 
         fObj = open(self.honeytokenDirectory + '/' + path, 'rb')
         d = defer.succeed(FR(fObj))
@@ -471,7 +471,7 @@ class FTPProtocol(FTP):
         if self.factory.allowAnonymous and self._user == self.factory.userAnonymous:
             return GUEST_NAME_OK_NEED_EMAIL
         else:
-            return (USR_NAME_OK_NEED_PASS, username)
+            return USR_NAME_OK_NEED_PASS, username
 
     def processCommand(self, cmd, *params):
         """

@@ -1,21 +1,15 @@
-# POP3-Service
+from honeygrove import config, log
+from honeygrove.resources.email_resources import database
+from honeygrove.services.ServiceBaseModel import Limiter, ServiceBaseModel
 
 from twisted.internet import reactor
 from twisted.internet.error import CannotListenError
 from twisted.internet.protocol import Factory, Protocol
-
 from twisted.protocols import policies
-
-from honeygrove import config
-from honeygrove.services.ServiceBaseModel import ServiceBaseModel
-from honeygrove.services.ServiceBaseModel import Limiter
-
-from honeygrove.logging import log
-
-from honeygrove.resources.email_resources import database
 
 from enum import Enum
 import re, hashlib, time
+
 
 class POP3Service(ServiceBaseModel):
     def __init__(self):
@@ -37,24 +31,23 @@ class POP3Service(ServiceBaseModel):
         self._transport.stopListening()
 
 class POP3Protocol(Protocol, policies.TimeoutMixin):
-    
     def savedMails(self):
         self.mailcount = 0
         self.mailsize = 0
         for mail in self.emails:
             self.mailcount += 1
-            self.mailsize  += len(mail[1])
+            self.mailsize += len(mail[1])
 
     def __init__(self):
         self.username = ""
         self.password = ""
 
-        self.timeoutPreAuth = 60 
+        self.timeoutPreAuth = 60
         self.timeoutPostAuth = 300
 
         self.mailcount = 0
         self.mailsize = 0
-        
+
         # flags indicating different states to verify correct sequence of commands
         self.state = {"connected": False, "user": False, "auth": False}
 
@@ -67,7 +60,7 @@ class POP3Protocol(Protocol, policies.TimeoutMixin):
                     header += i+": "+mail[1][i]+"\r\n"
                 self.emails.append([header, mail[2], hashlib.md5((header+mail[2]).encode("UTF-8")).hexdigest()])
                 # self.emails = [[header,body,UID], [header,body,UID], [header,body,UID], ...]
-        
+
         # refresh mail stats
         self.savedMails()
 
@@ -86,7 +79,7 @@ class POP3Protocol(Protocol, policies.TimeoutMixin):
 
         # add connection to dictionary
         self.factory.clients[self] = (str(self.transport.getPeer().host) + ":" + str(self.transport.getPeer().port))
-        
+
         # protocol state
         self.state["connected"] = True
         self.peerOfAttacker = self.transport.getPeer().host
@@ -100,7 +93,7 @@ class POP3Protocol(Protocol, policies.TimeoutMixin):
         log.info(self.name+" lost connection to "+str(self.transport.getPeer().host)+":"+str(self.transport.getPeer().port))
         # remove connection from dictionary
         del self.factory.clients[self]
-    
+
     def timeoutConnection(self):
         response = "-ERR Timeout waiting for client input\r\n"
         log.info(self.name+" ("+self.peerOfAttacker+"): Timeout waiting for client input")
@@ -117,16 +110,16 @@ class POP3Protocol(Protocol, policies.TimeoutMixin):
 
         # TODO: Verifizieren, dass möglichst alle 503-Fälle ("Bad sequence of commands") abgedeckt sind
         if(rawData.startswith(b'\xff') or rawData.startswith(b'\x04')):
-            #ignore Ctrl+C/D/Z etc.
+            # ignore Ctrl+C/D/Z etc.
             pass
         else:
             # binary data like b"\xff\x..." causes trouble when decoding (simply ignore it)
             try:
                 # decode raw data
                 data = rawData.decode("UTF-8")
-            except Exception as e:
+            except Exception as e: # noqa
                 data = ""
-            
+
             # get first line
             line = data[:data.find("\r\n")]
             # restrict maximum input lenght (doesn't affect mail transmission)
@@ -238,7 +231,6 @@ class POP3Protocol(Protocol, policies.TimeoutMixin):
                     response = "-ERR Syntax error in parameters or arguments\r\n"
                     log.response(self.name, self.peerOfAttacker, config.pop3Port, "", self.username, "-ERR (syntax)")
                     self.transport.write(response.encode("UTF-8"))
-
 
             elif(re.match("^RETR( .*)?$", line, re.IGNORECASE)):
                 if(re.match("^RETR( \d+)$", line, re.IGNORECASE)):

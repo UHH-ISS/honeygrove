@@ -1,22 +1,19 @@
-# Honey Adapter
+from honeygrove import config, log
+from honeygrove.core.ServiceController import ServiceController
+from honeygrove.resources.http_resources import HTMLLoader
+
 import json
 import os
+from os.path import isfile, join
 import threading
 import time
-from os.path import isfile, join
 from xml.etree import ElementTree as ET
-
-import honeygrove.config as config
-import honeygrove.logging.log as log
 
 if config.use_broker:
     from honeygrove.broker.BrokerEndpoint import BrokerEndpoint
 
-from honeygrove.core.ServiceController import ServiceController
-from honeygrove.resources.http_resources import HTMLLoader
 
-
-class HoneyAdapter(object):
+class HoneyAdapter:
     controller = None
     start = config.honeygrove_start
     lock = threading.Lock()
@@ -37,7 +34,7 @@ class HoneyAdapter(object):
 
     @staticmethod
     def command_message_loop():
-        while (True) and config.use_broker:
+        while config.use_broker:
             time.sleep(0.1)
             msg = BrokerEndpoint.getCommandMessage()
             if msg:
@@ -46,7 +43,7 @@ class HoneyAdapter(object):
 
     @staticmethod
     def heartbeat():
-        while (True):
+        while True:
             log.heartbeat()
             time.sleep(60)
 
@@ -72,6 +69,7 @@ class HoneyAdapter(object):
 
             # Get names of all services
             elif jsonDict["type"] == "get_all_services" and str(config.HPID) in jsonDict["to"]:
+                # XXX: What does this do?
                 services = list(HoneyAdapter.controller.runningServicesDict.keys())
                 nservices = list(HoneyAdapter.controller.serviceDict.keys())
                 aService = []
@@ -95,7 +93,7 @@ class HoneyAdapter(object):
                                 {"type": "started_services", "to": jsonDict["from"], "from": str(config.HPID),
                                  "services": started},
                                 sort_keys=True)
-                    except:
+                    except Exception:
                         answer = json.dumps({"type": "started_services", "to": jsonDict["from"], "from": str(config.HPID),
                                              "services": "port already used!"}, sort_keys=True)
 
@@ -348,7 +346,7 @@ class HoneyAdapter(object):
                             os.remove(config.httpResources + currentFile)
                     HTMLLoader.save_HTMLDictionary(config.httpHTMLDictionary)
                     config.httpHTMLDictionary = HTMLLoader.load_HTMLDictionary()
-                    data = True # data = "Removing of all pages was succesful!"
+                    data = True  # data = "Removing of all pages was succesful!"
                 else:
                     for page in pages:
                         if page in config.httpHTMLDictionary:
@@ -372,14 +370,14 @@ class HoneyAdapter(object):
                 path = jsonDict["page"]["url"]
                 page = jsonDict["page"]["html"]
                 page2 = jsonDict["page"]["dashboard"]
-                data = False #data = "Something went wrong!"
+                data = False  # data = "Something went wrong!"
                 sites = []
                 for key in config.httpHTMLDictionary:
                     sites.append(key)
                 if path in sites:
-                    data = False #data = "Page does exist already!"
+                    data = False  # data = "Page does exist already!"
                 else:
-                    data = True #data = "Adding of " + path + " was succesful!"
+                    data = True  # data = "Adding of " + path + " was succesful!"
                     with open(config.resources + "/http_resources" + path + "_login.html", "a+") as f:
                         f.write(page)
                     if page2 != "":

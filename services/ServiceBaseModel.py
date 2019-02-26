@@ -1,12 +1,10 @@
-# coding=utf-8
-# "Prototype" for all Services.
+from honeygrove import log
+
 from abc import ABC, abstractmethod
 
 from twisted.internet.protocol import Factory
 from twisted.protocols.policies import WrappingFactory
-from twisted.internet.address import IPv4Address
 
-from honeygrove.logging import log
 
 class ServiceBaseModel(ABC):
     def __init__(self):
@@ -78,5 +76,5 @@ class Limiter(WrappingFactory):
         peerHost = p.getPeer().host
         self.peerConnections[peerHost] -= 1
         if self.peerConnections[peerHost] == 0:
-           del self.peerConnections[peerHost]
+            del self.peerConnections[peerHost]
 

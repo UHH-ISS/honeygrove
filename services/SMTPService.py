@@ -1,19 +1,13 @@
-# SMTP-Service
+from honeygrove import config, log
+from honeygrove.services.ServiceBaseModel import Limiter, ServiceBaseModel
 
 from twisted.internet import reactor
-from twisted.internet.error import CannotListenError
 from twisted.internet.protocol import Factory, Protocol
-
 from twisted.protocols import policies
-
-from honeygrove import config
-from honeygrove.services.ServiceBaseModel import ServiceBaseModel
-from honeygrove.services.ServiceBaseModel import Limiter
-
-from honeygrove.logging import log
 
 from enum import Enum
 import base64, re, time
+
 
 class SMTPService(ServiceBaseModel):
     def __init__(self):
@@ -34,8 +28,8 @@ class SMTPService(ServiceBaseModel):
         self._stop = True
         self._transport.stopListening()
 
+
 class SMTPProtocol(Protocol, policies.TimeoutMixin):
-    
     def __init__(self):
         # buffer for email body
         self.msg = ""
@@ -46,13 +40,13 @@ class SMTPProtocol(Protocol, policies.TimeoutMixin):
         for m in mm:
             if (mm[m]):
                 self.AuthMethods += " "+m
-        del m,mm
+        del m, mm
 
         self.username = ""
         self.usernameValid = "honig"
         self.password = ""
         self.passwordValid = "bienenstock"
-        
+
         # source adress given by "MAIL FROM"
         self.mailFrom = ""
         # destination adress given by "RCPT TO"
@@ -76,10 +70,10 @@ class SMTPProtocol(Protocol, policies.TimeoutMixin):
         self.setTimeout(self.timeoutPreAuth)
 
         log.info(self.name+" established connection to "+str(self.transport.getPeer().host)+":"+str(self.transport.getPeer().port))
-        
+
         # add connection to dictionary
         self.factory.clients[self] = (str(self.transport.getPeer().host) + ":" + str(self.transport.getPeer().port))
-        
+
         # protocol state
         self.state["connected"] = True
         self.peerOfAttacker = self.transport.getPeer().host
@@ -109,16 +103,16 @@ class SMTPProtocol(Protocol, policies.TimeoutMixin):
         self.resetTimeout()
         # TODO: Verifizieren, dass möglichst alle 503-Fälle ("Bad sequence of commands") abgedeckt sind
         if(rawData.startswith(b'\xff') or rawData.startswith(b'\x04')):
-            #ignore Ctrl+C/D/Z etc.
+            # ignore Ctrl+C/D/Z etc.
             pass
         else:
             # binary data like b"\xff\x..." causes trouble when decoding (simply ignore it)
             try:
                 # decode raw data
                 data = rawData.decode("UTF-8")
-            except Exception as e:
+            except Exception as e:  # noqa
                 data = ""
-            
+
             # get first line
             line = data[:data.find("\r\n")]
             # restrict maximum input lenght (doesn't affect mail transmission)
@@ -128,10 +122,10 @@ class SMTPProtocol(Protocol, policies.TimeoutMixin):
 
             # moved this block to the top:
             # if self.state["data"] gets verified after commands, a mail body containing these valid commands executes them
-            if(self.state["data"]): # doesn't have to start with anything specific
+            if(self.state["data"]):  # doesn't have to start with anything specific
                 self.msg += data
                 if ("\r\n.\r\n" in self.msg):
-                    self.msg = self.msg[:self.msg.find("\r\n.\r\n")+2] # "+2" adds linebreak ("\r\n") to the end of the mail body
+                    self.msg = self.msg[:self.msg.find("\r\n.\r\n")+2]  # "+2" adds linebreak ("\r\n") to the end of the mail body
                     self.state["data"] = False
                     self.state["msg"] = True
                     response = "250 OK\r\n"
@@ -169,16 +163,16 @@ class SMTPProtocol(Protocol, policies.TimeoutMixin):
                     log.response(self.name, self.peerOfAttacker, config.smtpPort, "", self.username, "501 (syntax)")
                     self.transport.write(response.encode("UTF-8"))
 
-            elif(self.state["authLOGIN"]): # doesn't start with anything recognisable
+            elif(self.state["authLOGIN"]):  # doesn't start with anything recognisable
                 # state after client chose LOGIN authentication method
                 # TODO: missing protection against malformed inputs
                 self.username = base64.b64decode(line).decode("utf-8")
                 self.state["authLOGIN"] = False
                 self.state["authLOGINuser"] = True
-                response = "334 UGFzc3dvcmQ6\r\n" # "334 Password:"
+                response = "334 UGFzc3dvcmQ6\r\n"  # "334 Password:"
                 self.transport.write(response.encode("UTF-8"))
 
-            elif(self.state["authLOGINuser"]): # doesn't start with anything recognisable
+            elif(self.state["authLOGINuser"]):  # doesn't start with anything recognisable
                 # state after client sent username for LOGIN authentication method
                 # TODO: missing protection against malformed inputs
                 self.password = base64.b64decode(line).decode("utf-8")
@@ -198,7 +192,7 @@ class SMTPProtocol(Protocol, policies.TimeoutMixin):
 
             elif(re.match('^HELP( .*)?$', line, re.IGNORECASE)):
                 # don't react to arguments (exactly like e.g. smtp.outlook.com)
-                response="214 This server supports the following commands:\r\n214 HELO EHLO RCPT DATA MAIL QUIT HELP AUTH VRFY RSET NOOP\r\n"
+                response = "214 This server supports the following commands:\r\n214 HELO EHLO RCPT DATA MAIL QUIT HELP AUTH VRFY RSET NOOP\r\n"
                 log.response(self.name, self.peerOfAttacker, config.smtpPort, "", self.username, "214 OK")
                 self.transport.write(response.encode("UTF-8"))
 
@@ -243,7 +237,7 @@ class SMTPProtocol(Protocol, policies.TimeoutMixin):
                         elif(line == "AUTH LOGIN"):
                             if ("LOGIN" in self.AuthMethods):
                                 self.state["authLOGIN"] = True
-                                response = "334 VXNlcm5hbWU6\r\n" # "334 Username:"
+                                response = "334 VXNlcm5hbWU6\r\n"  # "334 Username:"
                             else:
                                 response = "535 SMTP Authentication unsuccessful/Bad username or password\r\n"
                                 log.response(self.name, self.peerOfAttacker, config.smtpPort, "", self.username, "535 (unsupported)")
@@ -273,13 +267,13 @@ class SMTPProtocol(Protocol, policies.TimeoutMixin):
                             response = "501 Syntax error in parameters or arguments\r\n"
                             log.response(self.name, self.peerOfAttacker, config.smtpPort, "", self.username, "501 (syntax)")
                     else:
-                        response = "503 Bad sequence of commands\r\n" # "Send hello first"
+                        response = "503 Bad sequence of commands\r\n"  # "Send hello first"
                         log.response(self.name, self.peerOfAttacker, config.smtpPort, "", self.username, "503 (sequence)")
                 self.transport.write(response.encode("UTF-8"))
 
             elif(re.match("^MAIL FROM:(.*)$", line, re.IGNORECASE)):
                 # tolerate additional whitespace
-                if(re.match("^MAIL FROM:[ ]?<(.*)>$", line, re.IGNORECASE)): # use "<(.*@.*\..*?)>" to check basic adress syntax
+                if(re.match("^MAIL FROM:[ ]?<(.*)>$", line, re.IGNORECASE)):  # use "<(.*@.*\..*?)>" to check basic adress syntax
                     if(self.state["auth"]):
                         self.state["mailfrom"] = True
                         self.mailFrom = re.match("^MAIL FROM:[ ]?<(.*)>$", line, re.IGNORECASE).groups()[0] # use "<(.*@.*\..*?)>" to check basic adress syntax
@@ -289,7 +283,7 @@ class SMTPProtocol(Protocol, policies.TimeoutMixin):
                         response = "535 SMTP Authentication unsuccessful/Bad username or password\r\n"
                         log.response(self.name, self.peerOfAttacker, config.smtpPort, "", self.username, "535 (credentials)")
                     else:
-                        response = "503 Bad sequence of commands\r\n" # "Send hello first"
+                        response = "503 Bad sequence of commands\r\n"  # "Send hello first"
                         log.response(self.name, self.peerOfAttacker, config.smtpPort, "", self.username, "503 (sequence)")
                 else:
                     # no email adress given etc.
@@ -299,37 +293,37 @@ class SMTPProtocol(Protocol, policies.TimeoutMixin):
 
             elif(re.match("^RCPT TO:(.*)$", line, re.IGNORECASE)):
                 # tolerate additional whitespace
-                if(re.match("^RCPT TO:[ ]?<(.*)>$", line, re.IGNORECASE)): # use "<(.*@.*\..*?)>" to check basic adress syntax
+                if(re.match("^RCPT TO:[ ]?<(.*)>$", line, re.IGNORECASE)):  # use "<(.*@.*\..*?)>" to check basic adress syntax
                     if(self.state["mailfrom"]):
                         self.state["mailto"] = True
-                        self.mailTo = re.match("^RCPT TO:[ ]?<(.*)>$", line, re.IGNORECASE).groups()[0] # use "<(.*@.*\..*?)>" to check basic adress syntax # use "<(.*@.*\..*?)>" to check basic adress syntax
+                        self.mailTo = re.match("^RCPT TO:[ ]?<(.*)>$", line, re.IGNORECASE).groups()[0]  # use "<(.*@.*\..*?)>" to check basic adress syntax # use "<(.*@.*\..*?)>" to check basic adress syntax
                         response = "250 OK\r\n"
                         log.response(self.name, self.peerOfAttacker, config.smtpPort, "", self.username, "250 OK")
                     elif(self.state["hello"]):
                         response = "535 SMTP Authentication unsuccessful/Bad username or password\r\n"
                         log.response(self.name, self.peerOfAttacker, config.smtpPort, "", self.username, "535 (credentials)")
                     else:
-                        response = "503 Bad sequence of commands\r\n" # "Send hello first"
+                        response = "503 Bad sequence of commands\r\n"  # "Send hello first"
                         log.response(self.name, self.peerOfAttacker, config.smtpPort, "", self.username, "503 (sequence)")
                 else:
                     # no email adress given etc.
                     response = "501 Syntax error in parameters or arguments\r\n"
                     log.response(self.name, self.peerOfAttacker, config.smtpPort, "", self.username, "501 (syntax)")
                 self.transport.write(response.encode("UTF-8"))
-            
+
             elif(re.match("^DATA( .*)?$", line, re.IGNORECASE)):
                 if (line == "DATA"):
                     if(self.state["mailto"]):
                         self.state["data"] = True
                         response = "354 Start mail input\r\n"
                     elif(self.state["auth"]):
-                        response = "503 Bad sequence of commands\r\n" # "Send hello first"
+                        response = "503 Bad sequence of commands\r\n"  # "Send hello first"
                         log.response(self.name, self.peerOfAttacker, config.smtpPort, "", self.username, "503 (sequence)")
                     elif(self.state["hello"]):
                         response = "535 SMTP Authentication unsuccessful/Bad username or password\r\n"
                         log.response(self.name, self.peerOfAttacker, config.smtpPort, "", self.username, "535 (credentials)")
                     else:
-                        response = "503 Bad sequence of commands\r\n" # "Send hello first"
+                        response = "503 Bad sequence of commands\r\n"  # "Send hello first"
                         log.response(self.name, self.peerOfAttacker, config.smtpPort, "", self.username, "503 (sequence)")
                 else:
                     response = "501 Syntax error in parameters or arguments\r\n"

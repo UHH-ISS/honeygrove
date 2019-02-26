@@ -1,21 +1,14 @@
-# IMAP-Service
+from honeygrove import config, log
+from honeygrove.resources.email_resources import database
+from honeygrove.services.ServiceBaseModel import Limiter, ServiceBaseModel
 
 from twisted.internet import reactor
-from twisted.internet.error import CannotListenError
-from twisted.internet.protocol import Factory, Protocol
-
+from twisted.internet.protocol import Protocol
 from twisted.protocols import policies
-
-from honeygrove import config
-from honeygrove.services.ServiceBaseModel import ServiceBaseModel
-from honeygrove.services.ServiceBaseModel import Limiter
-
-from honeygrove.logging import log
-
-from honeygrove.resources.email_resources import database
 
 from enum import Enum
 import base64, re, time, random
+
 
 class IMAPService(ServiceBaseModel):
     def __init__(self):
@@ -36,6 +29,7 @@ class IMAPService(ServiceBaseModel):
         self._stop = True
         self._transport.stopListening()
 
+
 class IMAPState(Enum):
     # see RFC 3501
     NotAuth = 0
@@ -43,8 +37,8 @@ class IMAPState(Enum):
     Selected = 2
     Logout = 3
 
+
 class IMAPProtocol(Protocol, policies.TimeoutMixin):
-    
     def __init__(self):
         # buffer for email body
         self.msg = ""
@@ -56,7 +50,7 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
             if (mm[m]):
                 # string containing authentication methods (embedded inside server response)
                 self.AuthMethods += " "+m
-        del m,mm
+        del m, mm
 
         self.username = ""
         self.usernameValid = "honig"
@@ -72,7 +66,7 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
 
         # flags indicating different states to verify correct sequence of commands
         self.state = {"connected": False, "appendData": False, "appendCleanUp": False}
-        
+
         # not used by now
         self.validflags = {"\\Seen", "\\Answered", "\\Flagged", "\\Deleted", "\\Draft", "\\Recent"}
 
@@ -94,9 +88,12 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
             headerDict = mail[1]
             flags = set()
             r = self.crossSumHash(mail[2])
-            if (r > 0.2): flags.add("\\Recent")
-            if (r > 0.5): flags.add("\\Seen")
-            if (r > 0.75): flags.add("\\Answered")
+            if (r > 0.2):
+                flags.add("\\Recent")
+            if (r > 0.5):
+                flags.add("\\Seen")
+            if (r > 0.75):
+                flags.add("\\Answered")
             self.emails.append([mail[0], flags, headerDict, header, mail[2]])
             # self.emails = [[mailbox,flags,headerDict,header,body], [mailbox,flags,headerDict,header,body], [mailbox,flags,headerDict,header,body], ...]
         self.mailboxes = dict()
@@ -108,11 +105,11 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
         # cross sum of the lenght of the input
         c = 0
         for i in str(len(text)):
-            c+=int(i)
+            c += int(i)
         # normalize to a value between 0 and 1
         while (c > 1):
             c = c / 10
-        return round(c,3)
+        return round(c, 3)
 
     # e.g. Thunderbird pads credentials and other parameters with quotation marks
     def stripPadding(self, input):
@@ -123,10 +120,10 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
     # refresh stats (number of mails for each mailbox) stored in self.mailboxes (dictionary)
     def calcMailboxStats(self):
         self.mailboxes = dict()
-        for i in ["INBOX","Drafts","Trash","Spam","Sent"]: # add default mailboxes
+        for i in ["INBOX", "Drafts", "Trash", "Spam", "Sent"]:  # add default mailboxes
             if (i not in self.mailboxes):
                 self.mailboxes[i] = 0
-        for mail in self.emails: # add custom folders
+        for mail in self.emails:  # add custom folders
             if (mail[0] not in self.mailboxes):
                 self.mailboxes[mail[0]] = 1
             else:
@@ -136,21 +133,22 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
     # "Example: a message sequence number set of 2,4:7,9,12:* for a mailbox with 15 messages
     #  is equivalent to 2,4,5,6,7,9,12,13,14,15" (quote from RFC 3501)
     # TODO: improve runtime complexity by redesigning requests
-    def sequenceNumberInSet (self, seqset, seqnum):
+    def sequenceNumberInSet(self, seqset, seqnum):
         for part in seqset.split(","):
-            if(not ":" in part):
-                if (part == str(seqnum)): # never return False
+            if ":" not in part:
+                if (part == str(seqnum)):  # never return False
                     return True
             else:
                 r = re.match("^(\d+|\*):(\d+|\*)$", part, re.IGNORECASE)
-                if (r != None):
-                    a,b = r.groups()
-                    #check '*' case first to avoid 'int("*")' error; a <= b included; never return False
+                if r:
+                    a, b = r.groups()
+                    # check '*' case first to avoid 'int("*")' error; a <= b included; never return False
+                    # XXX: maximum is undefined here??
                     if (((a == "*" and int(seqnum) >= 1) or (int(seqnum) >= int(a))) and ((b == "*" and maximum >= int(seqnum)) or (int(b) >= int(seqnum)))):
                         return True
         return False
 
-    # 
+    #
     def saveEmail(self, mailbox, flaglist, mail):
         # split mail into header...
         header = mail[:mail.find("\r\n\r\n")]
@@ -201,9 +199,9 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
         self.transport.write(response.encode("UTF-8"))
         # close connection gently (nonblocking, send buffers before closing, client is able to receive error message)
         self.transport.loseConnection()
-        #time.sleep(5)
+        # time.sleep(5)
         # force close connection after waiting duration
-        #self.transport.abortConnection()
+        # self.transport.abortConnection()
         # connectionLost() gets called automatically
 
     def dataReceived(self, rawData):
@@ -214,15 +212,14 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
 
         # TODO: Verifizieren, dass möglichst alle 503-Fälle ("Bad sequence of commands") abgedeckt sind
         if(rawData.startswith(b'\xff') or rawData.startswith(b'\x04')):
-            #ignore Ctrl+C/D/Z etc.
+            # ignore Ctrl+C/D/Z etc.
             pass
         else:
             # binary data like b"\xff\x..." causes trouble when decoding (simply ignore it)
             try:
                 # decode raw data and add it to buffer
                 self.dataBuffer += rawData.decode("UTF-8")
-            except Exception as e:
-                #print("ignoring invalid chars")
+            except Exception as e: # noqa
                 pass
 
             # get first line from buffer
@@ -236,13 +233,12 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
 
             if (not self.state["appendCleanUp"] and not self.state["appendData"]):
                 log.request(self.name, self.peerOfAttacker, config.imapPort, line, self.username)
-            
             # ignore one (maybe optional) empty line after append command
             if(self.state["appendCleanUp"]):
                 if (line != ""):
                     self.dataBuffer = line + "\r\n" + self.dataBuffer
                 self.state["appendCleanUp"] = False
-            elif(self.state["appendData"]): # wait for another part of the mail
+            elif(self.state["appendData"]):  # wait for another part of the mail
                 # reunify first line and remaining buffer
                 self.dataBuffer = line+"\r\n"+self.dataBuffer
                 # buffer is bigger than remaining announced transmission
@@ -258,7 +254,7 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
                     response = self.appendTag + " OK APPEND completed\r\n"
                     log.response(self.name, self.peerOfAttacker, config.imapPort, "", self.username, "OK")
                     self.transport.write(response.encode("UTF-8"))
-                else: # wait for another part of the mail
+                else:  # wait for another part of the mail
                     self.appendBuffer += self.dataBuffer
                     self.appendLength -= len(self.dataBuffer)
                     self.dataBuffer = ""
@@ -296,8 +292,6 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
                     log.response(self.name, self.peerOfAttacker, config.imapPort, "", self.username, "BAD (syntax)")
                     self.transport.write(response.encode("UTF-8"))
 
-
-
                 # "command-nonauth" (Valid only when in Not Authenticated state)
                 elif(re.match("^"+tag+" LOGIN (?P<userid>\S+) (?P<password>\S+)$", line, re.IGNORECASE)):
                     if (self.stateRFC == IMAPState.NotAuth):
@@ -329,9 +323,7 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
                         log.response(self.name, self.peerOfAttacker, config.imapPort, "", self.username, "BAD (sequence")
                     self.transport.write(response.encode("UTF-8"))
 
-                    #TODO: implement AUTHENTICATE command (provides SASL auth (GSSAPI etc.))
-
-
+                    # TODO: implement AUTHENTICATE command (provides SASL auth (GSSAPI etc.))
 
                 # "command-auth" (Valid only in Authenticated or Selected state)
                 elif(re.match("^"+tag+" LIST (?P<mailbox>\S+) (?P<listmailbox>\S+)$", line, re.IGNORECASE)):
@@ -359,9 +351,9 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
                 elif(re.match("^"+tag+" LSUB (?P<mailbox>\S+) (?P<listmailbox>\S+)$", line, re.IGNORECASE)):
                     if (self.stateRFC == IMAPState.Auth or self.stateRFC == IMAPState.Selected):
                         arguments = re.match("^"+tag+" LSUB (?P<mailbox>\S+) (?P<listmailbox>\S+)$", line, re.IGNORECASE)
+                        # XXX: why is this unused?
                         reference = self.stripPadding(arguments.group("mailbox"))
                         mailboxName = self.stripPadding(arguments.group("listmailbox"))
-                        
                         response = ""
                         # doesn't really support the wildcard feature, just distinguishes between "everything" and "one specific mailbox"
                         if (mailboxName in ["*", "%"]):
@@ -373,7 +365,7 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
                                 response += "* LSUB (\\HasNoChildren) \".\" \""+mailboxName+"\"\r\n"
                             response += tag+" OK LSUB Completed\r\n"
                         log.response(self.name, self.peerOfAttacker, config.imapPort, "", self.username, "OK")
-                    else:                                   
+                    else:
                         response = tag+" BAD Command received in invalid state.\r\n"
                         log.response(self.name, self.peerOfAttacker, config.imapPort, "", self.username, "BAD (sequence)")
                     self.transport.write(response.encode("UTF-8"))
@@ -401,24 +393,24 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
                         mailbox = self.stripPadding(arguments.group("mailbox"))
                         statusatt = arguments.group("statusatt")
                         if (mailbox in self.mailboxes):
-                            statusatt = statusatt.replace("MESSAGES","MESSAGES "+str(self.mailboxes[mailbox]))
+                            statusatt = statusatt.replace("MESSAGES", "MESSAGES "+str(self.mailboxes[mailbox]))
                             if ("RECENT" in statusatt):
                                 c = 0
                                 for mail in self.emails:
-                                    if(mail[0] == self.selectedMailbox): # just mails in this mailbox
+                                    if(mail[0] == self.selectedMailbox):  # just mails in this mailbox
                                         if ("\\Recent" in mail[1]):
                                             c += 1
-                                statusatt = statusatt.replace("RECENT","RECENT "+str(c))
+                                statusatt = statusatt.replace("RECENT", "RECENT "+str(c))
                             if ("UNSEEN" in statusatt):
                                 c = 0
                                 for mail in self.emails:
-                                    if(mail[0] == self.selectedMailbox): # just mails in this mailbox
-                                        if (not "\\Seen" in mail[1]):
+                                    if(mail[0] == self.selectedMailbox):  # just mails in this mailbox
+                                        if "\\Seen" not in mail[1]:
                                             c += 1
-                                statusatt = statusatt.replace("UNSEEN","UNSEEN "+str(c))
+                                statusatt = statusatt.replace("UNSEEN", "UNSEEN "+str(c))
                                 # TODO: research possible values (nonsense values at the moment)
-                                statusatt = statusatt.replace("UIDNEXT","UIDNEXT "+str(1))
-                                statusatt = statusatt.replace("UIDVALIDITY","UIDVALIDITY "+str(0))
+                                statusatt = statusatt.replace("UIDNEXT", "UIDNEXT "+str(1))
+                                statusatt = statusatt.replace("UIDVALIDITY", "UIDVALIDITY "+str(0))
 
                             response = "* STATUS "+mailbox+" ("+statusatt+")\r\n"
                             response += tag + " OK STATUS completed\r\n"
@@ -436,6 +428,7 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
                         arguments = re.match("^"+tag+" APPEND (?P<mailbox>\S+) \((?P<flaglist>\S+( \S+)*)?\)(?P<datetime> .+)? \{(?P<literal>\d+)\}$", line, re.IGNORECASE)
                         mailbox = self.stripPadding(arguments.group("mailbox"))
                         flaglist = arguments.group("flaglist")
+                        # XXX: Why is this unused??
                         datetime = arguments.group("datetime")
                         literal = arguments.group("literal")
                         # grant up to about 20 * 1 MiB storage (memory-DOS protection)
@@ -467,12 +460,10 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
                         log.response(self.name, self.peerOfAttacker, config.imapPort, "", self.username, "BAD (sequence)")
                     self.transport.write(response.encode("UTF-8"))
 
-
-
                 # "command-select" (Valid only when in Selected state)
                 elif(re.match("^"+tag+" CLOSE$", line, re.IGNORECASE)):
                     if (self.stateRFC == IMAPState.Selected):
-                        #TODO: delete accordingly flagged mails
+                        # TODO: delete accordingly flagged mails
                         self.stateRFC = IMAPState.Auth
                         response = tag+" OK CLOSE completed\r\n"
                         log.response(self.name, self.peerOfAttacker, config.imapPort, "", self.username, "OK")
@@ -505,19 +496,19 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
                         response = ""
                         c = 1  # sequence number of mail in mailbox (use position in mail array as ascending UID)
                         for i, mail in enumerate(self.emails):
-                            if(mail[0] == self.selectedMailbox): # just mails in this mailbox
-                                if (sequenceset == "1:*" or self.sequenceNumberInSet(sequenceset,i)): # important performance improvement for default parameter
+                            if (mail[0] == self.selectedMailbox):  # just mails in this mailbox
+                                if (sequenceset == "1:*" or self.sequenceNumberInSet(sequenceset, i)):  # important performance improvement for default parameter
                                     if (entries in ["FLAGS", "(FLAGS)"]):
                                         response += "* "+str(c)+" FETCH (UID "+str(i)+" FLAGS ("+(" ".join(mail[1]))+"))\r\n"
-                                    else:   
+                                    else:
                                         response += "* "+str(c)+" FETCH "
 
                                         # TODO: best solution: parse fetch-att parameters and select accordingly which attributes to send
                                         entriesProcessed = entries.upper()[:-1]
-                                        entriesProcessed = entriesProcessed.replace("UID","UID "+str(i))
-                                        entriesProcessed = entriesProcessed.replace("RFC822.SIZE","RFC822.SIZE "+str(len(mail[3])+len(mail[4])))
-                                        entriesProcessed = entriesProcessed.replace("FLAGS","FLAGS ("+(" ".join(mail[1]))+")")
-                                        entriesProcessed = entriesProcessed.replace("BODY.PEEK","BODY")
+                                        entriesProcessed = entriesProcessed.replace("UID", "UID "+str(i))
+                                        entriesProcessed = entriesProcessed.replace("RFC822.SIZE", "RFC822.SIZE "+str(len(mail[3])+len(mail[4])))
+                                        entriesProcessed = entriesProcessed.replace("FLAGS", "FLAGS ("+(" ".join(mail[1]))+")")
+                                        entriesProcessed = entriesProcessed.replace("BODY.PEEK", "BODY")
                                         buffer = ""
                                         if("BODY" in entriesProcessed or "ENVELOPE" in entriesProcessed or "TEXT" in entriesProcessed):
                                             buffer += mail[3]+"\r\n"+mail[4]
@@ -532,12 +523,12 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
                         response = tag+" BAD Command received in invalid state.\r\n"
                         log.response(self.name, self.peerOfAttacker, config.imapPort, "", self.username, "BAD (sequence)")
                     self.transport.write(response.encode("UTF-8"))
- 
-                elif(re.match("^"+tag+" UID FETCH .+$", line, re.IGNORECASE)): 
+
+                elif(re.match("^"+tag+" UID FETCH .+$", line, re.IGNORECASE)):
                     response = "* BAD Command argument error\r\n"
                     log.response(self.name, self.peerOfAttacker, config.imapPort, "", self.username, "BAD (syntax)")
-                    self.transport.write(response.encode("UTF-8")) 
-                         
+                    self.transport.write(response.encode("UTF-8"))
+
                     # temporary workaround to avoid the client to throw an error after uploading the mail
                 elif(re.match("^"+tag+" UID SEARCH *$", line, re.IGNORECASE)):
                     if (self.stateRFC == IMAPState.Selected):

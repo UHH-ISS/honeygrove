@@ -1,14 +1,13 @@
-import json
-import honeygrove.tests.testresources.testconfig as config
 from honeygrove.resources import __path__ as resources
-from xml.etree import ElementTree as ET
+from honeygrove.tests.testresources import testconfig as config
 
+import json
 import os
 from os.path import isfile, join
+from xml.etree import ElementTree as ET
 
 
 # Mock Classes needed for the Testing
-
 class ServiceA():
     _name = 'TESTSERVICEA'
     _stop = True
@@ -85,6 +84,7 @@ class DummyAdapter():
     def handle_messages(msgs):
         """
         Verarbeitet die Befehle der Managementkonsole.
+
         :param msgs: Erwartet von Broker einer zweifach-geschachtelte Liste aus Strings im JSON Format: [['{"type": "ping"}']]
         :return: die Antwort des HP als JSON (dict)
         """
@@ -181,7 +181,6 @@ class DummyAdapter():
                     {"type": "hp_settings", "to": str(jsonDict["from"]), "from": str(config.HPID), "settings": {
                         "service": service_name, "ports": returnport, "running": running,
                         "token_probability": token_prob}}, sort_keys=True)
-
 
             elif jsonDict["type"] == "get_credentials" and str(config.HPID) == jsonDict["to"]:
                 with open(resources._path[0] + "/database.txt", "r") as myfile:

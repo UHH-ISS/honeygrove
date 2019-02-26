@@ -8,18 +8,17 @@ from honeygrove import config
 class BrokerEndpoint:
     """
     The BrokerEndpoint is for the transmission of Broker messages.
-    You can send and retrive messages here.
+    You can send and retrieve messages here.
     """
 
-    #Creates endpoint
-    #global listenEndpoint
+    # Creates endpoint
+    # global listenEndpoint
     listenEndpoint = broker.Endpoint()
     # commands and settings are topics we subscribed to. (GLOBAL SCOPE for multihop)
     commandsQueue = listenEndpoint.make_subscriber("commands")
 
     # peering objects. needet for unpeering
     peerings = [0, 0, None]
-
 
     @staticmethod
     def getCommandMessage():
@@ -69,7 +68,6 @@ class BrokerEndpoint:
             BrokerEndpoint.listenEndpoint.unpeer(BrokerEndpoint.peerings[2])
         else:
             BrokerEndpoint.listenEndpoint.unpeer(peeringObj)
-
 
     @staticmethod
     def sendMessageToTopic(topic, msg):

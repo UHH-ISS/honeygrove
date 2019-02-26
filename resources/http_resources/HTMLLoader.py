@@ -6,9 +6,9 @@ import os
 
 
 def save_HTMLDictionary(obj):
-    with open(honeygrove.__path__._path[0] + '/resources/http_resources/' + 'HTMLDictionary.pkl', 'wb') as f:
+    with open(honeygrove.__path__[0] + '/resources/http_resources/' + 'HTMLDictionary.pkl', 'wb') as f:
         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
 def load_HTMLDictionary():
-    with open(honeygrove.__path__._path[0] + '/resources/http_resources/' + 'HTMLDictionary.pkl', 'rb') as f:
+    with open(honeygrove.__path__[0] + '/resources/http_resources/' + 'HTMLDictionary.pkl', 'rb') as f:
         return pickle.load(f)
