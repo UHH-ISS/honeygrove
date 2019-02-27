@@ -70,14 +70,16 @@ class Config:
     ssh.helptext_folder = resources_dir + "ssh_resources/helptexts"
     ssh.gnuhelp_folder = resources_dir + "ssh_resources/gnuhelp"
     ssh.real_shell = False
-    ssh.connections_per_host = 100
     ssh.accept_files = True
+    ssh.connections_per_host = 100
 
-    # Telnet configuration:
-    telnetPort = 23
-    telnetName = "Telnet"
-    telnet_real_shell = False
-    Telnet_conn_per_host = 100
+    # Telnet service configuration
+    telnet = ConfigSection()
+    telnet.name = "Telnet"
+    telnet.port = 23
+    # Currently not implemented
+    telnet.real_shell = False
+    telnet.connections_per_host = 100
 
     # FTP configuration:
     ftpPort = 21
@@ -148,7 +150,7 @@ class Config:
     quarantineDir = resources_dir + "/quarantine"
 
     # Startup
-    startupList = [http.name, ssh.name, ftpName, tcpFlagSnifferName, smtpName, smtpsName, pop3Name, pop3sName, imapName, imapsName, telnetName]
+    startupList = [http.name, ssh.name, telnet.name, ftpName, tcpFlagSnifferName, smtpName, smtpsName, pop3Name, pop3sName, imapName, imapsName]
 
     # Services, die nicht an einen Port gebunden sind
     noPortSpecificService = [listenServiceName, tcpFlagSnifferName]
