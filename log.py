@@ -156,7 +156,7 @@ def login(service, ip, port, successful, user, key=None, actual=None):
     if Config.use_broker:
         BrokerEndpoint.BrokerEndpoint.sendLogs(json.dumps(values))
 
-    message = ('{@timestamp} - [LOGIN] - {service}, {ip}:{port}, Lat: {lat:.4f}, Lon: {lon:.4f}, '
+    message = ('{@timestamp} - [LOGIN] - {service}, {ip}:{port}, Lat: {lat}, Lon: {lon}, '
                '{successful}, {user}, {key}, {actual}').format_map(values)
     _log_alert(message)
 
@@ -199,7 +199,7 @@ def request(service, ip, port, request, user=None, request_type=None):
     if Config.use_broker:
         BrokerEndpoint.BrokerEndpoint.sendLogs(json.dumps(values))
 
-    message = ('{@timestamp} - [REQUEST] - {service}, {ip}:{port}, Lat: {lat:.4f}, Lon: {lon:.4f}, '
+    message = ('{@timestamp} - [REQUEST] - {service}, {ip}:{port}, Lat: {lat}, Lon: {lon}, '
                '{request}, {user}, {request_type}').format_map(values)
     _log_alert(message)
 
@@ -242,7 +242,7 @@ def response(service, ip, port, response, user=None, status_code=None):
     if Config.use_broker:
         BrokerEndpoint.BrokerEndpoint.sendLogs(json.dumps(values))
 
-    message = ('{@timestamp} - [RESPONSE] - {service}, {ip}:{port}, Lat: {lat:.4f}, Lon: {lon:.4f}, '
+    message = ('{@timestamp} - [RESPONSE] - {service}, {ip}:{port}, Lat: {lat}, Lon: {lon}, '
                '{response}, {user}, {request_type}').format_map(values)
     _log_alert(message)
 
@@ -284,7 +284,7 @@ def file(service, ip, file_name, file_path=None, user=None):
         if file_path:
             BrokerEndpoint.BrokerEndpoint.sendFile(file_path)
 
-    message = '{@timestamp} - [FILE] - {service}, {ip}, Lat: {lat:.4f}, Lon: {lon:.4f}, {filename}, {user}'.format_map(values)
+    message = '{@timestamp} - [FILE] - {service}, {ip}, Lat: {lat}, Lon: {lon}, {filename}, {user}'.format_map(values)
     _log_alert(message)
 
 
@@ -314,7 +314,7 @@ def scan(ip, port, intime, scan_type):
     if Config.use_broker:
         BrokerEndpoint.BrokerEndpoint.sendLogs(json.dumps(values))
 
-    message = '{@timestamp} - [{}-SCAN] - {ip}:{port}, Lat: {lat:.4f}, Lon: {lon:.4f}'.format_map(values)
+    message = '{@timestamp} - [{}-SCAN] - {ip}:{port}, Lat: {lat}, Lon: {lon}'.format_map(values)
     _log_alert(message)
 
 
@@ -343,7 +343,7 @@ def limit_reached(service, ip):
     if Config.use_broker:
         BrokerEndpoint.BrokerEndpoint.sendLogs(json.dumps(values))
 
-    message = '{@timestamp} - [LIMIT REACHED] - {service}, {ip}, Lat: {lat:.4f}, Lon: {lon:.4f}'.format_map(values)
+    message = '{@timestamp} - [LIMIT REACHED] - {service}, {ip}, Lat: {lat}, Lon: {lon}'.format_map(values)
     _log_alert(message)
 
 
