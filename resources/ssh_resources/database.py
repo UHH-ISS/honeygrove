@@ -23,9 +23,8 @@ def restore():
 
 def save():
     try:
-        file = open(dbfilePath, 'w')
-        file.write(json.dumps(lastLoginTime))
-        file.close()
+        with open(dbfilePath, 'w') as fp:
+            fp.write(json.dumps(lastLoginTime))
     except Exception:
         # e.g. insufficient write permissions, io error etc.
         log.err("Failed to write lastLoginTime to file \""+str(dbfilePath)+"\"")
