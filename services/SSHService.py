@@ -23,17 +23,17 @@ import subprocess
 import time
 from urllib import request
 
-transport.SSHTransportBase.ourVersionString = Config.sshBanner
+transport.SSHTransportBase.ourVersionString = Config.ssh.banner
 
 
 class SSHService(ServiceBaseModel):
-    c = HoneytokenDataBase(servicename=Config.sshName)
+    c = HoneytokenDataBase(servicename=Config.ssh.name)
 
     def __init__(self):
         super(SSHService, self).__init__()
 
-        self._name = Config.sshName
-        self._port = Config.sshPort
+        self._name = Config.ssh.name
+        self._port = Config.ssh.port
 
         p = Portal(SSHRealm())
         p.registerChecker(SSHService.c)
@@ -41,7 +41,7 @@ class SSHService(ServiceBaseModel):
         self._fService = factory.SSHFactory()
         self._fService.services[b'ssh-userauth'] = groveUserAuth
 
-        self._limiter = Limiter(self._fService, Config.sshName, Config.SSH_conn_per_host)
+        self._limiter = Limiter(self._fService, Config.ssh.name, Config.ssh.connections_per_host)
 
         self._fService.portal = p
 
@@ -92,8 +92,8 @@ class SSHProtocol(recvline.HistoricRecvLine):
 
         self.user = self.terminal.transport.session.avatar
         self.userName = self.user.username.decode()
-        self.name = Config.sshName
-        self.port = Config.sshPort
+        self.name = Config.ssh.name
+        self.port = Config.ssh.port
         self._parser = FilesystemParser(Config.path_to_filesys)
         self.userIP = self.user.conn.transport.transport.client[0]
         self.l = log
@@ -166,7 +166,7 @@ class SSHProtocol(recvline.HistoricRecvLine):
         """
         helptext = ""
         append = False
-        with open(Config.resources_dir + "ssh_resources/helptexts") as helps:
+        with open(Config.ssh.helptext_folder) as helps:
             for line in helps:
                 if append and re.match("^\S", line):
                     return helptext
@@ -208,7 +208,7 @@ class SSHProtocol(recvline.HistoricRecvLine):
 
             res = None
 
-            if Config.ssh_real_shell:
+            if Config.ssh.real_shell:
                 # Forwarding commands to the real shell
 
                 if "cd" in line:
@@ -269,7 +269,7 @@ class SSHProtocol(recvline.HistoricRecvLine):
 
         gnuhelp = []
 
-        with open(Config.resources_dir + "ssh_resources/gnuhelp") as file:
+        with open(Config.ssh.gnuhelp_folder) as file:
             for line in file:
                 gnuhelp.append(line)
 
@@ -412,7 +412,7 @@ class SSHProtocol(recvline.HistoricRecvLine):
 
         # Write to disk
         filepath = ""
-        if Config.sshAcceptsFiles:
+        if Config.ssh.accept_files:
             request.urlretrieve(url, Config.quarantineDir + "/" + filename)
             filepath = Config.quarantineDir + "/" + filename
         self.l.file(self.name, self.userIP, filename, filepath, self.userName)
@@ -529,10 +529,10 @@ class groveUserAuth(userauth.SSHUserAuthServer):
             rest = keys.Key.fromString(data=rest)._toString_OPENSSH(None)
 
         d.addCallback(self._cbFinishedAuth)
-        d.addCallback(log.defer_login, Config.sshName, self.transport.transport.client[0], Config.sshPort, True,
+        d.addCallback(log.defer_login, Config.ssh.name, self.transport.transport.client[0], Config.ssh.port, True,
                       user.decode(), rest.decode("unicode_escape"), honeytoken_actual)
 
-        d.addErrback(log.defer_login, Config.sshName, self.transport.transport.client[0], Config.sshPort, False,
+        d.addErrback(log.defer_login, Config.ssh.name, self.transport.transport.client[0], Config.ssh.port, False,
                      user.decode(), rest.decode("unicode_escape"), honeytoken_actual)
         d.addErrback(self._ebMaybeBadAuth)
         d.addErrback(self._ebBadAuth)

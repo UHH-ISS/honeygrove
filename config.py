@@ -61,13 +61,17 @@ class Config:
     http.html_dictionary = HTMLLoader.load_HTMLDictionary()
     http.resource_folder = resources_dir + "/http_resources/"
 
-    # SSH configuration:
-    sshPort = 22
-    sshName = "SSH"
+    # SSH service configuration
+    ssh = ConfigSection()
+    ssh.name = "SSH"
+    ssh.port = 22
     # must start with "SSH-2.0-"
-    sshBanner = b'SSH-2.0-uhh'
-    ssh_real_shell = False
-    SSH_conn_per_host = 100
+    ssh.banner = b'SSH-2.0-uhh'
+    ssh.helptext_folder = resources_dir + "ssh_resources/helptexts"
+    ssh.gnuhelp_folder = resources_dir + "ssh_resources/gnuhelp"
+    ssh.real_shell = False
+    ssh.connections_per_host = 100
+    ssh.accept_files = True
 
     # Telnet configuration:
     telnetPort = 23
@@ -140,12 +144,11 @@ class Config:
     nc_maxLength = 24
 
     # Malware configuration
-    sshAcceptsFiles = True
     ftpAcceptsFiles = True
     quarantineDir = resources_dir + "/quarantine"
 
     # Startup
-    startupList = [http.name, ftpName, sshName, tcpFlagSnifferName, smtpName, smtpsName, pop3Name, pop3sName, imapName, imapsName, telnetName]
+    startupList = [http.name, ssh.name, ftpName, tcpFlagSnifferName, smtpName, smtpsName, pop3Name, pop3sName, imapName, imapsName, telnetName]
 
     # Services, die nicht an einen Port gebunden sind
     noPortSpecificService = [listenServiceName, tcpFlagSnifferName]
