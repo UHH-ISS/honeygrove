@@ -1,4 +1,5 @@
-from honeygrove import config, log
+from honeygrove import log
+from honeygrove.config import Config
 from honeygrove.core.FilesystemParser import FilesystemParser
 from honeygrove.core.HoneytokenDB import HoneytokenDataBase
 from honeygrove.services.ServiceBaseModel import Limiter, ServiceBaseModel
@@ -18,8 +19,8 @@ class FTPService(ServiceBaseModel):
 
     credchecker = HoneytokenDataBase("FTP")
     # Make name and port accessible for logging in FTPProtocol
-    _name = config.ftpName
-    _port = config.ftpPort
+    _name = Config.ftpName
+    _port = Config.ftpPort
 
     def __init__(self):
 
@@ -29,10 +30,10 @@ class FTPService(ServiceBaseModel):
 
         self._fService = FTPFactory(portal)
 
-        self._name = config.ftpName
-        self._port = config.ftpPort
+        self._name = Config.ftpName
+        self._port = Config.ftpPort
 
-        self._limiter = Limiter(self._fService, self._name, config.FTP_conn_per_host)
+        self._limiter = Limiter(self._fService, self._name, Config.FTP_conn_per_host)
 
         self.protocol = FTPProtocol
         self._fService.protocol = self.protocol
@@ -65,8 +66,8 @@ class FTPProtocol(FTP):
                            'MODE': " "
                            }
 
-    honeytokenDirectory = config.tokendir
-    receivedDataDirectory = config.quarantineDir
+    honeytokenDirectory = Config.tokendir
+    receivedDataDirectory = Config.quarantineDir
 
     lastmodified = dt.now()
 
@@ -314,7 +315,7 @@ class FTPProtocol(FTP):
             """
             Called from data transport when tranfer is done.
             """
-            if config.ftpAcceptsFiles:
+            if Config.ftpAcceptsFiles:
                 self.l.file(FTPService._name, self.transport.getPeer().host, FTPService._port, filename, self.receivedDataDirectory + "/" + filename,
                             self.user)
             else:
@@ -335,7 +336,7 @@ class FTPProtocol(FTP):
                             RESPONSE.get(CNX_CLOSED_TXFR_ABORTED), self.user, "STOR")
             return (CNX_CLOSED_TXFR_ABORTED,)
 
-        if config.ftpAcceptsFiles:
+        if Config.ftpAcceptsFiles:
             i = 1
             name = filename
             while name in os.listdir(self.receivedDataDirectory):

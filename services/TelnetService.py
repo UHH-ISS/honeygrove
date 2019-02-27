@@ -1,4 +1,5 @@
-from honeygrove import config, log
+from honeygrove import log
+from honeygrove.config import Config
 from honeygrove.services.ServiceBaseModel import Limiter, ServiceBaseModel
 
 from twisted.conch.telnet import TelnetTransport, StatefulTelnetProtocol
@@ -11,12 +12,12 @@ class TelnetService(ServiceBaseModel):
     def __init__(self):
         super(TelnetService, self).__init__()
 
-        self._name = config.telnetName
-        self._port = config.telnetPort
+        self._name = Config.telnetName
+        self._port = Config.telnetPort
 
         self._fService = TelnetFactory()
 
-        self._limiter = Limiter(self._fService, config.telnetName, config.Telnet_conn_per_host)
+        self._limiter = Limiter(self._fService, Config.telnetName, Config.Telnet_conn_per_host)
 
     def startService(self):
         self._stop = False
@@ -33,7 +34,7 @@ class TelnetProtocol(StatefulTelnetProtocol):
     def telnet_Password(self, line):
         self.password = line.decode("UTF-8")
 
-        log.login(config.telnetName, self.peerOfAttacker, config.telnetPort, False, self.username, self.password, "")
+        log.login(Config.telnetName, self.peerOfAttacker, Config.telnetPort, False, self.username, self.password, "")
 
         time.sleep(2.0)
 

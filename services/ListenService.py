@@ -1,4 +1,5 @@
-from honeygrove import config, log
+from honeygrove import log
+from honeygrove.config import Config
 from honeygrove.services.ServiceBaseModel import ServiceBaseModel
 
 from twisted.internet import reactor
@@ -17,15 +18,15 @@ class ListenService(ServiceBaseModel):
         self.protocol = ListenProtocol
         self._fService.protocol = self.protocol
 
-        self._name = config.listenServiceName
-        self._port = config.listenServicePorts
+        self._name = Config.listenServiceName
+        self._port = Config.listenServicePorts
         self._transport = dict([])
         self._stop = True
         self._active = False
 
     def startService(self):
         """
-        Start service on all ports defined in config.py. 
+        Start service on all ports defined in Config.py. 
         Ignores ports where it can't listen.
         :return:
         """
@@ -98,4 +99,4 @@ class ListenProtocol(Protocol):
         Called when the attacker sends data.
         :param data: The received data
         """
-        log.request(config.listenServiceName, self.transport.getPeer().host, self.transport.getHost().port, data.decode())
+        log.request(Config.listenServiceName, self.transport.getPeer().host, self.transport.getHost().port, data.decode())

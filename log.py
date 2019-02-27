@@ -1,28 +1,28 @@
-from honeygrove import config
+from honeygrove.config import Config
 
 from collections import defaultdict
 from datetime import datetime
 import json
 
-if config.use_broker:
+if Config.use_broker:
     from honeygrove.broker import BrokerEndpoint
-if config.use_geoip:
+if Config.use_geoip:
     import geoip2.database
 
-path = config.logpath
-geodatabasepath = config.geodatabasepath
-ID = str(config.HPID)
-print_status = config.print_status
-print_alerts = config.print_alerts
-log_status = config.log_status
-log_alerts = config.log_alerts
+path = Config.logpath
+geodatabasepath = Config.geodatabasepath
+ID = str(Config.HPID)
+print_status = Config.print_status
+print_alerts = Config.print_alerts
+log_status = Config.log_status
+log_alerts = Config.log_alerts
 
-if config.use_geoip:
+if Config.use_geoip:
     try:
         reader = geoip2.database.Reader(geodatabasepath)
     except FileNotFoundError:
         print("\nGeoIP database file not found, disabled GeoIP!\n")
-        config.use_geoip = False
+        Config.use_geoip = False
 
 PLACEHOLDER_STRING = '--'
 
@@ -60,7 +60,7 @@ def get_coordinates(ipaddress):
     :param ipaddress: the address out of a log entry
     """
 
-    if config.use_geoip:
+    if Config.use_geoip:
         response = reader.city(ipaddress)
         lat = float(response.location.latitude)
         lon = float(response.location.longitude)
@@ -70,7 +70,7 @@ def get_coordinates(ipaddress):
 
 
 def get_time():
-    if config.use_utc:
+    if Config.use_utc:
         return datetime.utcnow()
     else:
         return datetime.now()
@@ -153,7 +153,7 @@ def login(service, ip, port, successful, user, key=None, actual=None):
         values['lat'] = '{:.4f}'.format(coordinates[0])
         values['lon'] = '{:.4f}'.format(coordinates[1])
 
-    if config.use_broker:
+    if Config.use_broker:
         BrokerEndpoint.BrokerEndpoint.sendLogs(json.dumps(values))
 
     message = ('{@timestamp} - [LOGIN] - {service}, {ip}:{port}, Lat: {lat:.4f}, Lon: {lon:.4f}, '
@@ -196,7 +196,7 @@ def request(service, ip, port, request, user=None, request_type=None):
         values['lat'] = '{:.4f}'.format(coordinates[0])
         values['lon'] = '{:.4f}'.format(coordinates[1])
 
-    if config.use_broker:
+    if Config.use_broker:
         BrokerEndpoint.BrokerEndpoint.sendLogs(json.dumps(values))
 
     message = ('{@timestamp} - [REQUEST] - {service}, {ip}:{port}, Lat: {lat:.4f}, Lon: {lon:.4f}, '
@@ -239,7 +239,7 @@ def response(service, ip, port, response, user=None, status_code=None):
         values['lat'] = '{:.4f}'.format(coordinates[0])
         values['lon'] = '{:.4f}'.format(coordinates[1])
 
-    if config.use_broker:
+    if Config.use_broker:
         BrokerEndpoint.BrokerEndpoint.sendLogs(json.dumps(values))
 
     message = ('{@timestamp} - [RESPONSE] - {service}, {ip}:{port}, Lat: {lat:.4f}, Lon: {lon:.4f}, '
@@ -279,7 +279,7 @@ def file(service, ip, file_name, file_path=None, user=None):
         values['lat'] = '{:.4f}'.format(coordinates[0])
         values['lon'] = '{:.4f}'.format(coordinates[1])
 
-    if config.use_broker:
+    if Config.use_broker:
         BrokerEndpoint.BrokerEndpoint.sendLogs(json.dumps(values))
         if file_path:
             BrokerEndpoint.BrokerEndpoint.sendFile(file_path)
@@ -311,7 +311,7 @@ def scan(ip, port, intime, scan_type):
         values['lat'] = '{:.4f}'.format(coordinates[0])
         values['lon'] = '{:.4f}'.format(coordinates[1])
 
-    if config.use_broker:
+    if Config.use_broker:
         BrokerEndpoint.BrokerEndpoint.sendLogs(json.dumps(values))
 
     message = '{@timestamp} - [{}-SCAN] - {ip}:{port}, Lat: {lat:.4f}, Lon: {lon:.4f}\n'.format_map(values)
@@ -340,7 +340,7 @@ def limit_reached(service, ip):
         values['lat'] = '{:.4f}'.format(coordinates[0])
         values['lon'] = '{:.4f}'.format(coordinates[1])
 
-    if config.use_broker:
+    if Config.use_broker:
         BrokerEndpoint.BrokerEndpoint.sendLogs(json.dumps(values))
 
     message = '{@timestamp} - [LIMIT REACHED] - {service}, {ip}, Lat: {lat:.4f}, Lon: {lon:.4f}\n'.format_map(values)
@@ -355,7 +355,7 @@ def heartbeat():
     timestamp = format_time(get_time())
     message = ('{} - [Heartbeat]'.format(timestamp) + '\n')
 
-    if config.use_broker:
+    if Config.use_broker:
         bmessage = json.dumps({'event_type': 'heartbeat', '@timestamp': timestamp, 'honeypotID': ID})
         BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
 

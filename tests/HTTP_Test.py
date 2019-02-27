@@ -1,15 +1,18 @@
-import unittest
-import requests
-import time
-import threading
+from honeygrove.config import Config
 from honeygrove.services.HTTPService import HTTPService
-from honeygrove import config
+
 from twisted.internet import reactor
+
+import requests
+import threading
+import unittest
+
+
 class HTTPTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        config.httpPort = 9914
+        Config.httpPort = 9914
         threading.Thread(target=reactor.run, args=(False,)).start()
         HTTPTest.httpInstance = HTTPService()
         HTTPTest.httpInstance.startService()
@@ -17,7 +20,6 @@ class HTTPTest(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         reactor.callFromThread(reactor.stop)
-
 
     def testGET(self):
         """
@@ -30,5 +32,5 @@ class HTTPTest(unittest.TestCase):
         """
         Test Post Method
         """
-        response = requests.post("http://localhost:9914", data={"pwd":123})
+        response = requests.post("http://localhost:9914", data={"pwd": 123})
         self.assertIn(response.status_code, [200, 403])

@@ -1,8 +1,8 @@
-import base64
+from honeygrove.config import Config
 
 import broker
 
-from honeygrove import config
+import base64
 
 
 class BrokerEndpoint:
@@ -41,7 +41,7 @@ class BrokerEndpoint:
         """
         Start listening on ip
         """
-        BrokerEndpoint.listenEndpoint.listen(config.BrokerComIP, config.BrokerComPort)
+        BrokerEndpoint.listenEndpoint.listen(Config.BrokerComIP, Config.BrokerComPort)
 
     @staticmethod
     def peerTo(ip, port):

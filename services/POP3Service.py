@@ -1,13 +1,12 @@
-from honeygrove import config, log
+from honeygrove import log
+from honeygrove.config import Config
 from honeygrove.resources.email_resources import database
 from honeygrove.services.ServiceBaseModel import Limiter, ServiceBaseModel
 
 from twisted.internet import reactor
-from twisted.internet.error import CannotListenError
-from twisted.internet.protocol import Factory, Protocol
+from twisted.internet.protocol import Protocol
 from twisted.protocols import policies
 
-from enum import Enum
 import re, hashlib, time
 
 
@@ -15,9 +14,9 @@ class POP3Service(ServiceBaseModel):
     def __init__(self):
         super(POP3Service, self).__init__()
 
-        self._name = config.pop3Name
-        self._port = config.pop3Port
-        self._limiter = Limiter(self._fService, config.pop3Name, config.POP3_conn_per_host)
+        self._name = Config.pop3Name
+        self._port = Config.pop3Port
+        self._limiter = Limiter(self._fService, Config.pop3Name, Config.POP3_conn_per_host)
 
         self.protocol = POP3Protocol
         self._fService.protocol = self.protocol
@@ -29,6 +28,7 @@ class POP3Service(ServiceBaseModel):
     def stopService(self):
         self._stop = True
         self._transport.stopListening()
+
 
 class POP3Protocol(Protocol, policies.TimeoutMixin):
     def savedMails(self):
@@ -65,12 +65,12 @@ class POP3Protocol(Protocol, policies.TimeoutMixin):
         self.savedMails()
 
     def connectionMade(self):
-        if (self.transport.getHost().port == config.pop3Port):
-            self.name = config.pop3Name
-        elif (self.transport.getHost().port == config.pop3sPort):
-            self.name = config.pop3sName
+        if (self.transport.getHost().port == Config.pop3Port):
+            self.name = Config.pop3Name
+        elif (self.transport.getHost().port == Config.pop3sPort):
+            self.name = Config.pop3sName
         else:
-            log.err("Please check POP3/POP3S port configuration!")
+            log.err("Please check POP3/POP3S port Configuration!")
             self.name = "POP3/POP3S"
 
         self.setTimeout(self.timeoutPreAuth)
@@ -124,7 +124,7 @@ class POP3Protocol(Protocol, policies.TimeoutMixin):
             line = data[:data.find("\r\n")]
             # restrict maximum input lenght (doesn't affect mail transmission)
             line = line[:4094]
-            log.request(self.name, self.peerOfAttacker, config.pop3Port, line, self.username)
+            log.request(self.name, self.peerOfAttacker, Config.pop3Port, line, self.username)
 
             if(re.match("^USER( \S+)?$", line, re.IGNORECASE)):
                 if(re.match("^USER \S+$", line, re.IGNORECASE)):
@@ -132,10 +132,10 @@ class POP3Protocol(Protocol, policies.TimeoutMixin):
                     self.username = arguments.group("username")
                     self.state["user"] = True
                     response = "+OK Please enter password\r\n"
-                    log.response(self.name, self.peerOfAttacker, config.pop3Port, "", self.username, "+OK")
+                    log.response(self.name, self.peerOfAttacker, Config.pop3Port, "", self.username, "+OK")
                 else:
                     response = "-ERR Syntax error in parameters or arguments\r\n"
-                    log.response(self.name, self.peerOfAttacker, config.pop3Port, "", self.username, "-ERR")
+                    log.response(self.name, self.peerOfAttacker, Config.pop3Port, "", self.username, "-ERR")
                 self.transport.write(response.encode("UTF-8"))
 
             elif(re.match("^PASS( .*)?$", line, re.IGNORECASE)):
@@ -145,21 +145,21 @@ class POP3Protocol(Protocol, policies.TimeoutMixin):
                         self.password = arguments.group("password")
                         # TODO: implement honeytokendb check
                         if (True):
-                            log.login(self.name, self.peerOfAttacker, config.pop3Port, True, self.username, self.password, "")
+                            log.login(self.name, self.peerOfAttacker, Config.pop3Port, True, self.username, self.password, "")
                             self.state["auth"] = True
                             self.setTimeout(self.timeoutPostAuth)
                             response = "+OK mailbox locked and ready\r\n"
-                            log.response(self.name, self.peerOfAttacker, config.pop3Port, "", self.username, "+OK")
+                            log.response(self.name, self.peerOfAttacker, Config.pop3Port, "", self.username, "+OK")
                         else:
-                            log.login(self.name, self.peerOfAttacker, config.pop3Port, False, self.username, self.password, "")
+                            log.login(self.name, self.peerOfAttacker, Config.pop3Port, False, self.username, self.password, "")
                             response = "-ERR POP3 Authentication unsuccessful/Bad username or password\r\n"
-                            log.response(self.name, self.peerOfAttacker, config.pop3Port, "", self.username, "-ERR (credentials)")
+                            log.response(self.name, self.peerOfAttacker, Config.pop3Port, "", self.username, "-ERR (credentials)")
                     else:
                         response = "-ERR Bad sequence of commands\r\n"
-                        log.response(self.name, self.peerOfAttacker, config.pop3Port, "", self.username, "-ERR (sequence of commands)")
+                        log.response(self.name, self.peerOfAttacker, Config.pop3Port, "", self.username, "-ERR (sequence of commands)")
                 else:
                     response = "-ERR Syntax error in parameters or arguments\r\n"
-                    log.response(self.name, self.peerOfAttacker, config.pop3Port, "", self.username, "-ERR (syntax)")
+                    log.response(self.name, self.peerOfAttacker, Config.pop3Port, "", self.username, "-ERR (syntax)")
 #                print("POP3Service sent: \""+response+"\"")
                 self.transport.write(response.encode("UTF-8"))
 
@@ -167,13 +167,13 @@ class POP3Protocol(Protocol, policies.TimeoutMixin):
                 if(line == "STAT"):
                     if (self.state["auth"]):
                         response = "+OK "+str(self.mailcount)+" "+str(self.mailsize)+"\r\n"
-                        log.response(self.name, self.peerOfAttacker, config.pop3Port, "", self.username, "+OK")
+                        log.response(self.name, self.peerOfAttacker, Config.pop3Port, "", self.username, "+OK")
                     else:
                         response = "-ERR POP3 Authentication unsuccessful/Bad username or password\r\n"
-                        log.response(self.name, self.peerOfAttacker, config.pop3Port, "", self.username, "-ERR (credentials)")
+                        log.response(self.name, self.peerOfAttacker, Config.pop3Port, "", self.username, "-ERR (credentials)")
                 else:
                     response = "-ERR Syntax error in parameters or arguments\r\n"
-                    log.response(self.name, self.peerOfAttacker, config.pop3Port, "", self.username, "-ERR (syntax)")
+                    log.response(self.name, self.peerOfAttacker, Config.pop3Port, "", self.username, "-ERR (syntax)")
                 self.transport.write(response.encode("UTF-8"))
 
             elif(re.match("^LIST( .*)?$", line, re.IGNORECASE)):
@@ -184,24 +184,24 @@ class POP3Protocol(Protocol, policies.TimeoutMixin):
                             for i, mail in enumerate(self.emails):
                                 response += str(i+1)+" "+str(len(mail[1]))+"\r\n"
                             response += ".\r\n"
-                            log.response(self.name, self.peerOfAttacker, config.pop3Port, "", self.username, "+OK")
+                            log.response(self.name, self.peerOfAttacker, Config.pop3Port, "", self.username, "+OK")
                         else:
                             # n-th mail requested
                             n = int(re.match("^LIST( (\d+))$", line, re.IGNORECASE).groups()[1])
                             if (0 <= (n-1) < len(self.emails)):
                                 response = "+OK "+str(n)+" "+str(len(self.emails[n-1][1]))+"\r\n"
-                                log.response(self.name, self.peerOfAttacker, config.pop3Port, "", self.username, "+OK")
+                                log.response(self.name, self.peerOfAttacker, Config.pop3Port, "", self.username, "+OK")
                             else:
                                 response = "-ERR Email "+str(n)+" not available\r\n"
-                                log.response(self.name, self.peerOfAttacker, config.pop3Port, "", self.username, "-ERR (mail not found)")
+                                log.response(self.name, self.peerOfAttacker, Config.pop3Port, "", self.username, "-ERR (mail not found)")
                         self.transport.write(response.encode("UTF-8"))
                     else:
                         response = "-ERR POP3 Authentication unsuccessful/Bad username or password\r\n"
-                        log.response(self.name, self.peerOfAttacker, config.pop3Port, "", self.username, "-ERR (credentials)")
+                        log.response(self.name, self.peerOfAttacker, Config.pop3Port, "", self.username, "-ERR (credentials)")
                         self.transport.write(response.encode("UTF-8"))
                 else:
                     response = "-ERR Syntax error in parameters or arguments\r\n"
-                    log.response(self.name, self.peerOfAttacker, config.pop3Port, "", self.username, "-ERR (syntax)")
+                    log.response(self.name, self.peerOfAttacker, Config.pop3Port, "", self.username, "-ERR (syntax)")
                     self.transport.write(response.encode("UTF-8"))
 
             elif(re.match("^UIDL( .*)?$", line, re.IGNORECASE)):
@@ -212,24 +212,24 @@ class POP3Protocol(Protocol, policies.TimeoutMixin):
                             for i, mail in enumerate(self.emails):
                                 response += str(i+1)+" "+mail[2]+"\r\n"
                             response += ".\r\n"
-                            log.response(self.name, self.peerOfAttacker, config.pop3Port, "", self.username, "+OK")
+                            log.response(self.name, self.peerOfAttacker, Config.pop3Port, "", self.username, "+OK")
                         else:
                             # n-th mail requested
                             n = int(re.match("^UIDL( (\d+))$", line).groups()[1])
                             if (0 <= (n-1) < len(self.emails)):
                                 response = "+OK "+str(n)+" "+hashlib.md5(self.emails[n-1][1].encode("UTF-8")).hexdigest()+"\r\n"
-                                log.response(self.name, self.peerOfAttacker, config.pop3Port, "", self.username, "+OK")
+                                log.response(self.name, self.peerOfAttacker, Config.pop3Port, "", self.username, "+OK")
                             else:
                                 response = "-ERR Email "+str(n)+" not available\r\n"
-                                log.response(self.name, self.peerOfAttacker, config.pop3Port, "", self.username, "-ERR (mail not found)")
+                                log.response(self.name, self.peerOfAttacker, Config.pop3Port, "", self.username, "-ERR (mail not found)")
                         self.transport.write(response.encode("UTF-8"))
                     else:
                         response = "-ERR POP3 Authentication unsuccessful/Bad username or password\r\n"
-                        log.response(self.name, self.peerOfAttacker, config.pop3Port, "", self.username, "-ERR (credentials)")
+                        log.response(self.name, self.peerOfAttacker, Config.pop3Port, "", self.username, "-ERR (credentials)")
                         self.transport.write(response.encode("UTF-8"))
                 else:
                     response = "-ERR Syntax error in parameters or arguments\r\n"
-                    log.response(self.name, self.peerOfAttacker, config.pop3Port, "", self.username, "-ERR (syntax)")
+                    log.response(self.name, self.peerOfAttacker, Config.pop3Port, "", self.username, "-ERR (syntax)")
                     self.transport.write(response.encode("UTF-8"))
 
             elif(re.match("^RETR( .*)?$", line, re.IGNORECASE)):
@@ -239,18 +239,18 @@ class POP3Protocol(Protocol, policies.TimeoutMixin):
                         n = int(re.match("^RETR( (\d+))$", line, re.IGNORECASE).groups()[1])
                         if (0 <= (n-1) < len(self.emails)):
                             response = "+OK "+str(len(self.emails[n-1][1]))+" octets\r\n"+self.emails[n-1][0]+"\r\n"+self.emails[n-1][1]+"\r\n.\r\n"
-                            log.response(self.name, self.peerOfAttacker, config.pop3Port, "", self.username, "+OK")
+                            log.response(self.name, self.peerOfAttacker, Config.pop3Port, "", self.username, "+OK")
                         else:
                             response = "-ERR message "+str(n)+" not available\r\n"
-                            log.response(self.name, self.peerOfAttacker, config.pop3Port, "", self.username, "-ERR (mail not found)")
+                            log.response(self.name, self.peerOfAttacker, Config.pop3Port, "", self.username, "-ERR (mail not found)")
                         self.transport.write(response.encode("UTF-8"))
                     else:
                         response = "-ERR POP3 Authentication unsuccessful/Bad username or password\r\n"
-                        log.response(self.name, self.peerOfAttacker, config.pop3Port, "", self.username, "-ERR (credentials)")
+                        log.response(self.name, self.peerOfAttacker, Config.pop3Port, "", self.username, "-ERR (credentials)")
                         self.transport.write(response.encode("UTF-8"))
                 else:
                     response = "-ERR Syntax error in parameters or arguments\r\n"
-                    log.response(self.name, self.peerOfAttacker, config.pop3Port, "", self.username, "-ERR (syntax)")
+                    log.response(self.name, self.peerOfAttacker, Config.pop3Port, "", self.username, "-ERR (syntax)")
                     self.transport.write(response.encode("UTF-8"))
 
             elif(re.match("^DELE( .*)?$", line, re.IGNORECASE)):
@@ -260,18 +260,18 @@ class POP3Protocol(Protocol, policies.TimeoutMixin):
                         n = int(re.match("^DELE( (\d+))$", line, re.IGNORECASE).groups()[1])
                         if (0 <= (n-1) < len(self.emails)):
                             response = "+OK message "+str(n)+" deleted\r\n"
-                            log.response(self.name, self.peerOfAttacker, config.pop3Port, "", self.username, "+OK")
+                            log.response(self.name, self.peerOfAttacker, Config.pop3Port, "", self.username, "+OK")
                         else:
                             response = "-ERR message "+str(n)+" not available\r\n"
-                            log.response(self.name, self.peerOfAttacker, config.pop3Port, "", self.username, "-ERR (mail not found)")
+                            log.response(self.name, self.peerOfAttacker, Config.pop3Port, "", self.username, "-ERR (mail not found)")
                         self.transport.write(response.encode("UTF-8"))
                     else:
                         response = "-ERR POP3 Authentication unsuccessful/Bad username or password\r\n"
-                        log.response(self.name, self.peerOfAttacker, config.pop3Port, "", self.username, "-ERR (credentials)")
+                        log.response(self.name, self.peerOfAttacker, Config.pop3Port, "", self.username, "-ERR (credentials)")
                         self.transport.write(response.encode("UTF-8"))
                 else:
                     response = "-ERR Syntax error in parameters or arguments\r\n"
-                    log.response(self.name, self.peerOfAttacker, config.pop3Port, "", self.username, "-ERR (syntax)")
+                    log.response(self.name, self.peerOfAttacker, Config.pop3Port, "", self.username, "-ERR (syntax)")
                     self.transport.write(response.encode("UTF-8"))
 
             elif(re.match("^QUIT( .*)?$", line, re.IGNORECASE)):
@@ -279,16 +279,16 @@ class POP3Protocol(Protocol, policies.TimeoutMixin):
                 if (line == "QUIT"):
                     self.state["connected"] = False
                     response = "+OK bye\r\n"
-                    log.response(self.name, self.peerOfAttacker, config.pop3Port, "", self.username, "+OK")
+                    log.response(self.name, self.peerOfAttacker, Config.pop3Port, "", self.username, "+OK")
                     self.transport.write(response.encode("UTF-8"))
                     # close connection
                     self.transport.loseConnection()
                 else:
                     response = "-ERR Syntax error in parameters or arguments\r\n"
-                    log.response(self.name, self.peerOfAttacker, config.pop3Port, "", self.username, "-ERR (syntax")
+                    log.response(self.name, self.peerOfAttacker, Config.pop3Port, "", self.username, "-ERR (syntax")
                     self.transport.write(response.encode("UTF-8"))
 
             else:
                 response = "-ERR Unrecognized command \'"+line+"\'\r\n"
-                log.response(self.name, self.peerOfAttacker, config.pop3Port, "", self.username, "-ERR (command)")
+                log.response(self.name, self.peerOfAttacker, Config.pop3Port, "", self.username, "-ERR (command)")
                 self.transport.write(response.encode("UTF-8"))

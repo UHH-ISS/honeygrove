@@ -1,9 +1,11 @@
-import unittest
+from honeygrove.config import Config
 from honeygrove.core.ServiceController import ServiceController as SC
 from honeygrove.services.ListenService import ListenService
-from honeygrove import config
+
 import twisted.internet.reactor
-import time
+
+import unittest
+
 
 class ListenServiceTest(unittest.TestCase):
     listen = None
@@ -11,7 +13,7 @@ class ListenServiceTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        config.listenServicePorts = [9991,9992]
+        Config.listenServicePorts = [9991, 9992]
 
     def setUp(self):
         ListenServiceTest.listen = ListenService()
@@ -22,12 +24,11 @@ class ListenServiceTest(unittest.TestCase):
         ListenServiceTest.listen.stopService()
         twisted.internet.reactor.callFromThread(twisted.internet.reactor.stop)
 
-
     def testInit(self):
         """
         Test if all Ports are initialisiert
         """
-        self.assertEqual(ListenServiceTest.listen._port, [9991,9992])
+        self.assertEqual(ListenServiceTest.listen._port, [9991, 9992])
         self.assertEqual(ListenServiceTest.listen._stop, True)
         self.assertEqual(ListenServiceTest.listen._transport, dict([]))
 

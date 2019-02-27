@@ -1,24 +1,24 @@
+from honeygrove.config import Config
+
 import os
 import re
 import xml.etree.ElementTree as ET
 
-from honeygrove import config
-
 
 class FilesystemParser:
-    honeytoken_directory = config.tokendir
+    honeytoken_directory = Config.tokendir
     cd_pattern = "^cd \S+$"
     mkdir_pattern = "^mkdir \S+$"
     touch_pattern = "^touch \S+$"
     ls_pattern = "^ls \S+$"
 
-    def __init__(self, xml_path=config.path_to_filesys):
+    def __init__(self, xml_path=Config.path_to_filesys):
 
         with open(xml_path) as f:
             try:
                 self.start_path = f.readline().split("--")[1].split(",")  # read first line and parse
                 self.start_path = list(map(int, self.start_path))  # letters-numbers to list
-            except:
+            except Exception:
                 self.start_path = []  # if nothing given, the "/" is the root-/user directory
 
         # The current position in the tree as list
@@ -101,7 +101,7 @@ class FilesystemParser:
         if rel_path[0] == "~":
             rel_path = rel_path.replace("~", self.user_path)
 
-        if rel_path[0] != "/":  #  if its a absolute path, we don't have to add a prefix
+        if rel_path[0] != "/":  # if its a absolute path, we don't have to add a prefix
             rel_path = self.get_current_path() + "/" + rel_path
 
         # Deletes stuff like ///, /./, ./ or /.
@@ -196,7 +196,6 @@ class FilesystemParser:
         split = path.split("/")
         file_path = "/".join(split[:-1])
         file_name = split[-1]
-
 
         if file_name in self.ls(file_path) or file_name == ".":
             if tag == "dir":

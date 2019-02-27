@@ -1,4 +1,5 @@
-from honeygrove import config, log
+from honeygrove import log
+from honeygrove.config import Config
 
 import twisted.conch.error as concherror
 from twisted.conch.ssh import keys
@@ -29,7 +30,7 @@ class HoneytokenDataBase():
     passwordField = 2
     publicKeyField = 3
 
-    filepath = config.tokenDatabase
+    filepath = Config.tokenDatabase
     sep = ':'
 
     credentialInterfaces = (credentials.IUsernamePassword,
@@ -75,7 +76,7 @@ class HoneytokenDataBase():
 
     def load_credentials(self):
         """
-        Loads the credentials from the configured file.
+        Loads the credentials from the Configured file.
 
         @return: A list of (scope, username, password) tuples.
         @rtype: iterable
@@ -155,9 +156,9 @@ class HoneytokenDataBase():
             return failure.Failure(error.UnauthorizedLogin())
 
     def randomAccept(self, username, password, randomAcceptProbability):
-        if (len(password) <= config.pc_maxLength) and (len(password) >= config.pc_minLength) and (len(username) <= config.nc_maxLength) and (len(username) >= config.nc_minLength) and b":" not in username and b":" not in password:
-            if config.hashAccept:
-                hashbau = username + config.hashSeed + password
+        if (len(password) <= Config.pc_maxLength) and (len(password) >= Config.pc_minLength) and (len(username) <= Config.nc_maxLength) and (len(username) >= Config.nc_minLength) and b":" not in username and b":" not in password:
+            if Config.hashAccept:
+                hashbau = username + Config.hashSeed + password
                 hash1 = hashlib.sha1(hashbau).hexdigest()
                 i = 0
                 for x in range(0, 39):
@@ -185,12 +186,12 @@ class HoneytokenDataBase():
         except KeyError:
 
             # accept random
-            if self.servicename in config.honeytokendbProbabilities.keys():
-                randomAcceptProbability = config.honeytokendbProbabilities[self.servicename]
+            if self.servicename in Config.honeytokendbProbabilities.keys():
+                randomAcceptProbability = Config.honeytokendbProbabilities[self.servicename]
 
             if self.randomAccept(c.username, c.password, randomAcceptProbability) and hasattr(c, 'password'):
-                if self.servicename in config.honeytokendbGenerating.keys():
-                    self.writeToDatabase(c.username, c.password, ",".join(config.honeytokendbGenerating[self.servicename]))
+                if self.servicename in Config.honeytokendbGenerating.keys():
+                    self.writeToDatabase(c.username, c.password, ",".join(Config.honeytokendbGenerating[self.servicename]))
                     return defer.succeed(c.username)
 
             return defer.fail(error.UnauthorizedLogin())

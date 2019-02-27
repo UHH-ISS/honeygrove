@@ -1,4 +1,5 @@
-from honeygrove import config, log
+from honeygrove import log
+from honeygrove.config import Config
 from honeygrove.services.ServiceBaseModel import ServiceBaseModel
 
 import socket
@@ -31,7 +32,7 @@ class TCPFlagSniffer(ServiceBaseModel):
         Root priv. are needed!
         """
         super(TCPFlagSniffer, self).__init__()
-        self._name = config.tcpFlagSnifferName
+        self._name = Config.tcpFlagSnifferName
         self.synConnections = dict([])
         self.finConnections = dict([])
         self.xmasConnections = dict([])
@@ -140,22 +141,22 @@ class TCPFlagSniffer(ServiceBaseModel):
 
     def scanOpenSynConnections(self):
         """
-        Scans the Dict which is holding TCPDataStructs for timestaps which are older then a specific time defined in config
+        Scans the Dict which is holding TCPDataStructs for timestaps which are older then a specific time defined in Config
         """
         while not self._stop:
             with self.synConnectionsLock:
                 for _, item in self.synConnections.copy().items():
-                    if (time.time() - item.inTime) > config.tcpTimeout:
+                    if (time.time() - item.inTime) > Config.tcpTimeout:
                         log.tcp_scan(item.sourceIP, item.destPort, item.timeStamp, 'syn')
                         self.synConnections.pop(str(item.sourceIP) + str(item.destPort), None)
 
                 for _, item in self.finConnections.copy().items():
-                    if (time.time() - item.inTime) > config.tcpTimeout:
+                    if (time.time() - item.inTime) > Config.tcpTimeout:
                         log.tcp_scan(item.sourceIP, item.destPort, item.timeStamp, 'fin')
                         self.finConnections.pop(str(item.sourceIP) + str(item.destPort), None)
 
                 for _, item in self.xmasConnections.copy().items():
-                    if (time.time() - item.inTime) > config.tcpTimeout:
+                    if (time.time() - item.inTime) > Config.tcpTimeout:
                         log.tcp_scan(item.sourceIP, item.destPort, item.timeStamp, 'xmas')
                         self.xmasConnections.pop(str(item.sourceIP) + str(item.destPort), None)
 

@@ -1,4 +1,5 @@
-from honeygrove import config, log
+from honeygrove import log
+from honeygrove.config import Config
 from honeygrove.core.HoneytokenDB import HoneytokenDataBase
 from honeygrove.services.ServiceBaseModel import ServiceBaseModel
 
@@ -18,7 +19,7 @@ class HTTPService(ServiceBaseModel):
     now = datetime.now()
     timeNow = time.mktime(now.timetuple())
 
-    responseHeadersOkStatus = config.httpResponseHeader
+    responseHeadersOkStatus = Config.httpResponseHeader
     responseHeadersForbidden = {'Date': format_date_time(timeNow)}
     responseHeadersNotFound = {'Date': format_date_time(timeNow),
                                'Content-Type': 'text/html; charset=UTF-8'}
@@ -27,13 +28,13 @@ class HTTPService(ServiceBaseModel):
     notFoundStatus = "HTTP/1.1 404 Not Found"
     htdb = HoneytokenDataBase("HTTP")
     port = ""
-    resourceLocation = config.resources_dir + 'http_resources/'
+    resourceLocation = Config.resources_dir + 'http_resources/'
     supportedSites = []
 
     def __init__(self):
         super(HTTPService, self).__init__()
-        self._name = config.httpName
-        self._port = config.httpPort
+        self._name = Config.httpName
+        self._port = Config.httpPort
         self._fService.protocol = self.protokoll
         HTTPService.port = self._port
 
@@ -45,7 +46,7 @@ class HTTPService(ServiceBaseModel):
 
             self.peerOfAttacker = ""
             self.page = ""
-            self.path = config.resources_dir
+            self.path = Config.resources_dir
             self.attackingSite = ""
             self.loginSuccessfulSite = ""
             self.notFoundSite = ""
@@ -74,17 +75,17 @@ class HTTPService(ServiceBaseModel):
             for serviceLink in HTTPService.supportedSites:
                 if self.page == serviceLink:
                     pageNotFound = False
-                    self.attackingSite = HTTPService.resourceLocation + config.httpHTMLDictionary[serviceLink][0]
-                    if config.httpHTMLDictionary[serviceLink].__len__() > 1:
+                    self.attackingSite = HTTPService.resourceLocation + Config.httpHTMLDictionary[serviceLink][0]
+                    if Config.httpHTMLDictionary[serviceLink].__len__() > 1:
                         self.loginSuccessfulSite = HTTPService.resourceLocation + \
-                                                   config.httpHTMLDictionary[serviceLink][1]
+                                                   Config.httpHTMLDictionary[serviceLink][1]
                     else:
-                        self.loginSuccessfulSite = HTTPService.resourceLocation + config.httpHTMLDictionary['404'][0]
+                        self.loginSuccessfulSite = HTTPService.resourceLocation + Config.httpHTMLDictionary['404'][0]
                     self.short = serviceLink
                     break
 
             if pageNotFound:
-                self.notFoundSite = HTTPService.resourceLocation + config.httpHTMLDictionary['404'][0]
+                self.notFoundSite = HTTPService.resourceLocation + Config.httpHTMLDictionary['404'][0]
 
             # Handle GETs
             if self.requestType == "GET" and ('.gif' in self.page or '.png' in self.page or '/dashboard_files/' in self.page or '.jpg' in self.page or '.woff' in self.page or '.ttf' in self.page or '.svg' in self.page):
@@ -186,7 +187,7 @@ class HTTPService(ServiceBaseModel):
             self._transport = reactor.listenTCP(self._port, self._fService)
 
             sites = []
-            for key in config.httpHTMLDictionary:
+            for key in Config.httpHTMLDictionary:
                 sites.append(key)
             HTTPService.supportedSites = sites
 

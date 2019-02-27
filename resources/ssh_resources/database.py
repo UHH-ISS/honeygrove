@@ -1,8 +1,9 @@
-from honeygrove import config, log
+from honeygrove import log
+from honeygrove.config import Config
 
 import json
-dbfilePath = config.resources_dir + "ssh_resources/database.json"
 
+dbfilePath = Config.resources_dir + "ssh_resources/database.json"
 lastLoginTime = dict()
 
 
