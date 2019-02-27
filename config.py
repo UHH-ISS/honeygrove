@@ -43,6 +43,8 @@ class Config:
     listenServiceName = "LISTEN"
     tcpFlagSnifferName = "TCPFlagSniffer"
 
+    max_connections_per_host = 100
+
     # HTTP service configuration
     http = ConfigSection()
     http.name = "HTTP"
@@ -71,7 +73,7 @@ class Config:
     ssh.gnuhelp_folder = resources_dir + "ssh_resources/gnuhelp"
     ssh.real_shell = False
     ssh.accept_files = True
-    ssh.connections_per_host = 100
+    ssh.connections_per_host = max_connections_per_host
 
     # Telnet service configuration
     telnet = ConfigSection()
@@ -79,7 +81,7 @@ class Config:
     telnet.port = 23
     # Currently not implemented
     telnet.real_shell = False
-    telnet.connections_per_host = 100
+    telnet.connections_per_host = max_connections_per_host
 
     # FTP configuration:
     ftpPort = 21
