@@ -3,8 +3,14 @@ import socket
 from honeygrove.resources.http_resources import HTMLLoader
 
 
-# Honeypot service configuration file
+# With this we get dot-notation for config subsections
+class ConfigSection:
+    pass
+
+
+# Honeygrove configuration
 class Config:
+    # Generic
     HPID = "HP1"
     machine_name = "hp1"
     hp_description = {"Name": str(HPID), "Location": "Moscow, Russia", "Description": "Honeygrove instance"}
@@ -30,31 +36,30 @@ class Config:
     log_status = True
     log_alerts = True
     # True = use UTC, False = use System Time
-    use_utc = False
+    use_utc = True
 
     # Generic configuration:
     listenServicePorts = [r for r in range(1, 5000)]
     listenServiceName = "LISTEN"
     tcpFlagSnifferName = "TCPFlagSniffer"
 
+    # HTTP service configuration
+    http = ConfigSection()
+    http.name = "HTTP"
+    http.port = 80
     # Modify to simulate another server
-    httpResponseHeader = {'Last-Modified': "Sun, 07 Aug 2016 08:02:22 GMT",
-                          'Cache-Control': "no-store, no-cache, must-revalidate, post-check=0, pre-check=0",
-                          'Pragma': "no-cache",
-                          'Content-Type': "text/html; charset=UTF-8"}
-
+    http.response_headers = {'Last-Modified': "Sun, 07 Aug 2016 08:02:22 GMT",
+                             'Cache-Control': "no-store, no-cache, must-revalidate, post-check=0, pre-check=0",
+                             'Pragma': "no-cache",
+                             'Content-Type': "text/html; charset=UTF-8"}
     # To add your own HTML file you need to add it at httpSupportedSites
     # and add it into the dictionary below with its index. A
     # content page is optional. The first site is the login site, the
     # second one is the content page. The html login file needs
     # to have a login field with the name "log" and a password field
     # with the name of "pwd"
-    httpHTMLDictionary = HTMLLoader.load_HTMLDictionary()
-    httpResources = resources_dir + "/http_resources/"
-
-    # HTTP configuration:
-    httpPort = 80
-    httpName = "HTTP"
+    http.html_dictionary = HTMLLoader.load_HTMLDictionary()
+    http.resource_folder = resources_dir + "/http_resources/"
 
     # SSH configuration:
     sshPort = 22
@@ -140,7 +145,7 @@ class Config:
     quarantineDir = resources_dir + "/quarantine"
 
     # Startup
-    startupList = [httpName, ftpName, sshName, tcpFlagSnifferName, smtpName, smtpsName, pop3Name, pop3sName, imapName, imapsName, telnetName]
+    startupList = [http.name, ftpName, sshName, tcpFlagSnifferName, smtpName, smtpsName, pop3Name, pop3sName, imapName, imapsName, telnetName]
 
     # Services, die nicht an einen Port gebunden sind
     noPortSpecificService = [listenServiceName, tcpFlagSnifferName]

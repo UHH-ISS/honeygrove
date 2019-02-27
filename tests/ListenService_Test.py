@@ -1,5 +1,5 @@
 from honeygrove.config import Config
-from honeygrove.core.ServiceController import ServiceController as SC
+from honeygrove.core.ServiceController import ServiceController
 from honeygrove.services.ListenService import ListenService
 
 import twisted.internet.reactor
@@ -17,7 +17,7 @@ class ListenServiceTest(unittest.TestCase):
 
     def setUp(self):
         ListenServiceTest.listen = ListenService()
-        ListenServiceTest.Controller = SC()
+        ListenServiceTest.Controller = ServiceController()
         ListenServiceTest.Controller.listen = ListenServiceTest.listen
 
     def tearDown(self):
