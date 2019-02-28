@@ -19,8 +19,8 @@ class FTPService(ServiceBaseModel):
 
     credchecker = HoneytokenDataBase("FTP")
     # Make name and port accessible for logging in FTPProtocol
-    _name = Config.ftpName
-    _port = Config.ftpPort
+    _name = Config.ftp.name
+    _port = Config.ftp.port
 
     def __init__(self):
 
@@ -30,10 +30,10 @@ class FTPService(ServiceBaseModel):
 
         self._fService = FTPFactory(portal)
 
-        self._name = Config.ftpName
-        self._port = Config.ftpPort
+        self._name = Config.ftp.name
+        self._port = Config.ftp.port
 
-        self._limiter = Limiter(self._fService, self._name, Config.FTP_conn_per_host)
+        self._limiter = Limiter(self._fService, self._name, Config.ftp.connections_per_host)
 
         self.protocol = FTPProtocol
         self._fService.protocol = self.protocol
@@ -315,7 +315,7 @@ class FTPProtocol(FTP):
             """
             Called from data transport when tranfer is done.
             """
-            if Config.ftpAcceptsFiles:
+            if Config.ftp.accept_files:
                 self.l.file(FTPService._name, self.transport.getPeer().host, FTPService._port, filename, self.receivedDataDirectory + "/" + filename,
                             self.user)
             else:
@@ -336,7 +336,7 @@ class FTPProtocol(FTP):
                             RESPONSE.get(CNX_CLOSED_TXFR_ABORTED), self.user, "STOR")
             return (CNX_CLOSED_TXFR_ABORTED,)
 
-        if Config.ftpAcceptsFiles:
+        if Config.ftp.accept_files:
             i = 1
             name = filename
             while name in os.listdir(self.receivedDataDirectory):

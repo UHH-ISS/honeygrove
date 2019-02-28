@@ -84,9 +84,11 @@ class Config:
     telnet.connections_per_host = max_connections_per_host
 
     # FTP configuration:
-    ftpPort = 21
-    ftpName = "FTP"
-    FTP_conn_per_host = 100
+    ftp = ConfigSection()
+    ftp.name = "FTP"
+    ftp.port = 21
+    ftp.accept_files = True
+    ftp.connections_per_host = max_connections_per_host
 
     # TLS server certificate used for email services
     TLSeMailKey = base_dir + "keys/server.key"
@@ -148,11 +150,10 @@ class Config:
     nc_maxLength = 24
 
     # Malware configuration
-    ftpAcceptsFiles = True
     quarantineDir = resources_dir + "/quarantine"
 
     # Startup
-    startupList = [http.name, ssh.name, telnet.name, ftpName, tcpFlagSnifferName, smtpName, smtpsName, pop3Name, pop3sName, imapName, imapsName]
+    startupList = [http.name, ssh.name, telnet.name, ftp.name, tcpFlagSnifferName, smtpName, smtpsName, pop3Name, pop3sName, imapName, imapsName]
 
     # Services, die nicht an einen Port gebunden sind
     noPortSpecificService = [listenServiceName, tcpFlagSnifferName]
