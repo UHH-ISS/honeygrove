@@ -1,13 +1,13 @@
-import unittest
-from os.path import join
+from honeygrove.core.FilesystemParser import FilesystemParser
+from honeygrove.services.FTPService import FTPProtocol
+from honeygrove.tests.testresources import TestLogging as fakelogging, testconfig as config
 
 import mock
 from twisted.protocols.ftp import *
 
-from honeygrove.core.FilesystemParser import FilesystemParser
-from honeygrove.services.FTPService import FTPProtocol
-from honeygrove.tests.testresources import TestLogging as fakelogging
-from honeygrove.tests.testresources import testconfig as config
+import os
+from os.path import join
+import unittest
 
 
 def add_file(dir, name):
@@ -15,8 +15,10 @@ def add_file(dir, name):
     with open(path, 'w+') as file:
         file.write("")
 
-def remove_file(dir,name):
+
+def remove_file(dir, name):
     os.remove(join(dir, name))
+
 
 class FTP_Test(unittest.TestCase):
 
@@ -36,7 +38,7 @@ class FTP_Test(unittest.TestCase):
 
     def test_CWD(self):
 
-        #Case 1: Valid Path
+        # Case 1: Valid Path
         actual = self.ftp.ftp_CWD("Desktop")
         expected = ('250',)
         # 1.1 Get The Correct Response
@@ -46,7 +48,7 @@ class FTP_Test(unittest.TestCase):
         expected_directory = ('257.1', ' C:\\Benutzer\\TestUser\\Desktop')
         self.assertEqual(expected_directory, actual_directory)
 
-        #Case 2: Invalid Path
+        # Case 2: Invalid Path
         actual = self.ftp.ftp_CWD("non-existent").result.value
         self.assertTrue(isinstance(actual, FileNotFoundError))
 
@@ -104,8 +106,8 @@ class FTP_Test(unittest.TestCase):
 
         # Case 1: Valid Path to Directory
         actual = self.ftp.ftp_MDTM("Desktop")
-        expected = ('213',self.ftp.lastmodified.strftime('%Y%m%d%H%M%S'))
-        self.assertEqual(expected,actual)
+        expected = ('213', self.ftp.lastmodified.strftime('%Y%m%d%H%M%S'))
+        self.assertEqual(expected, actual)
 
         # Case 2: Valid Path to File
         self.ftp.ftp_CWD("Dokumente")
@@ -209,9 +211,9 @@ class FTP_Test(unittest.TestCase):
         # Case 2: Valid Path to Directory
         (response, size) = self.ftp.ftp_SIZE("Desktop")
         # 2.1 Get Correct Response
-        self.assertEqual('213',response)
+        self.assertEqual('213', response)
         # 2.2 Get Appropriate Size
-        self.assertTrue(size<=5000000 and size>=20000)
+        self.assertTrue(size <= 5000000 and size >= 20000)
 
         # Case 3: Valid Path to File
         self.ftp.ftp_CWD("Dokumente")
@@ -248,10 +250,9 @@ class FTP_Test(unittest.TestCase):
         # 3.1 Get Expected Error
         self.assertRaises(BadCmdSequenceError, self.ftp.ftp_STOR, "No DTP Instance")
 
-        #Delete
+        # Delete
         remove_file(self.ftp.receivedDataDirectory, "brief.doc")
         remove_file(self.ftp.receivedDataDirectory, "stortest")
-
 
     def test_RETR(self):
 
@@ -285,7 +286,7 @@ class FTP_Test(unittest.TestCase):
         # 3.1 Nothing Was Tried To Send
         self.assertTrue(patched.call_count == 0)
         # 3.2 Get Expected Response
-        self.assertEqual(expected,actual)
+        self.assertEqual(expected, actual)
         self.ftp.ftp_CWD("..")
 
         # Case 4: Valid Path to File In Honeytokendirectory
@@ -317,7 +318,7 @@ class FTP_Test(unittest.TestCase):
 
     def test_InheritedCommands(self):
         supported_commands = self.ftp.inherited_commands_whitelist
-        supported_commands.remove('RNFR') # Haben wir schon getestet
+        supported_commands.remove('RNFR')  # Was already tested
         for com in supported_commands:
             patch = mock.patch.object(FTPProtocol, "ftp_" + com)
             ftp = FTPProtocol()
@@ -337,38 +338,50 @@ class FTP_Test(unittest.TestCase):
 class TransportMock():
     def getPeer(self):
         return PeerMock()
+
     def getHost(self):
         return PeerMock()
+
     def write(self, text):
         pass
+
     def loseConnection(self):
         pass
+
 
 class PeerMock():
     host = "AttackerIP"
 
+
 class DTPMock():
     isConnected = True
     transport = TransportMock()
+
     def sendLine(self, line):
         pass
+
     def registerConsumer(self, consumer):
         pass
+
     def registerProducer(self, producer, smth):
         pass
+
 
 class DTPMock_Unconnected():
     isConnected = False
     transport = TransportMock()
+
 
 class PortalMock():
     def login(self, one, two, three):
         print(one, two, three)
         return SomeMock()
 
+
 class SomeMock():
     def addCallbacks(self, one, two):
         pass
+
 
 class FactoryMock():
     timeOut = None

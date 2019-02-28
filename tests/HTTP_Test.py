@@ -12,7 +12,7 @@ class HTTPTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        Config.httpPort = 9914
+        Config.http.port = 9914
         threading.Thread(target=reactor.run, args=(False,)).start()
         HTTPTest.httpInstance = HTTPService()
         HTTPTest.httpInstance.startService()
