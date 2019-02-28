@@ -110,15 +110,17 @@ class Config:
     smtps.port = 587
     smtps.connections_per_host = max_connections_per_host
 
-    # POP3 configuration:
-    pop3Port = 110
-    pop3Name = "POP3"
-    POP3_conn_per_host = 100
+    # POP3 service configuration
+    pop3 = ConfigSection()
+    pop3.name = "POP3"
+    pop3.port = 110
+    pop3.connections_per_host = max_connections_per_host
 
-    # POP3S (POP3 + TLS) configuration:
-    pop3sPort = 995
-    pop3sName = "POP3S"
-    POP3S_conn_per_host = 100
+    # POP3S (POP3 + TLS) service configuration
+    pop3s = ConfigSection()
+    pop3s.name = "POP3S"
+    pop3s.port = 995
+    pop3s.connections_per_host = max_connections_per_host
 
     # IMAP configuration:
     imapPort = 143
@@ -156,7 +158,7 @@ class Config:
     quarantineDir = resources_dir + "/quarantine"
 
     # Startup
-    startupList = [http.name, ssh.name, telnet.name, ftp.name, smtp.name, smtps.name, tcpFlagSnifferName, pop3Name, pop3sName, imapName, imapsName]
+    startupList = [http.name, ssh.name, telnet.name, ftp.name, smtp.name, smtps.name, pop3.name, pop3s.name, tcpFlagSnifferName, imapName, imapsName]
 
     # Services, die nicht an einen Port gebunden sind
     noPortSpecificService = [listenServiceName, tcpFlagSnifferName]

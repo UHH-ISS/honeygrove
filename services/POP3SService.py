@@ -9,9 +9,9 @@ class POP3SService(ServiceBaseModel):
     def __init__(self):
         super(POP3SService, self).__init__()
 
-        self._name = Config.pop3sName
-        self._port = Config.pop3sPort
-        self._limiter = Limiter(self._fService, Config.pop3sName, Config.POP3S_conn_per_host)
+        self._name = Config.pop3s.name
+        self._port = Config.pop3s.port
+        self._limiter = Limiter(self._fService, Config.pop3s.name, Config.pop3s.connections_per_host)
 
         self.protocol = POP3Protocol
         self._fService.protocol = self.protocol
