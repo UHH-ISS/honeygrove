@@ -9,9 +9,9 @@ class IMAPSService(ServiceBaseModel):
     def __init__(self):
         super(IMAPSService, self).__init__()
 
-        self._name = Config.imapsName
-        self._port = Config.imapsPort
-        self._limiter = Limiter(self._fService, Config.imapsName, Config.IMAPS_conn_per_host)
+        self._name = Config.imaps.name
+        self._port = Config.imaps.port
+        self._limiter = Limiter(self._fService, Config.imaps.name, Config.imaps.connections_per_host)
 
         self.protocol = IMAPProtocol
         self._fService.protocol = self.protocol

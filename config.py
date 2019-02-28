@@ -122,15 +122,19 @@ class Config:
     pop3s.port = 995
     pop3s.connections_per_host = max_connections_per_host
 
-    # IMAP configuration:
-    imapPort = 143
-    imapName = "IMAP"
-    IMAP_conn_per_host = 100
+    # IMAP service configuration
+    imap = ConfigSection()
+    imap.name = "IMAP"
+    imap.port = 143
+    # CRAM-MD5 and SCRAM-SHA-1 aren't yet implemented! (using them anyway crashes the connection)
+    imap.authentication_methods = smtp.authentication_methods
+    imap.connections_per_host = max_connections_per_host
 
-    # IMAPS (IMAP + TLS) configuration:
-    imapsPort = 993
-    imapsName = "IMAPS"
-    IMAPS_conn_per_host = 100
+    # IMAPS (IMAP + TLS) service configuration
+    imaps = ConfigSection()
+    imaps.name = "IMAPS"
+    imaps.port = 993
+    imaps.connections_per_host = max_connections_per_host
 
     # Path to Filesystem all services are using
     path_to_filesys = resources_dir + '/parser_resources' + '/unix.xml'
@@ -157,10 +161,11 @@ class Config:
     # Malware configuration
     quarantineDir = resources_dir + "/quarantine"
 
-    # Startup
-    startupList = [http.name, ssh.name, telnet.name, ftp.name, smtp.name, smtps.name, pop3.name, pop3s.name, tcpFlagSnifferName, imapName, imapsName]
+    # List of service names that should be enabled at startup
+    # Defaults to all implemented services
+    startupList = [http.name, ssh.name, telnet.name, ftp.name, smtp.name, smtps.name, pop3.name, pop3s.name, imap.name, imaps.name, tcpFlagSnifferName]
 
-    # Services, die nicht an einen Port gebunden sind
+    # Services which are not bound to a single port
     noPortSpecificService = [listenServiceName, tcpFlagSnifferName]
 
     # Zeitraum, in welchen ein ACK-Paket beim Verbindungsaufbau zurückkommen soll
