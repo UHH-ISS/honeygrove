@@ -46,7 +46,7 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
         # authentication methods offered to the client (https://english.stackexchange.com/a/7845)
         self.AuthMethods = ""
 
-        mm = Config.SMTPAuthMethods
+        mm = Config.smtp.authentication_methods
         for m in mm:
             if (mm[m]):
                 # string containing authentication methods (embedded inside server response)

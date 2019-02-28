@@ -18,7 +18,7 @@ class POP3SService(ServiceBaseModel):
 
     def startService(self):
         self._stop = False
-        self._transport = reactor.listenSSL(self._port, self._limiter, ssl.DefaultOpenSSLContextFactory(Config.TLSeMailKey, Config.TLSeMailCrt))
+        self._transport = reactor.listenSSL(self._port, self._limiter, ssl.DefaultOpenSSLContextFactory(Config.email.tls_key, Config.email.tls_cert))
 
     def stopService(self):
         self._stop = True

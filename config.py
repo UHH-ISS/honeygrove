@@ -83,29 +83,32 @@ class Config:
     telnet.real_shell = False
     telnet.connections_per_host = max_connections_per_host
 
-    # FTP configuration:
+    # FTP service configuration
     ftp = ConfigSection()
     ftp.name = "FTP"
     ftp.port = 21
     ftp.accept_files = True
     ftp.connections_per_host = max_connections_per_host
 
-    # TLS server certificate used for email services
-    TLSeMailKey = base_dir + "keys/server.key"
-    TLSeMailCrt = base_dir + "keys/server.crt"
+    # Email (POP3(S), SMTP(S), IMAP(S)) related configuration
+    email = ConfigSection()
+    # TLS configuration
+    email.tls_key = base_dir + "keys/server.key"
+    email.tls_cert = base_dir + "keys/server.crt"
 
-    # SMTP configuration:
-    smtpPort = 25
-    smtpName = "SMTP"
-    SMTP_conn_per_host = 100
-
-    # SMTPS (SMTP + TLS) configuration:
-    smtpsPort = 587
-    smtpsName = "SMTPS"
-    SMTPS_conn_per_host = 100
-
+    # SMTP service configuration
+    smtp = ConfigSection()
+    smtp.name = "SMTP"
+    smtp.port = 25
     # CRAM-MD5 and SCRAM-SHA-1 aren't yet implemented! (using them anyway crashes the connection)
-    SMTPAuthMethods = {"PLAIN": True, "LOGIN": True, "CRAM-MD5": False, "SCRAM-SHA-1": False}
+    smtp.authentication_methods = {"PLAIN": True, "LOGIN": True, "CRAM-MD5": False, "SCRAM-SHA-1": False}
+    smtp.connections_per_host = max_connections_per_host
+
+    # SMTPS (SMTP + TLS) service configuration
+    smtps = ConfigSection()
+    smtps.name = "SMTPS"
+    smtps.port = 587
+    smtps.connections_per_host = max_connections_per_host
 
     # POP3 configuration:
     pop3Port = 110
@@ -153,7 +156,7 @@ class Config:
     quarantineDir = resources_dir + "/quarantine"
 
     # Startup
-    startupList = [http.name, ssh.name, telnet.name, ftp.name, tcpFlagSnifferName, smtpName, smtpsName, pop3Name, pop3sName, imapName, imapsName]
+    startupList = [http.name, ssh.name, telnet.name, ftp.name, smtp.name, smtps.name, tcpFlagSnifferName, pop3Name, pop3sName, imapName, imapsName]
 
     # Services, die nicht an einen Port gebunden sind
     noPortSpecificService = [listenServiceName, tcpFlagSnifferName]
