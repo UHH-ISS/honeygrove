@@ -41,7 +41,7 @@ class BrokerEndpoint:
         """
         Start listening on ip
         """
-        BrokerEndpoint.listenEndpoint.listen(Config.BrokerComIP, Config.BrokerComPort)
+        BrokerEndpoint.listenEndpoint.listen(Config.broker.listen_ip, Config.broker.listen_port)
 
     @staticmethod
     def peerTo(ip, port):

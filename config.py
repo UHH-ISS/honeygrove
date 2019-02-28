@@ -172,22 +172,17 @@ class Config:
     # (Timeout zur Unterscheidung von Scans gegenüber einem ernsthaften Verbindungsaufbau)
     tcpTimeout = 5
 
-    # Broker Config
-    def get_ip_address():
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("8.8.8.8", 80))
-        return s.getsockname()[0]
-
-    # Needed for Broker to listen on correct IP - change "ip_addr" (string) for custom IP
-    if (use_broker):
-        ip_addr = get_ip_address()
-        BrokerComIP = ip_addr
-        BrokerComPort = 8888
-
-    # Opt. initial peering
-    init_peer = False
-    init_peer_ip = ""
-    init_peer_port = 34445
-
     # HoneyAdapter: StartMode
     honeygrove_start = 'active'
+
+    # Broker configuration
+    if (use_broker):
+        broker = ConfigSection()
+        # IP/port to listen on
+        broker.listen_ip = '127.0.0.1'
+        broker.listen_port = 8888
+
+        # Optional: initiate peering at startup (e.g. to CIM)
+        broker.peer = False
+        broker.peer_ip = ''
+        broker.peer_port = 34445
