@@ -30,7 +30,7 @@ class HoneytokenDataBase():
     passwordField = 2
     publicKeyField = 3
 
-    filepath = Config.tokenDatabase
+    filepath = Config.honeytoken.database_file
     sep = ':'
 
     credentialInterfaces = (credentials.IUsernamePassword,
@@ -52,23 +52,40 @@ class HoneytokenDataBase():
         shutil.copy2(path, temp_path)
         return temp_path
 
-    def getActual(self, user, pw, iskey=False):
+    def try_decode_key(self, raw_key):
+        key_str = raw_key.decode(errors='ignore')
+        # These keys are unsupported by twisted and Key.fromString fails if we call it, so return None
+        if "ed25519" in key_str or "ecdsa" in key_str:
+            return None
+        return keys.Key.fromString(data=raw_key).toString("OPENSSH").decode()
+
+    def try_get_tokens(self, user, data, is_key=False):
         res = []
+
+        if is_key:
+            # login via ssh key
+            key = self.try_decode_key(data)
+            if key is None:
+                # Key type is unsupported
+                return res
+        elif isinstance(data, bytes):
+            # login via password (which might be bytes)
+            pw = data.decode()
+        else:
+            pw = data
+
+        # Parse the credentials
         try:
             lines = self.load_credentials()
         except error.UnauthorizedLogin:
             return res
 
+        # Look for matching credentials
         for line in lines:
-            if iskey:
-                # login via ssh key
-                pw = keys.Key.fromString(data=pw).toString("OPENSSH").decode()
-                if line[1] == user and line[3] == pw:
+            if is_key:
+                if line[1] == user and line[3] == key:
                     res.extend(line[0])
             else:
-                # login without ssh key
-                if isinstance(pw, bytes):
-                    pw = pw.decode()
                 if line[1] == user and line[2] == pw:
                     res.extend(line[0])
 
@@ -87,8 +104,8 @@ class HoneytokenDataBase():
 
         # try to read from original database-file
         try:
-            with open(self.filepath, "r+") as file:
-                res = self.readLinesFromFile(file)
+            with open(self.filepath, "r+") as fp:
+                res = self.parse_lines(fp)
                 self.temp_copy_path = self.create_temporary_copy(self.filepath)  # update copy
                 return res
         except IOError:
@@ -97,15 +114,15 @@ class HoneytokenDataBase():
 
         # read from copied database-file
         try:
-            with open(self.temp_copy_path, "r") as file:
-                res = self.readLinesFromFile(file)
+            with open(self.temp_copy_path, "r") as fp:
+                res = self.parse_lines(fp)
                 return res
         except IOError as e:  # noqa
             raise error.UnauthorizedLogin()
 
-    def readLinesFromFile(self, file):
+    def parse_lines(self, lines):
         res = []
-        for line in file:
+        for line in lines:
             line = line.rstrip()
             parts = line.split(self.sep)
 
@@ -119,11 +136,9 @@ class HoneytokenDataBase():
                             parts[self.usernameField],
                             parts[self.passwordField],
                             ''))
-            else:
-                continue
         return res
 
-    def writeToDatabase(self, user, pw, services):
+    def write_to_database(self, user, pw, services):
 
         if type(user) is bytes:
             user = user.decode()
@@ -131,16 +146,15 @@ class HoneytokenDataBase():
             pw = pw.decode()
 
         try:
-            with open(self.filepath, "a") as file:
+            with open(self.filepath, "a") as fp:
                 log.info("Begin Honeytoken creation: {} : {}".format(user, pw))  # TODO make this a proper log type
-                file.write("\n" + services + self.sep + user + self.sep + pw + self.sep)
+                fp.write("\n" + services + self.sep + user + self.sep + pw + self.sep)
         except Exception as e:
             log.err("Honeytoken DB write exception: {}".format(e))
 
-    def getUser(self, username):
+    def get_user(self, username):
 
         by = type(username) is bytes
-
         for (s, u, p, k) in self.load_credentials():
             if by:
                 u = bytes(u, 'utf-8')
@@ -155,10 +169,13 @@ class HoneytokenDataBase():
         else:
             return failure.Failure(error.UnauthorizedLogin())
 
-    def randomAccept(self, username, password, randomAcceptProbability):
-        if (len(password) <= Config.pc_maxLength) and (len(password) >= Config.pc_minLength) and (len(username) <= Config.nc_maxLength) and (len(username) >= Config.nc_minLength) and b":" not in username and b":" not in password:
-            if Config.hashAccept:
-                hashbau = username + Config.hashSeed + password
+    def accept(self, username, password, randomAcceptProbability):
+        if (Config.honeytoken.username_min <= len(username) <= Config.honeytoken.username_max
+                and Config.honeytoken.password_min <= len(password) <= Config.honeytoken.password_max
+                and b":" not in username and b":" not in password):
+
+            if Config.accept_via_hash:
+                hashbau = username + Config.hash_seed + password
                 hash1 = hashlib.sha1(hashbau).hexdigest()
                 i = 0
                 for x in range(0, 39):
@@ -178,40 +195,38 @@ class HoneytokenDataBase():
 
         try:
             # try user authentification
-            u, p, k = self.getUser(c.username)
+            u, p, k = self.get_user(c.username)
 
         except error.UnauthorizedLogin:
             return defer.fail(error.UnauthorizedLogin())
 
         except KeyError:
+            # user not in database -> accept probabilistic
+            randomAcceptProbability = 0
+            if self.servicename in Config.honeytoken.probabilities.keys():
+                randomAcceptProbability = Config.honeytoken.probabilities[self.servicename]
 
-            # accept random
-            if self.servicename in Config.honeytokendbProbabilities.keys():
-                randomAcceptProbability = Config.honeytokendbProbabilities[self.servicename]
-
-            if self.randomAccept(c.username, c.password, randomAcceptProbability) and hasattr(c, 'password'):
-                if self.servicename in Config.honeytokendbGenerating.keys():
-                    self.writeToDatabase(c.username, c.password, ",".join(Config.honeytokendbGenerating[self.servicename]))
+            if hasattr(c, 'password') and self.accept(c.username, c.password, randomAcceptProbability):
+                if self.servicename in Config.honeytoken.generating.keys():
+                    self.write_to_database(c.username, c.password, ",".join(Config.honeytoken.generating[self.servicename]))
                     return defer.succeed(c.username)
 
-            return defer.fail(error.UnauthorizedLogin())
+            # TODO: Handle unknown keys
+            return defer.fail(error.UnauthorizedLogin("Invalid Password or Signature"))
 
-        else:
+        if hasattr(c, 'blob'):
+            userkey = keys.Key.fromString(data=k)
+            if not c.blob == userkey.blob():
+                return failure.Failure(error.ConchError("Unknown key."))
+            if not c.signature:
+                # tell the cient to sign his authentication (else the public key is kind of pointless)
+                return defer.fail(concherror.ValidPublicKey())
+            if userkey.verify(c.signature, c.sigData):
+                return defer.succeed(c.username)
+            else:
+                return failure.Failure(error.ConchError("Invalid Signature"))
 
-            if hasattr(c, 'blob'):
-                userkey = keys.Key.fromString(data=k)
-                if not c.blob == userkey.blob():
-                    return failure.Failure(error.ConchError("Unknown key."))
-                if not c.signature:
-                    return defer.fail(
-                        # telling the cient to sign his authentication (else the public key is kind of pointless)
-                        concherror.ValidPublicKey())
-                if userkey.verify(c.signature, c.sigData):
-                    return defer.succeed(c.username)
-                else:
-                    return failure.Failure(error.ConchError("Invalid Signature"))
+        if not p:
+            return defer.fail(error.UnauthorizedLogin())  # don't allow login with empty passwords
 
-            if not p:
-                return defer.fail(error.UnauthorizedLogin())  # don't allow login with empty passwords
-
-            return defer.maybeDeferred(c.checkPassword, p).addCallback(self.password_match, u)
+        return defer.maybeDeferred(c.checkPassword, p).addCallback(self.password_match, u)

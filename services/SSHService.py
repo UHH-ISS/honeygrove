@@ -7,9 +7,9 @@ from honeygrove.services.ServiceBaseModel import Limiter, ServiceBaseModel
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
+
 from twisted.conch import recvline, avatar, insults, error
 from twisted.conch.ssh import factory, keys, session, userauth, common, transport
-
 from twisted.cred.portal import Portal
 from twisted.internet import reactor
 from twisted.python import components, failure
@@ -27,7 +27,7 @@ transport.SSHTransportBase.ourVersionString = Config.ssh.banner
 
 
 class SSHService(ServiceBaseModel):
-    c = HoneytokenDataBase(servicename=Config.ssh.name)
+    honeytokendb = HoneytokenDataBase(servicename=Config.ssh.name)
 
     def __init__(self):
         super(SSHService, self).__init__()
@@ -36,7 +36,7 @@ class SSHService(ServiceBaseModel):
         self._port = Config.ssh.port
 
         p = Portal(SSHRealm())
-        p.registerChecker(SSHService.c)
+        p.registerChecker(SSHService.honeytokendb)
 
         self._fService = factory.SSHFactory()
         self._fService.services[b'ssh-userauth'] = groveUserAuth
@@ -509,9 +509,7 @@ class groveUserAuth(userauth.SSHUserAuthServer):
         self.nextService = nextService
         self.method = method
 
-        is_key = False
-        if method == b"publickey":
-            is_key = True
+        is_key = method == b"publickey"
 
         d = self.tryAuth(method, user, rest)
         if is_key:
@@ -519,21 +517,26 @@ class groveUserAuth(userauth.SSHUserAuthServer):
         else:
             rest = rest[5:]
 
-        if not d:
-            self._ebBadAuth(
-                failure.Failure(error.ConchError('auth returned none')))
-            return
+        user = user.decode()
 
-        honeytoken_actual = str(SSHService.c.getActual(user.decode(), rest, is_key))
+        # Try to get tokens from the database
+        honeytoken = str(SSHService.honeytokendb.try_get_tokens(user, rest, is_key))
+
+        # We need to decode the key to log it in the Callback and Errback
         if is_key:
-            rest = keys.Key.fromString(data=rest)._toString_OPENSSH(None)
+            rest = SSHService.honeytokendb.try_decode_key(rest)
+            # This might fail if the key type is unsupported, so we log that
+            if not rest:
+                rest = "<unsupported key type>"
+        elif isinstance(rest, bytes):
+            rest = rest.decode("unicode_escape")
 
         d.addCallback(self._cbFinishedAuth)
         d.addCallback(log.defer_login, Config.ssh.name, self.transport.transport.client[0], Config.ssh.port, True,
-                      user.decode(), rest.decode("unicode_escape"), honeytoken_actual)
+                      user, rest, honeytoken)
 
         d.addErrback(log.defer_login, Config.ssh.name, self.transport.transport.client[0], Config.ssh.port, False,
-                     user.decode(), rest.decode("unicode_escape"), honeytoken_actual)
+                     user, rest, honeytoken)
         d.addErrback(self._ebMaybeBadAuth)
         d.addErrback(self._ebBadAuth)
 

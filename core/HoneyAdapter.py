@@ -16,17 +16,17 @@ if Config.use_broker:
 
 class HoneyAdapter:
     controller = None
-    start = Config.honeygrove_start
     lock = threading.Lock()
 
     @staticmethod
     def init():
         HoneyAdapter.controller = ServiceController()
 
-        if HoneyAdapter.start == 'active':
-            for service in Config.startupList:
-                HoneyAdapter.controller.startService(service)
+        # Start services from config
+        for service in Config.enabled_services:
+            HoneyAdapter.controller.startService(service)
 
+        # Setup broker listener and potentially peer to CIM
         if Config.use_broker:
             BrokerEndpoint.startListening()
 
@@ -82,7 +82,7 @@ class HoneyAdapter:
                 answer = json.dumps({"type": "send_all_services", "from": hp_id, "to": jsonDict["from"],
                                      "services": aService}, sort_keys=True)
 
-            # Start serveral services (key = servicename)
+            # Start several services (key = servicename)
             elif jsonDict["type"] == "start_services" and hp_id in jsonDict["to"]:
                 started = []
                 for service in jsonDict["services"]:

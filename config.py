@@ -142,28 +142,27 @@ class Config:
     # Honeytoken Directory
     tokendir = resources_dir + '/honeytokenfiles'
 
-    # HoneytokenDB configuration:
-    tokenDatabase = resources_dir + "/honeytokendb/database.txt"
-    honeytokendbGenerating = {"SSH": ["SSH", "FTP", "HTTP"], "HTTP": ["HTTP", "SSH"], "FTP": ["FTP"]}
-    honeytokendbProbabilities = {"SSH": 0.5, "FTP": 0.1, "HTTP": 0.9, "Telnet": 0.8}
-    # hashAccept True: password acceptance over hash, False: random acceptance
-    hashAccept = True
-    hashSeed = b'Honey'
-
-    # password criteria
-    pc_minLength = 6
-    pc_maxLength = 24
-
-    # username criteria
-    nc_minLength = 6
-    nc_maxLength = 24
+    # HoneytokenDB configuration
+    honeytoken = ConfigSection()
+    honeytoken.database_file = resources_dir + "/honeytokendb/database.txt"
+    honeytoken.generating = {"SSH": ["SSH", "FTP", "HTTP"], "HTTP": ["HTTP", "SSH"], "FTP": ["FTP"]}
+    honeytoken.probabilities = {"SSH": 0.5, "FTP": 0.1, "HTTP": 0.9, "Telnet": 0.8}
+    # True: password acceptance via hash, False: random acceptance
+    honeytoken.accept_via_hash = True
+    honeytoken.hash_seed = b'honeygrove'
+    # username length limits
+    honeytoken.username_min = 6
+    honeytoken.username_max = 24
+    # password length limits
+    honeytoken.password_min = 6
+    honeytoken.password_max = 24
 
     # Malware configuration
     quarantineDir = resources_dir + "/quarantine"
 
     # List of service names that should be enabled at startup
     # Defaults to all implemented services
-    startupList = [http.name, ssh.name, telnet.name, ftp.name, smtp.name, smtps.name, pop3.name, pop3s.name, imap.name, imaps.name, tcpFlagSnifferName]
+    enabled_services = [http.name, ssh.name, telnet.name, ftp.name, smtp.name, smtps.name, pop3.name, pop3s.name, imap.name, imaps.name, tcpFlagSnifferName]
 
     # Services which are not bound to a single port
     noPortSpecificService = [listenServiceName, tcpFlagSnifferName]
@@ -171,9 +170,6 @@ class Config:
     # Zeitraum, in welchen ein ACK-Paket beim Verbindungsaufbau zurückkommen soll
     # (Timeout zur Unterscheidung von Scans gegenüber einem ernsthaften Verbindungsaufbau)
     tcpTimeout = 5
-
-    # HoneyAdapter: StartMode
-    honeygrove_start = 'active'
 
     # Broker configuration
     if (use_broker):
