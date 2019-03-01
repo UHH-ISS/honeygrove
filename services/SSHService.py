@@ -94,7 +94,7 @@ class SSHProtocol(recvline.HistoricRecvLine):
         self.userName = self.user.username.decode()
         self.name = Config.ssh.name
         self.port = Config.ssh.port
-        self._parser = FilesystemParser(Config.path_to_filesys)
+        self._parser = FilesystemParser(Config.folder.filesystem)
         self.userIP = self.user.conn.transport.transport.client[0]
         self.l = log
         self.current_dir = expanduser("~")
@@ -406,15 +406,15 @@ class SSHProtocol(recvline.HistoricRecvLine):
 
         # Determine filename
         i = 1
-        while filename in os.listdir(Config.quarantineDir):
+        while filename in os.listdir(Config.folder.quarantine):
             filename = filename + "." + str(i)
             i += 1
 
         # Write to disk
         filepath = ""
         if Config.ssh.accept_files:
-            request.urlretrieve(url, Config.quarantineDir + "/" + filename)
-            filepath = Config.quarantineDir + "/" + filename
+            request.urlretrieve(url, Config.folder.quarantine / filename)
+            filepath = Config.folder.quarantine / filename
         self.l.file(self.name, self.userIP, filename, filepath, self.userName)
 
     def ssh_ll(self, *args):

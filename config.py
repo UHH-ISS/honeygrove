@@ -1,6 +1,7 @@
 import honeygrove
-import socket
 from honeygrove.resources.http_resources import HTMLLoader
+
+from pathlib import PurePath
 
 
 # With this we get dot-notation for config subsections
@@ -10,15 +11,11 @@ class ConfigSection:
 
 # Honeygrove configuration
 class Config:
-    # Generic
+
+    # General configuration
     HPID = "HP1"
     machine_name = "hp1"
     hp_description = {"Name": str(HPID), "Location": "Moscow, Russia", "Description": "Honeygrove instance"}
-    base_dir = honeygrove.__path__[0] + "/"
-    resources_dir = base_dir + "resources/"
-    logpath = resources_dir + "logfile/log.txt"
-    geodatabasepath = resources_dir + "/path/to/database"
-
     # Set this to False if you do not want to use broker or broker is
     # unavailable on your machine. Currently, the management-console
     # and the EKStack can not be used without communication via Broker.
@@ -38,11 +35,29 @@ class Config:
     # True = use UTC, False = use System Time
     use_utc = True
 
-    # Generic configuration:
+    # Folder configuration
+    # All folder are relative to `folder.base`, so it is usually sufficient to only change this
+    folder = ConfigSection()
+    # Base path for resources and logs
+    folder.base = PurePath('/var/honeygrove')
+    # Resource related folders
+    folder.resources = folder.base / 'resources'
+    # Folder for emulated filesystem used by all services
+    folder.filesystem = folder.resources / 'filesystem' / 'unix.xml'
+    folder.honeytoken_files = folder.resources / 'honeytoken_files'
+    folder.quarantine = folder.resources / 'quarantine'
+    folder.tls = folder.resources / 'tls'
+    if use_geoip:
+        folder.geo_ip = folder.resources / 'geo_ip.db'
+    # Log folder (currently only a single file)
+    folder.log = folder.base / 'logs' / 'log.txt'
+
+    # Ports without sepcific service
     listenServicePorts = [r for r in range(1, 5000)]
     listenServiceName = "LISTEN"
     tcpFlagSnifferName = "TCPFlagSniffer"
 
+    # Default maximum connections per host per service
     max_connections_per_host = 100
 
     # HTTP service configuration
@@ -61,7 +76,7 @@ class Config:
     # to have a login field with the name "log" and a password field
     # with the name of "pwd"
     http.html_dictionary = HTMLLoader.load_HTMLDictionary()
-    http.resource_folder = resources_dir + "/http_resources/"
+    http.resource_folder = folder.resources / 'http'
 
     # SSH service configuration
     ssh = ConfigSection()
@@ -69,8 +84,10 @@ class Config:
     ssh.port = 22
     # must start with "SSH-2.0-"
     ssh.banner = b'SSH-2.0-uhh'
-    ssh.helptext_folder = resources_dir + "ssh_resources/helptexts"
-    ssh.gnuhelp_folder = resources_dir + "ssh_resources/gnuhelp"
+    ssh.resource_folder = folder.resources / 'ssh'
+    ssh.resource_database = ssh.resource_folder / 'database.json'
+    ssh.helptext_folder = ssh.resource_folder / 'helptexts'
+    ssh.gnuhelp_folder = ssh.resource_folder / 'gnuhelp'
     ssh.real_shell = False
     ssh.accept_files = True
     ssh.connections_per_host = max_connections_per_host
@@ -93,8 +110,8 @@ class Config:
     # Email (POP3(S), SMTP(S), IMAP(S)) related configuration
     email = ConfigSection()
     # TLS configuration
-    email.tls_key = base_dir + "keys/server.key"
-    email.tls_cert = base_dir + "keys/server.crt"
+    email.tls_key = folder.tls / 'email.key'
+    email.tls_cert = folder.tls / 'email.crt'
 
     # SMTP service configuration
     smtp = ConfigSection()
@@ -136,15 +153,9 @@ class Config:
     imaps.port = 993
     imaps.connections_per_host = max_connections_per_host
 
-    # Path to Filesystem all services are using
-    path_to_filesys = resources_dir + '/parser_resources' + '/unix.xml'
-
-    # Honeytoken Directory
-    tokendir = resources_dir + '/honeytokenfiles'
-
     # HoneytokenDB configuration
     honeytoken = ConfigSection()
-    honeytoken.database_file = resources_dir + "/honeytokendb/database.txt"
+    honeytoken.database_file = folder.resources / 'honeytokendb' / 'database.txt'
     honeytoken.generating = {"SSH": ["SSH", "FTP", "HTTP"], "HTTP": ["HTTP", "SSH"], "FTP": ["FTP"]}
     honeytoken.probabilities = {"SSH": 0.5, "FTP": 0.1, "HTTP": 0.9, "Telnet": 0.8}
     # True: password acceptance via hash, False: random acceptance
@@ -156,9 +167,6 @@ class Config:
     # password length limits
     honeytoken.password_min = 6
     honeytoken.password_max = 24
-
-    # Malware configuration
-    quarantineDir = resources_dir + "/quarantine"
 
     # List of service names that should be enabled at startup
     # Defaults to all implemented services

@@ -28,7 +28,6 @@ class HTTPService(ServiceBaseModel):
     notFoundStatus = "HTTP/1.1 404 Not Found"
     htdb = HoneytokenDataBase("HTTP")
     port = ""
-    resourceLocation = Config.http.resource_folder
     html_dictionary = Config.http.html_dictionary
     supportedSites = []
 
@@ -47,7 +46,7 @@ class HTTPService(ServiceBaseModel):
 
             self.peerOfAttacker = ""
             self.page = ""
-            self.path = HTTPService.resourceLocation
+            self.path = Config.http.resource_folder
             self.attackingSite = ""
             self.loginSuccessfulSite = ""
             self.notFoundSite = ""
@@ -76,16 +75,16 @@ class HTTPService(ServiceBaseModel):
             for serviceLink in HTTPService.supportedSites:
                 if self.page == serviceLink:
                     pageNotFound = False
-                    self.attackingSite = HTTPService.resourceLocation + HTTPService.html_dictionary[serviceLink][0]
+                    self.attackingSite = self.path / HTTPService.html_dictionary[serviceLink][0]
                     if len(HTTPService.html_dictionary[serviceLink]) > 1:
-                        self.loginSuccessfulSite = HTTPService.resourceLocation + HTTPService.html_dictionary[serviceLink][1]
+                        self.loginSuccessfulSite = self.path / HTTPService.html_dictionary[serviceLink][1]
                     else:
-                        self.loginSuccessfulSite = HTTPService.resourceLocation + HTTPService.html_dictionary['404'][0]
+                        self.loginSuccessfulSite = self.path / HTTPService.html_dictionary['404'][0]
                     self.short = serviceLink
                     break
 
             if pageNotFound:
-                self.notFoundSite = HTTPService.resourceLocation + HTTPService.html_dictionary['404'][0]
+                self.notFoundSite = self.path / HTTPService.html_dictionary['404'][0]
 
             # Handle GETs
             if self.requestType == "GET" and ('.gif' in self.page or '.png' in self.page or '/dashboard_files/' in self.page or '.jpg' in self.page or '.woff' in self.page or '.ttf' in self.page or '.svg' in self.page):

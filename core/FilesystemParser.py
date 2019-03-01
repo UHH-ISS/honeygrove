@@ -6,13 +6,13 @@ import xml.etree.ElementTree as ET
 
 
 class FilesystemParser:
-    honeytoken_directory = Config.tokendir
+    honeytoken_directory = Config.folder.honeytoken_files
     cd_pattern = "^cd \S+$"
     mkdir_pattern = "^mkdir \S+$"
     touch_pattern = "^touch \S+$"
     ls_pattern = "^ls \S+$"
 
-    def __init__(self, xml_path=Config.path_to_filesys):
+    def __init__(self, xml_path=Config.folder.filesystem):
 
         with open(xml_path) as f:
             try:

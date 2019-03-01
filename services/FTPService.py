@@ -66,8 +66,8 @@ class FTPProtocol(FTP):
                            'MODE': " "
                            }
 
-    honeytokenDirectory = Config.tokendir
-    receivedDataDirectory = Config.quarantineDir
+    honeytokenDirectory = Config.folder.honeytoken_files
+    receivedDataDirectory = Config.folder.quarantine
 
     lastmodified = dt.now()
 

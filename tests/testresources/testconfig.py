@@ -1,5 +1,6 @@
-import uuid
 from honeygrove.tests.testresources import __path__ as resources
+
+import uuid
 
 # HoneytokenDB configuration:
 honeytokendbProbabilities = {"TESTSERVICEA": 0.5, "TESTSERVICEB": 0.1, "LISTEN": 0.1}

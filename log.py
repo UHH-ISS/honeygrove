@@ -9,9 +9,15 @@ if Config.use_broker:
 if Config.use_geoip:
     import geoip2.database
 
-path = Config.logpath
-geodatabasepath = Config.geodatabasepath
+# Honeypot ID
 ID = str(Config.HPID)
+
+# Folders
+path = Config.folder.log
+if Config.use_geoip:
+    geodatabasepath = Config.folder.geo_ip
+
+# Settings
 print_status = Config.print_status
 print_alerts = Config.print_alerts
 log_status = Config.log_status
@@ -353,10 +359,10 @@ def heartbeat():
     """
 
     timestamp = format_time(get_time())
-    message = ('{} - [Heartbeat]'.format(timestamp))
 
     if Config.use_broker:
         bmessage = json.dumps({'event_type': 'heartbeat', '@timestamp': timestamp, 'honeypotID': ID})
         BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
 
+    message = ('{} - [Heartbeat]'.format(timestamp))
     _log_status(message)

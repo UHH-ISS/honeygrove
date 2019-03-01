@@ -123,8 +123,8 @@ class HoneyAdapter:
 
                 running = not service._stop
 
-                if service_name in Config.honeytokendbProbabilities:
-                    token_prob = Config.honeytokendbProbabilities[service_name]
+                if service_name in Config.honeytoken.probabilities:
+                    token_prob = Config.honeytoken.probabilities[service_name]
                 else:
                     token_prob = 0
 
@@ -158,7 +158,7 @@ class HoneyAdapter:
 
                 # Set new token_probability
                 if token_prob != "unchanged":
-                    Config.honeytokendbProbabilities[service_name] = token_prob
+                    Config.honeytoken.probabilities[service_name] = token_prob
 
                 returnport = [service._port]
                 if service_name == 'LISTEN':
@@ -171,7 +171,8 @@ class HoneyAdapter:
 
             # Get file of credentials of honeytokendb
             elif jsonDict["type"] == "get_credentials" and hp_id == jsonDict["to"]:
-                with open(Config.tokenDatabase, "r") as myfile:
+                # XXX: Is this the correct file?
+                with open(Config.folder.honeytoken_files, "r") as myfile:
                     data = myfile.read()
                     answer = json.dumps({"type": "send_credentials", "from": hp_id, "to": jsonDict["from"],
                                          "file": data}, sort_keys=True)
@@ -192,14 +193,15 @@ class HoneyAdapter:
                         valid = split[3].startswith("ssh-rsa ")
 
                 if valid:
-                    with open(Config.tokenDatabase, "w") as myfile:
+                    # XXX: Is this the correct file?
+                    with open(Config.folder.honeytoken_files, "w") as myfile:
                         myfile.write(jsonDict["file"])
                 answer = json.dumps({"type": "update", "from": hp_id, "to": jsonDict["from"],
                                      "response": "set_credentials", "successful": valid}, sort_keys=True)
 
             # Get the current filesystem_xml
             elif jsonDict["type"] == "get_filesystem_xml" and hp_id in jsonDict["to"]:
-                with open(Config.path_to_filesys, "r") as myfile:
+                with open(Config.folder.filesystem, "r") as myfile:
                     data = myfile.read()
                     answer = json.dumps(
                         {"type": "respond_filesystem_xml", "from": hp_id, "to": jsonDict["from"],
@@ -233,11 +235,11 @@ class HoneyAdapter:
                 if valid:
                     file_name = "custom_file_system.xml"
 
-                    new_path = "/".join(Config.path_to_filesys.split("/")[:-1]) + "/" + file_name
+                    new_path = Config.folder.filesystem.with_name(file_name)
                     with open(new_path, "w") as myfile:
                         myfile.write(jsonDict["file"])
 
-                    Config.path_to_filesys = new_path
+                    Config.folder.filesystem = new_path
 
                 answer = json.dumps({"type": "update", "from": hp_id, "to": jsonDict["from"],
                                      "response": "set_filesystem_xml", "successful": valid}, sort_keys=True)
@@ -245,12 +247,12 @@ class HoneyAdapter:
             # Get name and content of all tokenfiles
             elif jsonDict["type"] == 'get_token_files' and hp_id == jsonDict["to"]:
                 tokenfiles = []
-                for filename in os.listdir(Config.tokendir):
-                    path = join(Config.tokendir, filename)
+                for filename in os.listdir(Config.folder.honeytoken_files):
+                    path = Config.folder.honeytoken_files / filename
                     if isfile(path):
                         try:
-                            with open(path, 'r') as file:
-                                data = file.read()
+                            with open(path, 'r') as fp:
+                                data = fp.read()
                                 tokenfiles.append({"name": filename, "file": data})
                         except EnvironmentError:
                             pass
@@ -262,7 +264,7 @@ class HoneyAdapter:
             elif jsonDict["type"] == 'add_token_file' and hp_id == jsonDict["to"]:
                 succ = 'true'
                 filename = jsonDict["file"]["name"]
-                path = join(Config.tokendir, filename)
+                path = join(Config.folder.honeytoken_files, filename)
                 content = jsonDict["file"]["file"]
 
                 # If tokenfile with same name exists: overwrite content
@@ -285,9 +287,9 @@ class HoneyAdapter:
                 # Case ALL
                 if "ALL" in names:
                     try:
-                        files = os.listdir(Config.tokendir)
+                        files = os.listdir(Config.folder.honeytoken_files)
                         for f in files:
-                            os.remove(join(Config.tokendir, f))
+                            os.remove(Config.folder.honeytoken_files / f)
 
                     except EnvironmentError:
                         succ = 'false'
@@ -296,7 +298,7 @@ class HoneyAdapter:
                 else:
                     try:
                         for name in names:
-                            path = join(Config.tokendir, name)
+                            path = join(Config.folder.honeytoken_files, name)
                             if isfile(path):  # In case name is not valid
                                 os.remove(path)
                     except EnvironmentError:
@@ -318,10 +320,10 @@ class HoneyAdapter:
                     content = "None"
                     if Config.http.html_dictionary[sites[i]].__len__() > 1:
                         content = Config.http.html_dictionary[sites[i]][1]
-                        file = open(Config.httpResources + content, encoding='utf8')
+                        file = open(Config.http.resource_folder / content, encoding='utf8')
                         content = file.read()
                         file.close()
-                    file = open(Config.httpResources + login, encoding='utf8')
+                    file = open(Config.http.resource_folder / login, encoding='utf8')
                     login = file.read()
                     file.close()
                     data.append({"url": sites[i],
@@ -342,26 +344,24 @@ class HoneyAdapter:
                     Config.http.html_dictionary.clear()
                     Config.http.html_dictionary["404"] = ["404_login.html"]
 
-                    for currentFile in os.listdir(Config.httpResources):
+                    for currentFile in os.listdir(Config.http.resource_folder):
                         ext = ('.html')
                         if currentFile.endswith(ext) and not currentFile.__eq__("404_login.html"):
-                            os.remove(Config.httpResources + currentFile)
+                            os.remove(Config.http.resource_folder / currentFile)
                     HTMLLoader.save_HTMLDictionary(Config.http.html_dictionary)
                     Config.http.html_dictionary = HTMLLoader.load_HTMLDictionary()
                     data = True  # data = "Removing of all pages was succesful!"
                 else:
                     for page in pages:
                         if page in Config.http.html_dictionary:
-                            if Config.http.html_dictionary[page].__len__() > 1:
-                                os.remove(Config.httpResources + Config.http.html_dictionary[page][1])
-                            os.remove(Config.httpResources + Config.http.html_dictionary[page][0])
+                            if len(Config.http.html_dictionary[page]) > 1:
+                                os.remove(Config.http.resource_folder / Config.http.html_dictionary[page][1])
+                            os.remove(Config.http.resource_folder / Config.http.html_dictionary[page][0])
                             del Config.http.html_dictionary[page]
                             HTMLLoader.save_HTMLDictionary(Config.http.html_dictionary)
                             Config.http.html_dictionary = HTMLLoader.load_HTMLDictionary()
-                    if set(pages) < set(sites):
-                        data = True
-                    else:
-                        data = False
+
+                    data = len(set(pages)) < len(set(sites))
 
                 answer = json.dumps(
                     {"type": "update", "from": hp_id, "to": jsonDict["from"],
@@ -380,16 +380,16 @@ class HoneyAdapter:
                     data = False  # data = "Page does exist already!"
                 else:
                     data = True  # data = "Adding of " + path + " was succesful!"
-                    with open(Config.resources + "/http_resources" + path + "_login.html", "a+") as f:
+                    with open(Config.http.resource_folder / path / "_login.html", "a+") as f:
                         f.write(page)
-                    if page2 != "":
-                        with open(Config.resources + "/http_resources" + path + "_content.html", "a+") as f:
+                    if page2:
+                        with open(Config.http.resource_folder / path / "_content.html", "a+") as f:
                             f.write(page2)
                         Config.http.html_dictionary[path] = [path[1:] + "_login.html", path[1:] + "_content.html"]
                     else:
                         Config.http.html_dictionary[path] = [path[1:] + "_login.html"]
-                    HoneyAdapter.controller.stopService(Config.httpName)
-                    HoneyAdapter.controller.startService(Config.httpName)
+                    HoneyAdapter.controller.stopService(Config.http.name)
+                    HoneyAdapter.controller.startService(Config.http.name)
                 HTMLLoader.save_HTMLDictionary(Config.http.html_dictionary)
                 answer = json.dumps(
                     {"type": "update", "from": hp_id, "to": jsonDict["from"],
