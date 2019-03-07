@@ -1,4 +1,4 @@
-from honeygrove import log
+from honeygrove import log as hg_log
 from honeygrove.config import Config
 from honeygrove.core.FilesystemParser import FilesystemParser
 from honeygrove.core.HoneytokenDB import HoneytokenDataBase
@@ -74,7 +74,7 @@ class FTPProtocol(FTP):
     def __init__(self):
         self._parser = FilesystemParser()
         self.user = "anonymous"
-        self.l = log
+        self.l = hg_log
 
     def ftp_PWD(self):
         """
@@ -445,13 +445,13 @@ class FTPProtocol(FTP):
             self.logout = logout
             self.workingDirectory = []
             self.state = self.AUTHED
-            self.l.login(FTPService._name, self.transport.getPeer().host, FTPService._port, True, self.user, password, str(FTPService.credchecker.getActual(self.user, password)))
+            self.l.login(FTPService._name, self.transport.getPeer().host, FTPService._port, True, self.user, password, str(FTPService.credchecker.try_get_tokens(self.user, password)))
             return reply
 
         def _ebLogin(failure):
             failure.trap(cred_error.UnauthorizedLogin, cred_error.UnhandledCredentials)
             self.state = self.UNAUTH
-            self.l.login(FTPService._name, self.transport.getPeer().host, FTPService._port, False, self.user, password, str(FTPService.credchecker.getActual(self.user, password)))
+            self.l.login(FTPService._name, self.transport.getPeer().host, FTPService._port, False, self.user, password, str(FTPService.credchecker.try_get_tokens(self.user, password)))
             self.user = 'anonymous'
             raise AuthorizationError
 

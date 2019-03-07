@@ -172,10 +172,11 @@ class HoneytokenDataBase():
     def accept(self, username, password, randomAcceptProbability):
         if (Config.honeytoken.username_min <= len(username) <= Config.honeytoken.username_max
                 and Config.honeytoken.password_min <= len(password) <= Config.honeytoken.password_max
-                and b":" not in username and b":" not in password):
+                and ":" not in username and ":" not in password):
 
-            if Config.accept_via_hash:
-                hashbau = username + Config.hash_seed + password
+            if Config.honeytoken.accept_via_hash:
+                # Need to encode to be able to hash it via hashlib
+                hashbau = (username + Config.honeytoken.hash_seed + password).encode()
                 hash1 = hashlib.sha1(hashbau).hexdigest()
                 i = 0
                 for x in range(0, 39):

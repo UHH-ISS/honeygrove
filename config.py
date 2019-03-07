@@ -160,7 +160,7 @@ class Config:
     honeytoken.probabilities = {"SSH": 0.5, "FTP": 0.1, "HTTP": 0.9, "Telnet": 0.8}
     # True: password acceptance via hash, False: random acceptance
     honeytoken.accept_via_hash = True
-    honeytoken.hash_seed = b'honeygrove'
+    honeytoken.hash_seed = '__honeygrove__'
     # username length limits
     honeytoken.username_min = 6
     honeytoken.username_max = 24
