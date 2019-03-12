@@ -37,17 +37,18 @@ class BrokerEndpoint:
         BrokerEndpoint.listenEndpoint.publish("logs", jsonString)
 
     @staticmethod
-    def startListening():
+    def listen(ip, port):
         """
-        Start listening on ip
+        Listen on ip:port
+        :param ip: string
+        :param port: int
         """
-        BrokerEndpoint.listenEndpoint.listen(Config.broker.listen_ip, Config.broker.listen_port)
+        BrokerEndpoint.listenEndpoint.listen(ip, port)
 
     @staticmethod
-    def peerTo(ip, port):
+    def peer(ip, port):
         """
-        Peering to given port/ip
-        logic for unpeering included if peered
+        Peer to given ip:port
         :param ip: string
         :param port: int
         """

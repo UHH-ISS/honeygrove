@@ -29,10 +29,10 @@ class HoneyAdapter:
         # Setup broker listener and peer to CIM (if enabled)
         if Config.use_broker:
             if Config.broker.listen:
-                BrokerEndpoint.startListening()
+                BrokerEndpoint.listen(Config.broker.listen_ip, Config.broker.listen_port)
 
             if Config.broker.peer:
-                BrokerEndpoint.peerTo(Config.broker.peer_ip, Config.broker.peer_port)
+                BrokerEndpoint.peer(Config.broker.peer_ip, Config.broker.peer_port)
 
     @staticmethod
     def command_message_loop():

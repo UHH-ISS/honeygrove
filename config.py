@@ -178,15 +178,15 @@ class Config:
     # (Timeout zur Unterscheidung von Scans gegenüber einem ernsthaften Verbindungsaufbau)
     tcpTimeout = 5
 
-    # Broker configuration
+    # Optional: Broker configuration
     if (use_broker):
         broker = ConfigSection()
-        # IP/port to listen on
+        # Optional: IP/port to listen on (e.g. for connections from the management console)
         broker.listen = False
         broker.listen_ip = '127.0.0.1'
         broker.listen_port = 8888
 
-        # Optional: initiate peering at startup (e.g. to CIM)
+        # Optional: IP/port to peer to at startup (e.g. for connection to the CIM)
         broker.peer = False
         broker.peer_ip = '127.0.0.1'
         broker.peer_port = 34445
