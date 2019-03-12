@@ -15,7 +15,7 @@ ID = str(Config.HPID)
 # Folders
 path = Config.folder.log
 if Config.use_geoip:
-    geodatabasepath = Config.folder.geo_ip
+    geodatabasepath = str(Config.folder.geo_ip)
 
 # Settings
 print_status = Config.print_status

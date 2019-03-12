@@ -15,7 +15,7 @@ Honeygrove was tested on Ubuntu 16.4 and Debian 9.1. It may work on other distri
   $ python3 -m venv .venv
   $ source .venv/bin/activate
   ```
-* Install the required dependencies
+* Install the required python dependencies
   ```shell
   $ pip3 install --upgrade -r requirements.txt
   ```
@@ -40,7 +40,7 @@ Honeygrove was tested on Ubuntu 16.4 and Debian 9.1. It may work on other distri
 For further information see our [wiki](https://github.com/UHH-ISS/honeygrove/wiki) (currently only the user guide for honeygrove is available in english).
 
 
-### History
+### Contributors
 
 Honeygrove was initially developed as a bachelor project of the [IT-Security and Security Management](https://www.inf.uni-hamburg.de/inst/ab/snp/home.html) working group at Universität Hamburg and subsequently improved.
 
