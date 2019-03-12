@@ -26,9 +26,10 @@ class HoneyAdapter:
         for service in Config.enabled_services:
             HoneyAdapter.controller.startService(service)
 
-        # Setup broker listener and potentially peer to CIM
+        # Setup broker listener and peer to CIM (if enabled)
         if Config.use_broker:
-            BrokerEndpoint.startListening()
+            if Config.broker.listen:
+                BrokerEndpoint.startListening()
 
             if Config.broker.peer:
                 BrokerEndpoint.peerTo(Config.broker.peer_ip, Config.broker.peer_port)

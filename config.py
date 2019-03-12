@@ -1,4 +1,3 @@
-import honeygrove
 from honeygrove.resources.http_resources import HTMLLoader
 
 from pathlib import PurePath
@@ -183,10 +182,11 @@ class Config:
     if (use_broker):
         broker = ConfigSection()
         # IP/port to listen on
+        broker.listen = False
         broker.listen_ip = '127.0.0.1'
         broker.listen_port = 8888
 
         # Optional: initiate peering at startup (e.g. to CIM)
         broker.peer = False
-        broker.peer_ip = ''
+        broker.peer_ip = '127.0.0.1'
         broker.peer_port = 34445
