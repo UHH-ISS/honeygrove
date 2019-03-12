@@ -98,7 +98,7 @@ class Config:
     # must start with "SSH-2.0-"
     ssh.banner = b'SSH-2.0-uhh'
     ssh.resource_folder = folder.resources / 'ssh'
-    ssh.resource_database = ssh.resource_folder / 'database.json'
+    ssh.database_path = ssh.resource_folder / 'database.json'
     ssh.helptext_folder = ssh.resource_folder / 'helptexts'
     ssh.gnuhelp_folder = ssh.resource_folder / 'gnuhelp'
     ssh.real_shell = False
@@ -122,6 +122,8 @@ class Config:
 
     # Email (POP3(S), SMTP(S), IMAP(S)) related configuration
     email = ConfigSection()
+    email.resource_folder = folder.resources / 'email'
+    email.database_path = email.resource_folder / 'database.py'
     # TLS configuration
     email.tls_key = folder.tls / 'email.key'
     email.tls_cert = folder.tls / 'email.crt'

@@ -1,6 +1,6 @@
 from honeygrove import log
 from honeygrove.core.HoneyAdapter import HoneyAdapter
-from honeygrove.resources.ssh_resources import database as ssh_database
+from honeygrove.services.SSHService import load_database, save_database
 
 import os
 import threading
@@ -9,7 +9,7 @@ import atexit
 
 def shutdownHoneyGrove():
     log.info("Shutting down")
-    ssh_database.save()
+    save_database()
     quit()
 
 
@@ -34,6 +34,8 @@ if __name__ == '__main__':
     commandThread.start()
     heartbeatThread.start()
 
-    ssh_database.restore()
+    # XXX: Why is this necessary here?
+    # Load ssh database
+    load_database()
     atexit.register(shutdownHoneyGrove)
 

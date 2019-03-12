@@ -1,6 +1,5 @@
 from honeygrove import log
 from honeygrove.config import Config
-from honeygrove.resources.email_resources import database
 from honeygrove.services.ServiceBaseModel import Limiter, ServiceBaseModel
 
 from twisted.internet import reactor
@@ -82,7 +81,12 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
 
         # array containing the default mails available on the server (import them from database.py)
         self.emails = list()
-        for mail in database.mails:
+        # The eval code below creates a local variable mails
+        mails = None
+        # XXX: This is very ugly!
+        with open(Config.email.database_path, 'r') as fp:
+            eval(fp.read())
+        for mail in mails:
             header = ""
             for i in mail[1]:
                 header += i+": "+mail[1][i]+"\r\n"

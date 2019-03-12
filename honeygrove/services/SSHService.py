@@ -2,7 +2,6 @@ from honeygrove import log
 from honeygrove.config import Config
 from honeygrove.core.FilesystemParser import FilesystemParser
 from honeygrove.core.HoneytokenDB import HoneytokenDataBase
-from honeygrove.resources.ssh_resources import database
 from honeygrove.services.ServiceBaseModel import Limiter, ServiceBaseModel
 
 from cryptography.hazmat.backends import default_backend
@@ -15,6 +14,7 @@ from twisted.internet import reactor
 from twisted.python import components, failure
 
 from datetime import datetime, timedelta
+import json
 import os
 from os.path import expanduser, exists, dirname
 from random import randint
@@ -24,6 +24,29 @@ import time
 from urllib import request
 
 transport.SSHTransportBase.ourVersionString = Config.ssh.banner
+
+lastLoginTime = dict()
+
+
+def load_database():
+    global lastLoginTime
+    try:
+        with open(Config.ssh.database_path, 'r') as fp:
+            lastLoginTime = json.loads(fp.read())
+    except FileNotFoundError:
+        pass
+    except Exception:
+        # e.g. damaged json encoding
+        log.err("Failed to load lastLoginTime from existing file \""+str(Config.ssh.database_path)+"\"")
+
+
+def save_database():
+    try:
+        with open(Config.ssh.database_path, 'w') as fp:
+            fp.write(json.dumps(lastLoginTime))
+    except Exception:
+        # e.g. insufficient write permissions, io error etc.
+        log.err("Failed to write lastLoginTime to file \""+str(Config.ssh.database_path)+"\"")
 
 
 class SSHService(ServiceBaseModel):
@@ -116,16 +139,17 @@ class SSHProtocol(recvline.HistoricRecvLine):
         self.showPrompt()
 
     def saveLoginTime(self, username):
+        global lastLoginTime
         # limits number of saved "user profiles" to keep an attacker from filling the memory
-        if len(database.lastLoginTime) <= 10000:
+        if len(lastLoginTime) <= 10000:
             if Config.use_utc:
-                database.lastLoginTime[username] = str(datetime.utcnow().ctime())
+                lastLoginTime[username] = str(datetime.utcnow().ctime())
             else:
-                database.lastLoginTime[username] = str(datetime.now().ctime())
+                lastLoginTime[username] = str(datetime.now().ctime())
 
     def loadLoginTime(self, username):
-        if username in database.lastLoginTime:
-            return database.lastLoginTime[username]
+        if username in lastLoginTime:
+            return lastLoginTime[username]
         else:
             return False
 

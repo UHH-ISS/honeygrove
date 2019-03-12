@@ -1,6 +1,5 @@
 from honeygrove import log
 from honeygrove.config import Config
-from honeygrove.resources.email_resources import database
 from honeygrove.services.ServiceBaseModel import Limiter, ServiceBaseModel
 
 from twisted.internet import reactor
@@ -52,7 +51,12 @@ class POP3Protocol(Protocol, policies.TimeoutMixin):
         self.state = {"connected": False, "user": False, "auth": False}
 
         self.emails = list()
-        for mail in database.mails:
+        # The eval code below creates a local variable mails
+        mails = None
+        # XXX: This is very ugly!
+        with open(Config.email.database_path, 'r') as fp:
+            eval(fp.read())
+        for mail in mails:
             # POP3 offers only download function for received mails
             if (mail[0] == "INBOX"):
                 header = ""
