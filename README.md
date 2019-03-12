@@ -17,7 +17,7 @@ Honeygrove was tested on Ubuntu 16.4 and Debian 9.1. It may work on other distri
   ```
 * Install the required dependencies
   ```shell
-  $ pip3 install -r requirements.txt
+  $ pip3 install --upgrade -r requirements.txt
   ```
 * Optional: Install [`broker`](https://github.com/zeek/broker) and the python bindings to communicate with a CIM
 * Create the honeygrove main directory and some required subdirectories
