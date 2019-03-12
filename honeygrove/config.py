@@ -1,6 +1,16 @@
-from honeygrove.resources.http_resources import HTMLLoader
-
 from pathlib import PurePath
+import pickle
+
+
+# Utility methods to pickle some config parts
+def load_object(path):
+    with open(path, 'rb') as f:
+        return pickle.load(f)
+
+
+def save_object(obj, path):
+    with open(path, 'wb') as f:
+        pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
 
 # With this we get dot-notation for config subsections
@@ -74,8 +84,12 @@ class Config:
     # second one is the content page. The html login file needs
     # to have a login field with the name "log" and a password field
     # with the name of "pwd"
-    http.html_dictionary = HTMLLoader.load_HTMLDictionary()
     http.resource_folder = folder.resources / 'http'
+    http.html_dictionary_path = http.resource_folder / 'html_dictionary.pkl'
+    http.html_dictionary_content = load_object(http.html_dictionary_path)
+
+    def save_html_dictionary(self):
+        save_object(self.http.html_dictionary_content, self.http.html_dictionary_path)
 
     # SSH service configuration
     ssh = ConfigSection()

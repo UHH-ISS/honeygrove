@@ -1,7 +1,6 @@
 from honeygrove import log
 from honeygrove.config import Config
 from honeygrove.core.ServiceController import ServiceController
-from honeygrove.resources.http_resources import HTMLLoader
 
 import json
 import os
@@ -349,8 +348,7 @@ class HoneyAdapter:
                         ext = ('.html')
                         if currentFile.endswith(ext) and not currentFile.__eq__("404_login.html"):
                             os.remove(Config.http.resource_folder / currentFile)
-                    HTMLLoader.save_HTMLDictionary(Config.http.html_dictionary)
-                    Config.http.html_dictionary = HTMLLoader.load_HTMLDictionary()
+                    Config.save_html_dictionary()
                     data = True  # data = "Removing of all pages was succesful!"
                 else:
                     for page in pages:
@@ -359,8 +357,7 @@ class HoneyAdapter:
                                 os.remove(Config.http.resource_folder / Config.http.html_dictionary[page][1])
                             os.remove(Config.http.resource_folder / Config.http.html_dictionary[page][0])
                             del Config.http.html_dictionary[page]
-                            HTMLLoader.save_HTMLDictionary(Config.http.html_dictionary)
-                            Config.http.html_dictionary = HTMLLoader.load_HTMLDictionary()
+                            Config.save_html_dictionary()
 
                     data = len(set(pages)) < len(set(sites))
 
@@ -391,7 +388,7 @@ class HoneyAdapter:
                         Config.http.html_dictionary[path] = [path[1:] + "_login.html"]
                     HoneyAdapter.controller.stopService(Config.http.name)
                     HoneyAdapter.controller.startService(Config.http.name)
-                HTMLLoader.save_HTMLDictionary(Config.http.html_dictionary)
+                Config.save_html_dictionary()
                 answer = json.dumps(
                     {"type": "update", "from": hp_id, "to": jsonDict["from"],
                      "successful": data, "response": "add_html"})

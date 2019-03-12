@@ -28,7 +28,7 @@ class HTTPService(ServiceBaseModel):
     notFoundStatus = "HTTP/1.1 404 Not Found"
     htdb = HoneytokenDataBase("HTTP")
     port = ""
-    html_dictionary = Config.http.html_dictionary
+    html_dictionary = Config.http.html_dictionary_content
     supportedSites = []
 
     def __init__(self):
