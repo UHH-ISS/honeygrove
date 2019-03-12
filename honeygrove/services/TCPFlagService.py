@@ -100,7 +100,7 @@ class TCPFlagSniffer(ServiceBaseModel):
 
             elif flags == NULL_FLAG:
                 with self.synConnectionsLock:
-                    log.tcp_scan(sourceAddress, destPort, log.get_time(), 'null')
+                    log.scan(sourceAddress, destPort, log.get_time(), 'null')
 
     def getTCPPacketInformation(self, packet):
         """
@@ -147,17 +147,17 @@ class TCPFlagSniffer(ServiceBaseModel):
             with self.synConnectionsLock:
                 for _, item in self.synConnections.copy().items():
                     if (time.time() - item.inTime) > Config.tcpTimeout:
-                        log.tcp_scan(item.sourceIP, item.destPort, item.timeStamp, 'syn')
+                        log.scan(item.sourceIP, item.destPort, item.timeStamp, 'syn')
                         self.synConnections.pop(str(item.sourceIP) + str(item.destPort), None)
 
                 for _, item in self.finConnections.copy().items():
                     if (time.time() - item.inTime) > Config.tcpTimeout:
-                        log.tcp_scan(item.sourceIP, item.destPort, item.timeStamp, 'fin')
+                        log.scan(item.sourceIP, item.destPort, item.timeStamp, 'fin')
                         self.finConnections.pop(str(item.sourceIP) + str(item.destPort), None)
 
                 for _, item in self.xmasConnections.copy().items():
                     if (time.time() - item.inTime) > Config.tcpTimeout:
-                        log.tcp_scan(item.sourceIP, item.destPort, item.timeStamp, 'xmas')
+                        log.scan(item.sourceIP, item.destPort, item.timeStamp, 'xmas')
                         self.xmasConnections.pop(str(item.sourceIP) + str(item.destPort), None)
 
             time.sleep(0.5)

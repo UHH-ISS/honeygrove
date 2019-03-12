@@ -308,6 +308,7 @@ def scan(ip, port, intime, scan_type):
 
     values = defaultdict(lambda: PLACEHOLDER_STRING,
                          {'event_type': '{}-scan'.format(scan_type),
+                          'scan_type': scan_type.upper(),
                           '@timestamp': timestamp,
                           'ip': ip,
                           'port': port,
@@ -320,7 +321,7 @@ def scan(ip, port, intime, scan_type):
     if Config.use_broker:
         BrokerEndpoint.BrokerEndpoint.sendLogs(json.dumps(values))
 
-    message = '{@timestamp} - [{}-SCAN] - {ip}:{port}, Lat: {lat}, Lon: {lon}'.format_map(values)
+    message = '{@timestamp} - [{scan_type}-SCAN] - {ip}:{port}, Lat: {lat}, Lon: {lon}'.format_map(values)
     _log_alert(message)
 
 
