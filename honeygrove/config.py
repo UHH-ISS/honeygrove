@@ -4,12 +4,12 @@ import pickle
 
 # Utility methods to pickle some config parts
 def load_object(path):
-    with open(path, 'rb') as f:
+    with open(str(path), 'rb') as f:
         return pickle.load(f)
 
 
 def save_object(obj, path):
-    with open(path, 'wb') as f:
+    with open(str(path), 'wb') as f:
         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
 

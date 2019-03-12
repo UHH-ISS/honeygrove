@@ -53,7 +53,7 @@ def write(message):
     :param message: the message to be written
     """
 
-    with open(path, 'a') as fp:
+    with open(str(path), 'a') as fp:
         fp.write(message)
 
 

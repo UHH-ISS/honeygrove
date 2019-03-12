@@ -31,7 +31,7 @@ lastLoginTime = dict()
 def load_database():
     global lastLoginTime
     try:
-        with open(Config.ssh.database_path, 'r') as fp:
+        with open(str(Config.ssh.database_path), 'r') as fp:
             lastLoginTime = json.loads(fp.read())
     except FileNotFoundError:
         pass
@@ -42,7 +42,7 @@ def load_database():
 
 def save_database():
     try:
-        with open(Config.ssh.database_path, 'w') as fp:
+        with open(str(Config.ssh.database_path), 'w') as fp:
             fp.write(json.dumps(lastLoginTime))
     except Exception:
         # e.g. insufficient write permissions, io error etc.
@@ -72,13 +72,14 @@ class SSHService(ServiceBaseModel):
         # self._fService.protocol = self.protocol
         home = expanduser('~')
 
-        privateKeyPath = home + '/.ssh/id_rsa'
-        publicKeyPath = home + '/.ssh/id_rsa.pub'
+        # XXX: These paths should be configurable
+        privateKeyPath = home + '/.ssh/id_honeygrove'
+        publicKeyPath = home + '/.ssh/id_honeygrove.pub'
 
         # Generate RSA keys if they don't exist
 
         if not (exists(privateKeyPath) and exists(publicKeyPath)):
-            key = keys.rsa.generate_private_key(public_exponent=65537, key_size=2048, backend=default_backend())
+            key = keys.rsa.generate_private_key(public_exponent=65537, key_size=4096, backend=default_backend())
             private_key = key.private_bytes(serialization.Encoding.PEM,
                                             serialization.PrivateFormat.TraditionalOpenSSL,
                                             serialization.NoEncryption())
@@ -190,7 +191,7 @@ class SSHProtocol(recvline.HistoricRecvLine):
         """
         helptext = ""
         append = False
-        with open(Config.ssh.helptext_folder) as helps:
+        with open(str(Config.ssh.helptext_folder)) as helps:
             for line in helps:
                 if append and re.match("^\S", line):
                     return helptext
@@ -293,7 +294,7 @@ class SSHProtocol(recvline.HistoricRecvLine):
 
         gnuhelp = []
 
-        with open(Config.ssh.gnuhelp_folder) as file:
+        with open(str(Config.ssh.gnuhelp_folder)) as file:
             for line in file:
                 gnuhelp.append(line)
 

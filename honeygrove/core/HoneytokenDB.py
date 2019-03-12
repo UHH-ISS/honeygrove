@@ -30,7 +30,7 @@ class HoneytokenDataBase():
     passwordField = 2
     publicKeyField = 3
 
-    filepath = Config.honeytoken.database_file
+    filepath = str(Config.honeytoken.database_file)
     sep = ':'
 
     credentialInterfaces = (credentials.IUsernamePassword,

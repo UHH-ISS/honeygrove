@@ -54,7 +54,7 @@ class POP3Protocol(Protocol, policies.TimeoutMixin):
         # The eval code below creates a local variable mails
         mails = None
         # XXX: This is very ugly!
-        with open(Config.email.database_path, 'r') as fp:
+        with open(str(Config.email.database_path), 'r') as fp:
             eval(fp.read())
         for mail in mails:
             # POP3 offers only download function for received mails

@@ -85,7 +85,7 @@ class BrokerEndpoint:
         Sends a file to the file topic
         :param filepath: path to the file
         """
-        with open(filepath, "rb") as file:
+        with open(str(filepath), "rb") as file:
             content = file.read()
             b64content = base64.b64encode(content)
             BrokerEndpoint.listenEndpoint.publish("files", b64content.decode(encoding="utf-8"))

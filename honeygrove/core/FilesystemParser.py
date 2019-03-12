@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 
 
 class FilesystemParser:
-    honeytoken_directory = Config.folder.honeytoken_files
+    honeytoken_directory = str(Config.folder.honeytoken_files)
     cd_pattern = "^cd \S+$"
     mkdir_pattern = "^mkdir \S+$"
     touch_pattern = "^touch \S+$"
@@ -14,7 +14,7 @@ class FilesystemParser:
 
     def __init__(self, xml_path=Config.folder.filesystem):
 
-        with open(xml_path) as f:
+        with open(str(xml_path)) as f:
             try:
                 self.start_path = f.readline().split("--")[1].split(",")  # read first line and parse
                 self.start_path = list(map(int, self.start_path))  # letters-numbers to list
@@ -345,8 +345,8 @@ class FilesystemParser:
         if not self.valid_file(path):
             raise Exception("Is a directory")
         filename = path.split("/")[-1]
-        for file in os.listdir(self.honeytoken_directory):
-            if file == filename:
-                with open(self.honeytoken_directory + "/" + file, "r") as myfile:
-                    data = myfile.read()
+        for f in os.listdir(self.honeytoken_directory):
+            if f == filename:
+                with open(self.honeytoken_directory + "/" + f, "r") as fp:
+                    data = fp.read()
                 return data
