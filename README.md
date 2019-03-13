@@ -2,12 +2,12 @@
 
 Honeygrove is a modular honeypot based on Python that builds upon [Broker](https://github.com/zeek/broker) and the [Twisted Framework](https://twistedmatrix.com/trac/wiki).
 
-### System Requirements
+## System Requirements
 
-Honeygrove was tested on Ubuntu 16.4 and Debian 9.1. It may work on other distributions. If Broker is not available, the honeypot itself can be used without it. Currently there is no possibility to communicate with the management-console or the monitoring stack without Broker.
+Honeygrove currently requires **Python 3.5+** and was tested on Ubuntu 16.4, Debian 9.1 and ArchLinux. However it should work on other distributions that provide a compatible Python distribution. If Broker is not available, the honeypot itself can be used without it. Currently there is no possibility to communicate with the management-console or the monitoring stack without Broker.
 
 
-### Quickstart Guide
+## Quickstart Guide
 
 * Clone the repository or download and unzip it
 * Optional: Setup a virtualenv to contain the required dependencies
@@ -40,14 +40,11 @@ Honeygrove was tested on Ubuntu 16.4 and Debian 9.1. It may work on other distri
 For further information see our [wiki](https://github.com/UHH-ISS/honeygrove/wiki) (currently only the user guide for honeygrove is available in english).
 
 
-### Contributors
+## Related Projects
 
-Honeygrove was initially developed as a bachelor project of the [IT-Security and Security Management](https://www.inf.uni-hamburg.de/inst/ab/snp/home.html) working group at Universität Hamburg and subsequently improved.
+Honeygrove is intended to be used with a Cyber Incident Monitor (CIM) ([honeygrove-cim](https://github.com/UHH-ISS/honeygrove-cim)) and can additionally be controlled through a management console ([honeygrove-console](https://github.com/UHH-ISS/honeygrove-console)) that communicates with honeygrove via `broker`.
 
-Contributors that agreed to be named are:
+## License
 
-* [Arne Büngener](https://github.com/4rne)
-* Alexandra Lindt
-* [Adrian Miska](https://github.com/AdrianMiska)
-* [Frieder Uhlig](https://github.com/Moshtart)
-* [Julian 4goettma](https://github.com/4goettma)
+Honeygrove is licensed under the MIT license. See LICENSE for more details.
+
