@@ -1,4 +1,4 @@
-![Honeygrove](https://github.com/UHH-ISS/honeygrove/raw/master/wiki_resources/honeygrove_logo.png)
+![Honeygrove](https://raw.githubusercontent.com/wiki/UHH-ISS/honeygrove/img/honeygrove_logo.png)
 
 Honeygrove is a modular honeypot based on Python that builds upon [Broker](https://github.com/zeek/broker) and the [Twisted Framework](https://twistedmatrix.com/trac/wiki).
 
