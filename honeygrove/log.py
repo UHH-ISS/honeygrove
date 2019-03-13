@@ -156,11 +156,14 @@ def login(service, ip, port, successful, user, key=None, actual=None):
                           'honeypotID': ID})
 
     if coordinates:
-        values['lat'] = '{:.4f}'.format(coordinates[0])
-        values['lon'] = '{:.4f}'.format(coordinates[1])
+        values['coordinates'] = '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1])
 
     if Config.use_broker:
         BrokerEndpoint.BrokerEndpoint.sendLogs(json.dumps(values))
+        
+    if coordinates:
+        values['lat'] = '{:.4f}'.format(coordinates[0])
+        values['lon'] = '{:.4f}'.format(coordinates[1])
 
     message = ('{@timestamp} - [LOGIN] - {service}, {ip}:{port}, Lat: {lat}, Lon: {lon}, '
                '{successful}, {user}, {key}, {actual}').format_map(values)
@@ -199,11 +202,14 @@ def request(service, ip, port, request, user=None, request_type=None):
                           'honeypotID': ID})
 
     if coordinates:
-        values['lat'] = '{:.4f}'.format(coordinates[0])
-        values['lon'] = '{:.4f}'.format(coordinates[1])
+        values['coordinates'] = '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1])
 
     if Config.use_broker:
         BrokerEndpoint.BrokerEndpoint.sendLogs(json.dumps(values))
+
+    if coordinates:
+        values['lat'] = '{:.4f}'.format(coordinates[0])
+        values['lon'] = '{:.4f}'.format(coordinates[1])
 
     message = ('{@timestamp} - [REQUEST] - {service}, {ip}:{port}, Lat: {lat}, Lon: {lon}, '
                '{request}, {user}, {request_type}').format_map(values)
@@ -240,13 +246,16 @@ def response(service, ip, port, response, user=None, status_code=None):
                           'response': response,
                           'request_type': status_code,
                           'honeypotID': ID})
+    
+    if coordinates:
+        values['coordinates'] = '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1])
+
+    if Config.use_broker:
+        BrokerEndpoint.BrokerEndpoint.sendLogs(json.dumps(values))
 
     if coordinates:
         values['lat'] = '{:.4f}'.format(coordinates[0])
         values['lon'] = '{:.4f}'.format(coordinates[1])
-
-    if Config.use_broker:
-        BrokerEndpoint.BrokerEndpoint.sendLogs(json.dumps(values))
 
     message = ('{@timestamp} - [RESPONSE] - {service}, {ip}:{port}, Lat: {lat}, Lon: {lon}, '
                '{response}, {user}, {request_type}').format_map(values)
@@ -280,15 +289,18 @@ def file(service, ip, file_name, file_path=None, user=None):
                           'user': user,
                           'filename': file_name,
                           'honeypotID': ID})
-
+    
     if coordinates:
-        values['lat'] = '{:.4f}'.format(coordinates[0])
-        values['lon'] = '{:.4f}'.format(coordinates[1])
+        values['coordinates'] = '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1])
 
     if Config.use_broker:
         BrokerEndpoint.BrokerEndpoint.sendLogs(json.dumps(values))
         if file_path:
             BrokerEndpoint.BrokerEndpoint.sendFile(file_path)
+
+    if coordinates:
+        values['lat'] = '{:.4f}'.format(coordinates[0])
+        values['lon'] = '{:.4f}'.format(coordinates[1])
 
     message = '{@timestamp} - [FILE] - {service}, {ip}, Lat: {lat}, Lon: {lon}, {filename}, {user}'.format_map(values)
     _log_alert(message)
@@ -313,13 +325,16 @@ def scan(ip, port, intime, scan_type):
                           'ip': ip,
                           'port': port,
                           'honeypotID': ID})
+    
+    if coordinates:
+        values['coordinates'] = '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1])
+
+    if Config.use_broker:
+        BrokerEndpoint.BrokerEndpoint.sendLogs(json.dumps(values))
 
     if coordinates:
         values['lat'] = '{:.4f}'.format(coordinates[0])
         values['lon'] = '{:.4f}'.format(coordinates[1])
-
-    if Config.use_broker:
-        BrokerEndpoint.BrokerEndpoint.sendLogs(json.dumps(values))
 
     message = '{@timestamp} - [{scan_type}-SCAN] - {ip}:{port}, Lat: {lat}, Lon: {lon}'.format_map(values)
     _log_alert(message)
@@ -342,13 +357,16 @@ def limit_reached(service, ip):
                           'service': service,
                           'ip': ip,
                           'honeypotID': ID})
+    
+    if coordinates:
+        values['coordinates'] = '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1])
+
+    if Config.use_broker:
+        BrokerEndpoint.BrokerEndpoint.sendLogs(json.dumps(values))
 
     if coordinates:
         values['lat'] = '{:.4f}'.format(coordinates[0])
         values['lon'] = '{:.4f}'.format(coordinates[1])
-
-    if Config.use_broker:
-        BrokerEndpoint.BrokerEndpoint.sendLogs(json.dumps(values))
 
     message = '{@timestamp} - [LIMIT REACHED] - {service}, {ip}, Lat: {lat}, Lon: {lon}'.format_map(values)
     _log_alert(message)
