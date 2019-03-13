@@ -11,22 +11,35 @@ class BrokerEndpoint:
     You can send and retrieve messages here.
     """
 
-    # Creates endpoint
-    # global listenEndpoint
-    listenEndpoint = broker.Endpoint()
-    # commands and settings are topics we subscribed to. (GLOBAL SCOPE for multihop)
-    commandsQueue = listenEndpoint.make_subscriber("commands")
+    # Broker Endpoint
+    endpoint = broker.Endpoint()
+    # Status Subscriber
+    status_queue = endpoint.make_status_subscriber(True)
+    # Subscribe to management commands
+    command_queue = endpoint.make_subscriber("commands")
 
-    # peering objects. needet for unpeering
+    # peering objects. needed for unpeering
     peerings = [0, 0, None]
+    
+    @staticmethod
+    def getStatusMessages():
+        for st in BrokerEndpoint.status_queue.poll():
+            # Error
+            if type(st) == broker.Error:
+                yield "[Broker Error] {}". format(st)
+            # Status
+            elif type(st) == broker.Status:
+                yield "[Broker Status] {}". format(st)
+            else:
+                raise RuntimeError("Unknown Broker Status Type")
 
     @staticmethod
-    def getCommandMessage():
+    def getCommandMessages():
         """
         Gets a message from the command message_queue
         :return: Broker Message
         """
-        return BrokerEndpoint.commandsQueue.poll()
+        return BrokerEndpoint.command_queue.poll()
 
     @staticmethod
     def sendLogs(jsonString):
@@ -34,7 +47,7 @@ class BrokerEndpoint:
         Sends a Broker message containing a JSON string.
         :param jsonString: Json string.
         """
-        BrokerEndpoint.listenEndpoint.publish("logs", jsonString)
+        BrokerEndpoint.endpoint.publish("logs", jsonString)
 
     @staticmethod
     def listen(ip, port):
@@ -43,7 +56,11 @@ class BrokerEndpoint:
         :param ip: string
         :param port: int
         """
-        BrokerEndpoint.listenEndpoint.listen(ip, port)
+        p = BrokerEndpoint.endpoint.listen(ip, port)
+        if p == 0:
+            raise RuntimeError(
+                "Unable to listen on Broker port {}".format(port))
+        return p
 
     @staticmethod
     def peer(ip, port):
@@ -56,7 +73,7 @@ class BrokerEndpoint:
             if BrokerEndpoint.peerings[0] != 0:
                 BrokerEndpoint.unPeer(BrokerEndpoint.peerings[2])
 
-            obj = BrokerEndpoint.listenEndpoint.peer(ip, port)
+            obj = BrokerEndpoint.endpoint.peer_nosync(ip, port)
             BrokerEndpoint.peerings = [ip, port, obj]
 
     @staticmethod
@@ -66,9 +83,9 @@ class BrokerEndpoint:
         :param peeringObj: peering objekt
         """
         if peeringObj is None:
-            BrokerEndpoint.listenEndpoint.unpeer(BrokerEndpoint.peerings[2])
+            BrokerEndpoint.endpoint.unpeer(BrokerEndpoint.peerings[2])
         else:
-            BrokerEndpoint.listenEndpoint.unpeer(peeringObj)
+            BrokerEndpoint.endpoint.unpeer(peeringObj)
 
     @staticmethod
     def sendMessageToTopic(topic, msg):
@@ -77,7 +94,7 @@ class BrokerEndpoint:
         :param topic: string with topic
         :param msg: can be str, int, double
         """
-        BrokerEndpoint.listenEndpoint.publish(topic, msg)
+        BrokerEndpoint.endpoint.publish(topic, msg)
 
     @staticmethod
     def sendFile(filepath):
@@ -88,5 +105,5 @@ class BrokerEndpoint:
         with open(str(filepath), "rb") as file:
             content = file.read()
             b64content = base64.b64encode(content)
-            BrokerEndpoint.listenEndpoint.publish("files", b64content.decode(encoding="utf-8"))
+            BrokerEndpoint.endpoint.publish("files", b64content.decode(encoding="utf-8"))
 

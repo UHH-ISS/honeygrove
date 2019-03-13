@@ -28,7 +28,7 @@ class Config:
     # Set this to False if you do not want to use broker or broker is
     # unavailable on your machine. Currently, the management-console
     # and the EKStack can not be used without communication via Broker.
-    use_broker = False
+    use_broker = True
 
     # Set this to False if you do not want to use geoip or no database
     # is available on your machine.
@@ -198,11 +198,11 @@ class Config:
     if (use_broker):
         broker = ConfigSection()
         # Optional: IP/port to listen on (e.g. for connections from the management console)
-        broker.listen = False
+        broker.listen = True
         broker.listen_ip = '127.0.0.1'
         broker.listen_port = 8888
 
         # Optional: IP/port to peer to at startup (e.g. for connection to the CIM)
-        broker.peer = False
+        broker.peer = True
         broker.peer_ip = '127.0.0.1'
         broker.peer_port = 34445

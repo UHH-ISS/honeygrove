@@ -1,5 +1,7 @@
 from honeygrove import log
-from honeygrove.core.HoneyAdapter import HoneyAdapter
+from honeygrove.config import Config
+from honeygrove.core.HoneyAdapter import BrokerWatcher
+from honeygrove.core.ServiceController import ServiceController
 from honeygrove.services.SSHService import load_database, save_database
 
 import os
@@ -24,15 +26,18 @@ if __name__ == '__main__':
     if not os.getuid() == 0:
         print("[-] Honeygrove must be run as root.\n[!] Starting anyway!\n[!] Some functions may not work correctly!")
 
-    HoneyAdapter.init()
-    commandThread = threading.Thread(target=HoneyAdapter.command_message_loop, args=())
-    heartbeatThread = threading.Thread(target=HoneyAdapter.heartbeat, args=())
 
-    commandThread.name = "CommandThread"
-    heartbeatThread.name = "HeartbeatThread"
-
-    commandThread.start()
-    heartbeatThread.start()
+    # Initialize Services
+    controller = ServiceController()
+        
+    # Initialize Broker
+    brokerThread = threading.Thread(target=BrokerWatcher.broker_status_loop, args=(controller,))
+    brokerThread.name = "BrokerThread"
+    brokerThread.start()
+    
+    # Start Services
+    for service in Config.enabled_services:
+        controller.startService(service)
 
     # XXX: Why is this necessary here?
     # Load ssh database

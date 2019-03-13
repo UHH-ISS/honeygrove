@@ -1,68 +1,83 @@
 from honeygrove import log
 from honeygrove.config import Config
-from honeygrove.core.ServiceController import ServiceController
 
 import json
 import os
 from os.path import isfile, join
+import select
 import threading
 import time
 from xml.etree import ElementTree as ET
 
 if Config.use_broker:
     from honeygrove.broker.BrokerEndpoint import BrokerEndpoint
-
-
-class HoneyAdapter:
-    controller = None
-    lock = threading.Lock()
-
+    
+    
+class BrokerWatcher():
+    
     @staticmethod
-    def init():
-        HoneyAdapter.controller = ServiceController()
-
-        # Start services from config
-        for service in Config.enabled_services:
-            HoneyAdapter.controller.startService(service)
-
-        # Setup broker listener and peer to CIM (if enabled)
-        if Config.use_broker:
-            if Config.broker.listen:
-                BrokerEndpoint.listen(Config.broker.listen_ip, Config.broker.listen_port)
-
-            if Config.broker.peer:
-                BrokerEndpoint.peer(Config.broker.peer_ip, Config.broker.peer_port)
-
-    @staticmethod
-    def command_message_loop():
-        while Config.use_broker:
-            time.sleep(0.1)
-            msg = BrokerEndpoint.getCommandMessage()
-            if msg:
-                with HoneyAdapter.lock:
-                    HoneyAdapter.handle_messages(msg)
-
-    @staticmethod
-    def heartbeat():
+    def broker_status_loop(controller):
+        # Only if broker is enabled
+        if not Config.use_broker:
+            return
+        
+        # Initialize
+        # - Listen for commands from management console 
+        if Config.broker.listen:
+            BrokerEndpoint.listen(Config.broker.listen_ip, Config.broker.listen_port)
+        # - Peer to database for log messages
+        if Config.broker.peer:
+            BrokerEndpoint.peer(Config.broker.peer_ip, Config.broker.peer_port)
+            
+        heartbeat_interval = 60
+        next_heartbeat = time.time()
+            
+        # Watch endpoints 
+        # - Loop Status
+        # - Print Status/Error
+        fds = [BrokerEndpoint.status_queue.fd(), 
+               BrokerEndpoint.command_queue.fd()]
         while True:
-            log.heartbeat()
-            time.sleep(60)
-
+            # Wait for something to do
+            t = time.time()
+            timeout = next_heartbeat - t if next_heartbeat > t else 0
+            result = select.select(fds, [], [], timeout)
+            
+            # Heartbeat Time
+            if len(result[0]) == 0:
+                log.heartbeat()
+                next_heartbeat += heartbeat_interval
+                continue
+            
+            # - Status
+            if fds[0] in result[0]:
+                for status in BrokerEndpoint.getStatusMessages():
+                    log.info(status)
+                    
+            # - Command
+            if fds[1] in result[0]:
+                cmds = BrokerEndpoint.getCommandMessages()
+                for cmd in cmds:
+                    ManagementHandler.handle_messages(cmd, controller)
+    
+class ManagementHandler:
+    
     @staticmethod
-    def handle_messages(msgs):
+    def handle_messages(msg, controller):
         """
         Processes the commands sent by the management-console.
 
         :param msgs: List of list of JSON-formatted command [['{"type": "ping"}']]
         :return: Honeypot's answer as JSON
         """
-        print("[!] In Message: ", msgs[0][0])
+        topic, datagrams = msg
         hp_id = str(Config.HPID)
 
-        for msg in msgs[0]:  # zweifach-geschachtelte Liste aus Strings im JSON Format: [['{"type": "ping"}']]
-            jsonDict = json.loads(str(msg))
+        for data in datagrams:  # zweifach-geschachtelte Liste aus Strings im JSON Format: [['{"type": "ping"}']]
+            print("[!] In Message: ", data)
+            jsonDict = json.loads(str(data))
 
-            answer = hp_id + ": COULD NOT HANDLE " + str(msg)  # Wichtig, damit answer nie None ist
+            answer = hp_id + ": COULD NOT HANDLE " + str(data)  # Wichtig, damit answer nie None ist
 
             # Ping
             if jsonDict["type"] == "ping":
@@ -72,8 +87,8 @@ class HoneyAdapter:
             # Get names of all services
             elif jsonDict["type"] == "get_all_services" and hp_id in jsonDict["to"]:
                 # XXX: What does this do?
-                services = list(HoneyAdapter.controller.runningServicesDict.keys())
-                nservices = list(HoneyAdapter.controller.serviceDict.keys())
+                services = list(controller.runningServicesDict.keys())
+                nservices = list(controller.serviceDict.keys())
                 aService = []
 
                 for service in nservices:
@@ -87,7 +102,7 @@ class HoneyAdapter:
                 started = []
                 for service in jsonDict["services"]:
                     try:
-                        if HoneyAdapter.controller.startService(service):
+                        if controller.startService(service):
                             started.append(service)
                         else:
                             started = "service schon gestartet!"
@@ -103,7 +118,7 @@ class HoneyAdapter:
             elif jsonDict["type"] == "stop_services" and hp_id in jsonDict["to"]:
                 stopped = []
                 for service in jsonDict["services"]:
-                    if HoneyAdapter.controller.stopService(service):
+                    if controller.stopService(service):
                         stopped.append(service)
                     else:
                         stopped = ["Already stopped"]
@@ -114,7 +129,7 @@ class HoneyAdapter:
             # Get all changeable settings
             elif jsonDict["type"] == "get_settings" and hp_id in jsonDict["to"]:
                 service_name = jsonDict["service"]
-                service = HoneyAdapter.controller.serviceDict[service_name]
+                service = controller.serviceDict[service_name]
 
                 ports = [service._port]
                 # Case service == ListenService
@@ -143,7 +158,7 @@ class HoneyAdapter:
                     token_prob = settings["token_probability"]
                 else:
                     token_prob = "unchanged"
-                service = HoneyAdapter.controller.serviceDict[service_name]
+                service = controller.serviceDict[service_name]
                 running = not service._stop
 
                 # Change port
@@ -384,8 +399,8 @@ class HoneyAdapter:
                         Config.http.html_dictionary[path] = [path[1:] + "_login.html", path[1:] + "_content.html"]
                     else:
                         Config.http.html_dictionary[path] = [path[1:] + "_login.html"]
-                    HoneyAdapter.controller.stopService(Config.http.name)
-                    HoneyAdapter.controller.startService(Config.http.name)
+                    controller.stopService(Config.http.name)
+                    controller.startService(Config.http.name)
                 Config.save_html_dictionary()
                 answer = json.dumps(
                     {"type": "update", "from": hp_id, "to": jsonDict["from"],
