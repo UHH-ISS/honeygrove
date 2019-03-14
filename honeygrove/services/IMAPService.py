@@ -81,11 +81,10 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
 
         # array containing the default mails available on the server (import them from database.py)
         self.emails = list()
-        # The eval code below creates a local variable mails
         mails = None
         # XXX: This is very ugly!
         with open(str(Config.email.database_path), 'r') as fp:
-            eval(fp.read())
+            mails = eval(fp.read())
         for mail in mails:
             header = ""
             for i in mail[1]:
