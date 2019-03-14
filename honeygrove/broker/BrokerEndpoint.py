@@ -12,7 +12,16 @@ class BrokerEndpoint:
     """
 
     # Broker Endpoint
-    endpoint = broker.Endpoint()
+    bcfg = broker.Configuration()
+    if Config.broker.ssl_ca_file:
+        bcfg.openssl_cafile = Config.broker.ssl_ca_file # Path to CA file
+    if Config.broker.ssl_ca_path:
+        bcfg.openssl_capath = Config.broker.ssl_ca_path # Path to directory with CA files
+    if Config.broker.ssl_certificate:
+        bcfg.openssl_certificate = Config.broker.ssl_certificate # Own certificate
+    if Config.broker.ssl_key_file:
+        bcfg.openssl_key = Config.broker.ssl_key_file # Own key
+    endpoint = broker.Endpoint(bcfg)
     # Status Subscriber
     status_queue = endpoint.make_status_subscriber(True)
     # Subscribe to management commands
