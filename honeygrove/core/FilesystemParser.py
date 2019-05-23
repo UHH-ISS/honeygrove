@@ -24,7 +24,7 @@ class FilesystemParser:
         # The current position in the tree as list
         self.current_pos = self.start_path
         self.xml_path = xml_path
-        self.tree = ET.parse(self.xml_path)
+        self.tree = ET.parse(str(self.xml_path))
         self.root = self.tree.getroot()
 
         if self.root.attrib['name'] != "/":

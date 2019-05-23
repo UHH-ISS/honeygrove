@@ -4,7 +4,7 @@ Honeygrove was initially developed as a bachelor project of the [IT-Security and
 
 Contributors that agreed to be named are:
 
-* [Steffen Haas](https://github.com/iBiqQ)
+* [Steffen Haas](https://github.com/iBigQ)
 * [Florian Wilkens](https://github.com/1wilkens)
 * [Arne Büngener](https://github.com/4rne)
 * Alexandra Lindt
