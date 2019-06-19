@@ -1,0 +1,11 @@
+# Ignore cached python files
+__pycache__/
+**/*.pyc
+
+# Ignore everything unrelated to honeygrove itself
+.dockerignore
+.venv
+.git
+.gitignore
+*.md
+Dockerfile
