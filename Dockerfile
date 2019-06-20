@@ -1,5 +1,6 @@
 FROM uhhiss/broker-docker:latest
 
+LABEL Maintainer="{haas,wilkens}@informatik.uni-hamburg.de"
 EXPOSE 21 22 23 25 80 110 143 443 587 993 995
 
 RUN echo "===> Installing build-dependencies..." \
@@ -24,6 +25,8 @@ COPY resources /var/honeygrove/resources
 
 RUN echo "===>  Copying honeygrove sources..."
 COPY honeygrove /app/honeygrove
+
+VOLUME ["/var/honeygrove/logs", "/var/honeygrove/quarantine", "/var/honeygrove/honeytoken_files"]
 
 ENTRYPOINT ["python3"]
 CMD ["-m", "honeygrove"]
