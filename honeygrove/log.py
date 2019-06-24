@@ -94,7 +94,7 @@ def info(message):
     """
 
     timestamp = format_time(get_time())
-    message = '{} - [INFO] - {}'.format(timestamp, message)
+    message = '{} [INFO] {}'.format(timestamp, message)
     _log_status(message)
 
 
@@ -106,7 +106,7 @@ def err(message):
     """
 
     timestamp = format_time(get_time())
-    message = '{} - [ERROR] - {}'.format(timestamp, message)
+    message = '{} [ERROR] {}'.format(timestamp, message)
     _log_status(message)
 
 
@@ -160,7 +160,7 @@ def login(service, ip, port, successful, user, key=None, actual=None):
 
     if Config.use_broker:
         BrokerEndpoint.BrokerEndpoint.sendLogs(json.dumps(values))
-        
+
     if coordinates:
         values['lat'] = '{:.4f}'.format(coordinates[0])
         values['lon'] = '{:.4f}'.format(coordinates[1])
@@ -246,7 +246,7 @@ def response(service, ip, port, response, user=None, status_code=None):
                           'response': response,
                           'request_type': status_code,
                           'honeypotID': ID})
-    
+
     if coordinates:
         values['coordinates'] = '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1])
 
@@ -289,7 +289,7 @@ def file(service, ip, file_name, file_path=None, user=None):
                           'user': user,
                           'filename': file_name,
                           'honeypotID': ID})
-    
+
     if coordinates:
         values['coordinates'] = '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1])
 
@@ -325,7 +325,7 @@ def scan(ip, port, intime, scan_type):
                           'ip': ip,
                           'port': port,
                           'honeypotID': ID})
-    
+
     if coordinates:
         values['coordinates'] = '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1])
 
@@ -357,7 +357,7 @@ def limit_reached(service, ip):
                           'service': service,
                           'ip': ip,
                           'honeypotID': ID})
-    
+
     if coordinates:
         values['coordinates'] = '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1])
 
