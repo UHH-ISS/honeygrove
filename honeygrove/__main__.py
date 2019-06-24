@@ -29,12 +29,12 @@ if __name__ == '__main__':
 
     # Initialize Services
     controller = ServiceController()
-        
+
     # Initialize Broker
     brokerThread = threading.Thread(target=BrokerWatcher.broker_status_loop, args=(controller,))
     brokerThread.name = "BrokerThread"
     brokerThread.start()
-    
+
     # Start Services
     for service in Config.enabled_services:
         controller.startService(service)

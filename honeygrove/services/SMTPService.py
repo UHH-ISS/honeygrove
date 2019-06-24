@@ -20,14 +20,6 @@ class SMTPService(ServiceBaseModel):
         self.protocol = SMTPProtocol
         self._fService.protocol = self.protocol
 
-    def startService(self):
-        self._stop = False
-        self._transport = reactor.listenTCP(self._port, self._limiter)
-
-    def stopService(self):
-        self._stop = True
-        self._transport.stopListening()
-
 
 class SMTPProtocol(Protocol, policies.TimeoutMixin):
     def __init__(self):

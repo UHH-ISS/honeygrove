@@ -30,15 +30,16 @@ class ServiceController():
         Starts the given service and adds it to threadDict
         :param name: Name of the service (str)
         """
-        if self.serviceDict[name]._port is not None:
-            log.info("Try StartService: " + name + " (port " + str(self.serviceDict[name]._port) + ")")
-        else:
-            log.info("Try StartService: " + name)
+        service = self.serviceDict[name]
+        address = service._address
+        if service._port:
+            address += ":{}".format(service._port)
+        log.info("{}: Starting on {}".format(name, address))
         if name not in self.runningServicesDict:
             if name not in Config.noPortSpecificService:
-                self.listen.stopOnPort(self.serviceDict[name]._port)
-            self.serviceDict[name].startService()
-            self.runningServicesDict[name] = self.serviceDict[name]
+                self.listen.stopOnPort(service._port)
+            service.startService()
+            self.runningServicesDict[name] = service
             return True
         else:
             return False

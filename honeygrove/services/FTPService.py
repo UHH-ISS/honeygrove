@@ -38,14 +38,6 @@ class FTPService(ServiceBaseModel):
         self.protocol = FTPProtocol
         self._fService.protocol = self.protocol
 
-    def startService(self):
-        self._stop = False
-        self._transport = reactor.listenTCP(self._port, self._limiter)
-
-    def stopService(self):
-        self._stop = True
-        self._transport.stopListening()
-
 
 class FTPProtocol(FTP):
     overwritten_commands_whitelist = ['CWD', 'DELE', 'LIST', 'MDTM', 'MKD',

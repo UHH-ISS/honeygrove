@@ -34,7 +34,7 @@ class ListenService(ServiceBaseModel):
             self._stop = False
             for port in self._port:
                 try:
-                    self._transport[port] = reactor.listenTCP(port, self._fService)
+                    self._transport[port] = reactor.listenTCP(port, self._fService, interface=self._interface)
                 except CannotListenError:
                     pass
 

@@ -183,7 +183,7 @@ class HTTPService(ServiceBaseModel):
     def startService(self):
         try:
             self._stop = False
-            self._transport = reactor.listenTCP(self._port, self._fService)
+            self._transport = reactor.listenTCP(self._port, self._fService, interface=self._address)
 
             sites = []
             for key in HTTPService.html_dictionary:
@@ -200,8 +200,8 @@ class HTTPService(ServiceBaseModel):
         self._transport.stopListening()
         try:
             self._transport.connectionLost("Force close/cleanup due to next service scheduling")
-        except AttributeError:
-            log.err("HTTPService connectionLost wirft AttributeError!")
+        except AttributeError as err:
+            log.err("HTTPService.connectionLost threw AttributeError: " + err)
 
     def parseHeaderLine(self, line):
         pdata = line.split(':', 1)[0]

@@ -1,7 +1,9 @@
 from honeygrove import log
+from honeygrove.config import Config
 
 from abc import ABC, abstractmethod
 
+from twisted.internet import reactor
 from twisted.internet.protocol import Factory
 from twisted.protocols.policies import WrappingFactory
 
@@ -18,26 +20,30 @@ class ServiceBaseModel(ABC):
         # Only these variables should be changeable
 
         self._name = None
+        self._address = Config.address
         self._port = None
+
         self._stop = True
-        # _status wird anscheinend bisher nicht verwendet!
+        # XXX: Not used currently?
+
         self._status = None
+        self._limiter = None
         self._transport = None
 
-    @abstractmethod
     def startService(self):
         """
         Starts the specific service
         """
-        pass
+        self._stop = False
+        self._transport = reactor.listenTCP(self._port, self._limiter, interface=self._address)
 
-    @abstractmethod
     def stopService(self):
         """
         Stops the specific service
         :return:
         """
-        pass
+        self._stop = True
+        self._transport.stopListening()
 
     def changePort(self, port):
         """
@@ -52,11 +58,11 @@ class ServiceBaseModel(ABC):
 
 class Limiter(WrappingFactory):
 
-    # name = freier Name des Services
-    # config = maxConnection
-    def __init__(self, service, name, config):
+    # name = Name of the service
+    # max_conns = Maximum number of connections per host
+    def __init__(self, service, name, max_conns):
         super(Limiter, self).__init__(service)
-        self._maxConnectionsPerPeer = config
+        self._maxConnectionsPerPeer = max_conns
         self._name = name
 
     def startFactory(self):
