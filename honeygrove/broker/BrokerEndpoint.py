@@ -3,7 +3,7 @@ from honeygrove.config import Config
 import broker
 
 import base64
-import datetime
+from datetime import datetime
 
 
 class BrokerEndpoint:
@@ -58,7 +58,7 @@ class BrokerEndpoint:
         Sends a Broker message containing a JSON string.
         :param message: message to publish
         """
-        index = "honeygrove-" + datetime.utcnow().strftime('%Y-%m')
+        index = "honeygrove-" + datetime.today().strftime('%Y-%m')
         BrokerEndpoint.endpoint.publish("logs", {index: message})
 
     @staticmethod
