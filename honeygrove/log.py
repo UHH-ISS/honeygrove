@@ -2,6 +2,7 @@ from honeygrove.config import Config
 
 from collections import defaultdict
 from datetime import datetime
+from hashlib import sha256
 import json
 
 if Config.use_broker:
@@ -9,19 +10,16 @@ if Config.use_broker:
 if Config.use_geoip:
     import geoip2.database
 
-# Honeypot ID
-ID = str(Config.HPID)
+ECS_SERVICE = {'id': sha256(str(Config.HPID).encode('utf-8')).hexdigest(),
+               'name': str(Config.HPID).lower(),
+               'type': 'honeygrove',
+               }
+
 
 # Folders
 path = Config.folder.log
 if Config.use_geoip:
     geodatabasepath = str(Config.folder.geo_ip)
-
-# Settings
-print_status = Config.print_status
-print_alerts = Config.print_alerts
-log_status = Config.log_status
-log_alerts = Config.log_alerts
 
 if Config.use_geoip:
     try:
@@ -34,16 +32,16 @@ PLACEHOLDER_STRING = '--'
 
 
 def _log_status(message):
-    if log_status:
+    if Config.log_status:
         write(message + '\n')
-    if print_status:
+    if Config.print_status:
         print(message)
 
 
 def _log_alert(message):
-    if log_alerts:
+    if Config.log_alerts:
         write(message + '\n')
-    if print_alerts:
+    if Config.print_alerts:
         print(message)
 
 
@@ -143,30 +141,39 @@ def login(service, ip, port, successful, user, key=None, actual=None):
     if not actual:
         actual = PLACEHOLDER_STRING
 
-    values = defaultdict(lambda: PLACEHOLDER_STRING,
-                         {'event_type': 'login',
-                          '@timestamp': timestamp,
-                          'service': service,
-                          'ip': ip,
-                          'port': str(port),
-                          'successful': str(successful),
-                          'user': user,
-                          'key': key,
-                          'actual': actual,
-                          'honeypotID': ID})
+    ecs_event = {'category': 'alert', 'action': 'login'}
+    # XXX: we don't know the source port currently..
+    ecs_source = {'address': ip, 'ip': ip}
+    # XXX: this is not very useful when we listen on 0.0.0.0 but good enough for now
+    ecs_destination = {'address': Config.address, 'ip': Config.address, 'port': port}
+    ecs_hg_login = defaultdict(lambda: PLACEHOLDER_STRING, {'service': service,
+                                                            'username': user,
+                                                            'password': key,
+                                                            'successful': successful})
+    ecs_hg = {'login': ecs_hg_login}
 
+    values = {'@timestamp': timestamp,
+              'service': ECS_SERVICE,
+              'event': ecs_event,
+              'source': ecs_source,
+              'destination': ecs_destination,
+              'honeygrove': ecs_hg}
+
+    # Append geo coordinates of source, if available
     if coordinates:
-        values['coordinates'] = '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1])
+        values['source']['geo'] = {'location': '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1])}
 
     if Config.use_broker:
         BrokerEndpoint.BrokerEndpoint.sendLogs(json.dumps(values))
 
+    lat = PLACEHOLDER_STRING
+    lon = PLACEHOLDER_STRING
     if coordinates:
-        values['lat'] = '{:.4f}'.format(coordinates[0])
-        values['lon'] = '{:.4f}'.format(coordinates[1])
+        lat = '{:.4f}'.format(coordinates[0])
+        lon = '{:.4f}'.format(coordinates[1])
 
-    message = ('{@timestamp} - [LOGIN] - {service}, {ip}:{port}, Lat: {lat}, Lon: {lon}, '
-               '{successful}, {user}, {key}, {actual}').format_map(values)
+    message = ('{} - [LOGIN] - {}, {}:{}, Lat: {}, Lon: {}, {}, {}, {}, {}'
+               '').format(timestamp, service, ip, port, lat, lon, successful, user, key, actual)
     _log_alert(message)
 
 
@@ -199,7 +206,7 @@ def request(service, ip, port, request, user=None, request_type=None):
                           'user': user,
                           'request': request,
                           'request_type': request_type,
-                          'honeypotID': ID})
+                          'honeypotID': Config.HPID})
 
     if coordinates:
         values['coordinates'] = '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1])
@@ -245,7 +252,7 @@ def response(service, ip, port, response, user=None, status_code=None):
                           'user': user,
                           'response': response,
                           'request_type': status_code,
-                          'honeypotID': ID})
+                          'honeypotID': Config.HPID})
 
     if coordinates:
         values['coordinates'] = '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1])
@@ -288,7 +295,7 @@ def file(service, ip, file_name, file_path=None, user=None):
                           'ip': ip,
                           'user': user,
                           'filename': file_name,
-                          'honeypotID': ID})
+                          'honeypotID': Config.HPID})
 
     if coordinates:
         values['coordinates'] = '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1])
@@ -324,7 +331,7 @@ def scan(ip, port, intime, scan_type):
                           '@timestamp': timestamp,
                           'ip': ip,
                           'port': port,
-                          'honeypotID': ID})
+                          'honeypotID': Config.HPID})
 
     if coordinates:
         values['coordinates'] = '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1])
@@ -356,7 +363,7 @@ def limit_reached(service, ip):
                           '@timestamp': timestamp,
                           'service': service,
                           'ip': ip,
-                          'honeypotID': ID})
+                          'honeypotID': Config.HPID})
 
     if coordinates:
         values['coordinates'] = '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1])
@@ -380,7 +387,7 @@ def heartbeat():
     timestamp = format_time(get_time())
 
     if Config.use_broker:
-        bmessage = json.dumps({'event_type': 'heartbeat', '@timestamp': timestamp, 'honeypotID': ID})
+        bmessage = json.dumps({'event_type': 'heartbeat', '@timestamp': timestamp, 'honeypotID': Config.HPID})
         BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
 
     message = ('{} - [Heartbeat]'.format(timestamp))

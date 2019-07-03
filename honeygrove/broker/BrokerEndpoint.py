@@ -3,6 +3,7 @@ from honeygrove.config import Config
 import broker
 
 import base64
+import datetime
 
 
 class BrokerEndpoint:
@@ -14,14 +15,15 @@ class BrokerEndpoint:
     # Broker Endpoint
     bcfg = broker.Configuration()
     if Config.broker.ssl_ca_file:
-        bcfg.openssl_cafile = Config.broker.ssl_ca_file # Path to CA file
+        bcfg.openssl_cafile = Config.broker.ssl_ca_file  # Path to CA file
     if Config.broker.ssl_ca_path:
-        bcfg.openssl_capath = Config.broker.ssl_ca_path # Path to directory with CA files
+        bcfg.openssl_capath = Config.broker.ssl_ca_path  # Path to directory with CA files
     if Config.broker.ssl_certificate:
-        bcfg.openssl_certificate = Config.broker.ssl_certificate # Own certificate
+        bcfg.openssl_certificate = Config.broker.ssl_certificate  # Own certificate
     if Config.broker.ssl_key_file:
-        bcfg.openssl_key = Config.broker.ssl_key_file # Own key
+        bcfg.openssl_key = Config.broker.ssl_key_file  # Own key
     endpoint = broker.Endpoint(bcfg)
+
     # Status Subscriber
     status_queue = endpoint.make_status_subscriber(True)
     # Subscribe to management commands
@@ -29,7 +31,7 @@ class BrokerEndpoint:
 
     # peering objects. needed for unpeering
     peerings = [0, 0, None]
-    
+
     @staticmethod
     def getStatusMessages():
         for st in BrokerEndpoint.status_queue.poll():
@@ -51,12 +53,13 @@ class BrokerEndpoint:
         return BrokerEndpoint.command_queue.poll()
 
     @staticmethod
-    def sendLogs(jsonString):
+    def sendLogs(message):
         """
         Sends a Broker message containing a JSON string.
-        :param jsonString: Json string.
+        :param message: message to publish
         """
-        BrokerEndpoint.endpoint.publish("logs", jsonString)
+        index = "honeygrove-" + datetime.utcnow().strftime('%Y-%m')
+        BrokerEndpoint.endpoint.publish("logs", {index: message})
 
     @staticmethod
     def listen(ip, port):
@@ -67,8 +70,7 @@ class BrokerEndpoint:
         """
         p = BrokerEndpoint.endpoint.listen(ip, port)
         if p == 0:
-            raise RuntimeError(
-                "Unable to listen on Broker port {}".format(port))
+            raise RuntimeError("Unable to listen on Broker port {}".format(port))
         return p
 
     @staticmethod
