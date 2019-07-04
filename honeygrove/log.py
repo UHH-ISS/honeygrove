@@ -4,6 +4,7 @@ from collections import defaultdict
 from datetime import datetime
 from hashlib import sha256
 import json
+from socket import getfqdn
 
 if Config.use_broker:
     from honeygrove.broker import BrokerEndpoint
@@ -53,6 +54,19 @@ def write(message):
 
     with open(str(path), 'a') as fp:
         fp.write(message)
+
+
+def get_reverse_hostname(ip):
+    name = getfqdn(ip)
+    return name if name != ip else None
+
+def get_ecs_source_dict(ip):
+    ecs_source = {'address': ip, 'ip': ip}
+    host = get_reverse_hostname(ip)
+    if host:
+        ecs_source['domain'] = host
+    return ecs_source
+
 
 
 def get_coordinates(ipaddress):
@@ -143,7 +157,7 @@ def login(service, ip, port, successful, user, key=None, actual=None):
 
     ecs_event = {'category': 'alert', 'action': 'login'}
     # XXX: we don't know the source port currently..
-    ecs_source = {'address': ip, 'ip': ip}
+    ecs_source = get_ecs_source_dict(ip)
     # XXX: this is not very useful when we listen on 0.0.0.0 but good enough for now
     ecs_destination = {'address': Config.address, 'ip': Config.address, 'port': port}
     ecs_hg_login = defaultdict(lambda: PLACEHOLDER_STRING, {'service': service,
@@ -172,7 +186,7 @@ def login(service, ip, port, successful, user, key=None, actual=None):
         lat = '{:.4f}'.format(coordinates[0])
         lon = '{:.4f}'.format(coordinates[1])
 
-    message = ('{} - [LOGIN] - {}, {}:{}, Lat: {}, Lon: {}, {}, {}, {}, {}'
+    message = ('{} [LOGIN] {}, {}:{}, Lat: {}, Lon: {}, {}, {}, {}, {}'
                '').format(timestamp, service, ip, port, lat, lon, successful, user, key, actual)
     _log_alert(message)
 
@@ -218,7 +232,7 @@ def request(service, ip, port, request, user=None, request_type=None):
         values['lat'] = '{:.4f}'.format(coordinates[0])
         values['lon'] = '{:.4f}'.format(coordinates[1])
 
-    message = ('{@timestamp} - [REQUEST] - {service}, {ip}:{port}, Lat: {lat}, Lon: {lon}, '
+    message = ('{@timestamp} [REQUEST] {service}, {ip}:{port}, Lat: {lat}, Lon: {lon}, '
                '{request}, {user}, {request_type}').format_map(values)
     _log_alert(message)
 
@@ -264,7 +278,7 @@ def response(service, ip, port, response, user=None, status_code=None):
         values['lat'] = '{:.4f}'.format(coordinates[0])
         values['lon'] = '{:.4f}'.format(coordinates[1])
 
-    message = ('{@timestamp} - [RESPONSE] - {service}, {ip}:{port}, Lat: {lat}, Lon: {lon}, '
+    message = ('{@timestamp} [RESPONSE] {service}, {ip}:{port}, Lat: {lat}, Lon: {lon}, '
                '{response}, {user}, {request_type}').format_map(values)
     _log_alert(message)
 
@@ -309,7 +323,7 @@ def file(service, ip, file_name, file_path=None, user=None):
         values['lat'] = '{:.4f}'.format(coordinates[0])
         values['lon'] = '{:.4f}'.format(coordinates[1])
 
-    message = '{@timestamp} - [FILE] - {service}, {ip}, Lat: {lat}, Lon: {lon}, {filename}, {user}'.format_map(values)
+    message = '{@timestamp} [FILE] {service}, {ip}, Lat: {lat}, Lon: {lon}, {filename}, {user}'.format_map(values)
     _log_alert(message)
 
 
@@ -325,25 +339,37 @@ def scan(ip, port, intime, scan_type):
     timestamp = format_time(intime)
     coordinates = get_coordinates(ip)
 
-    values = defaultdict(lambda: PLACEHOLDER_STRING,
-                         {'event_type': '{}-scan'.format(scan_type),
-                          'scan_type': scan_type.upper(),
-                          '@timestamp': timestamp,
-                          'ip': ip,
-                          'port': port,
-                          'honeypotID': Config.HPID})
+    ecs_event = {'category': 'warning', 'action': 'scan'}
+    # XXX: we don't know the source port currently..
+    ecs_source = get_ecs_source_dict(ip)
+    # XXX: this is not very useful when we listen on 0.0.0.0 but good enough for now
+    ecs_destination = {'address': Config.address, 'ip': Config.address, 'port': port}
+    ecs_hg_scan = defaultdict(lambda: PLACEHOLDER_STRING, {'port': port, 'type': scan_type})
+    ecs_hg = {'scan': ecs_hg_scan}
 
+    values = {'@timestamp': timestamp,
+              'service': ECS_SERVICE,
+              'event': ecs_event,
+              'source': ecs_source,
+              'destination': ecs_destination,
+              'honeygrove': ecs_hg}
+
+    # Append geo coordinates of source, if available
     if coordinates:
-        values['coordinates'] = '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1])
+        values['source']['geo'] = {'location': '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1])}
 
     if Config.use_broker:
         BrokerEndpoint.BrokerEndpoint.sendLogs(json.dumps(values))
 
+    lat = PLACEHOLDER_STRING
+    lon = PLACEHOLDER_STRING
     if coordinates:
-        values['lat'] = '{:.4f}'.format(coordinates[0])
-        values['lon'] = '{:.4f}'.format(coordinates[1])
+        lat = '{:.4f}'.format(coordinates[0])
+        lon = '{:.4f}'.format(coordinates[1])
 
-    message = '{@timestamp} - [{scan_type}-SCAN] - {ip}:{port}, Lat: {lat}, Lon: {lon}'.format_map(values)
+
+    message = ('{} [{}-SCAN] {}:{}, Lat: {}, Lon: {}'
+               '').format(timestamp, scan_type, ip, port, lat, lon)
     _log_alert(message)
 
 
@@ -375,7 +401,7 @@ def limit_reached(service, ip):
         values['lat'] = '{:.4f}'.format(coordinates[0])
         values['lon'] = '{:.4f}'.format(coordinates[1])
 
-    message = '{@timestamp} - [LIMIT REACHED] - {service}, {ip}, Lat: {lat}, Lon: {lon}'.format_map(values)
+    message = '{@timestamp} [LIMIT REACHED] {service}, {ip}, Lat: {lat}, Lon: {lon}'.format_map(values)
     _log_alert(message)
 
 
@@ -387,8 +413,11 @@ def heartbeat():
     timestamp = format_time(get_time())
 
     if Config.use_broker:
-        bmessage = json.dumps({'event_type': 'heartbeat', '@timestamp': timestamp, 'honeypotID': Config.HPID})
-        BrokerEndpoint.BrokerEndpoint.sendLogs(bmessage)
+        ecs_event = {'category': 'info', 'action': 'heartbeat'}
+        values = {'@timestamp': timestamp,
+                  'service': ECS_SERVICE,
+                  'event': ecs_event}
+        BrokerEndpoint.BrokerEndpoint.sendLogs(values)
 
-    message = ('{} - [Heartbeat]'.format(timestamp))
+    message = ('{} [Heartbeat]'.format(timestamp))
     _log_status(message)
