@@ -26,7 +26,8 @@ if Config.use_geoip:
     try:
         reader = geoip2.database.Reader(geodatabasepath)
     except FileNotFoundError:
-        print("\nGeoIP database file not found, disabled GeoIP!\n")
+        print("\nGeoIP database file not found: {}\n".format(geodatabasepath))
+        print("\nDisabling GeoIP support!\n")
         Config.use_geoip = False
 
 PLACEHOLDER_STRING = '--'
@@ -59,6 +60,7 @@ def write(message):
 def get_reverse_hostname(ip):
     name = getfqdn(ip)
     return name if name != ip else None
+
 
 def get_ecs_source_dict(ip):
     ecs_source = {'address': ip, 'ip': ip}
