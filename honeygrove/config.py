@@ -23,7 +23,6 @@ class Config:
 
     # General configuration
     HPID = "HP1"
-    machine_name = "hp1"
     hp_description = {"Name": str(HPID), "Location": "Moscow, Russia", "Description": "Honeygrove instance"}
     address = "127.0.0.1"
     # Set this to False if you do not want to use broker or broker is
