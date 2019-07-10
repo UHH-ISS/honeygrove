@@ -9,7 +9,7 @@ import threading
 import atexit
 
 
-def shutdownHoneyGrove():
+def shutdown():
     log.info("Shutting down")
     save_database()
     quit()
@@ -40,5 +40,5 @@ if __name__ == '__main__':
     # XXX: Why is this necessary here?
     # Load ssh database
     load_database()
-    atexit.register(shutdownHoneyGrove)
+    atexit.register(shutdown)
 
