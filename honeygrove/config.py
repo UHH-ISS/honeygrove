@@ -24,7 +24,7 @@ class Config:
     # General configuration
     HPID = "HP1"
     hp_description = {"Name": str(HPID), "Location": "Moscow, Russia", "Description": "Honeygrove instance"}
-    address = "127.0.0.1"
+    address = "0.0.0.0"
     # Set this to False if you do not want to use broker or broker is
     # unavailable on your machine. Currently, the management-console
     # and the EKStack can not be used without communication via Broker.

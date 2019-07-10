@@ -305,7 +305,7 @@ class FTPProtocol(FTP):
 
         def cbSent(result):
             """
-            Called from data transport when tranfer is done.
+            Called from data transport when transfer is done.
             """
             if Config.ftp.accept_files:
                 self.l.file(FTPService._name, self.transport.getPeer().host, FTPService._port, filename, self.receivedDataDirectory + "/" + filename,
