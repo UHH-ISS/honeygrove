@@ -17,9 +17,9 @@ ECS_SERVICE = {'id': sha256(str(Config.HPID).encode('utf-8')).hexdigest(),
 
 if Config.use_geoip:
     try:
-        GEO_READER = geoip2.database.Reader(Config.folder.geo_ip)
+        GEO_READER = geoip2.database.Reader(str(Config.folder.geo_ip))
     except FileNotFoundError:
-        print("\nGeoIP database file not found: {}\n".format(Config.folder.geo_ip))
+        print("\nGeoIP database file not found: {}\n".format(str(Config.folder.geo_ip)))
         print("\nDisabling GeoIP support!\n")
         Config.use_geoip = False
 
