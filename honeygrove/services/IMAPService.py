@@ -21,14 +21,6 @@ class IMAPService(ServiceBaseModel):
         self.protocol = IMAPProtocol
         self._fService.protocol = self.protocol
 
-    def startService(self):
-        self._stop = False
-        self._transport = reactor.listenTCP(self._port, self._limiter)
-
-    def stopService(self):
-        self._stop = True
-        self._transport.stopListening()
-
 
 class IMAPState(Enum):
     # see RFC 3501

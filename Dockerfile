@@ -14,7 +14,7 @@ WORKDIR /app
 
 COPY requirements.txt /app
 RUN echo "===> Installing python dependencies via pip..." \
-    && pip3 install -r requirements.txt
+    && pip3 install --upgrade -r requirements.txt
 
 RUN echo "===> Purging build-dependencies..." \
     && apk del --purge .build-deps
@@ -23,7 +23,7 @@ RUN echo "===> Preparing honeygrove runtime folders..." \
     && bash -c "mkdir -p /var/honeygrove/{logs,resources/{quarantine,honeytoken_files}}"
 COPY resources /var/honeygrove/resources
 
-RUN echo "===>  Copying honeygrove sources..."
+RUN echo "===> Copying honeygrove sources..."
 COPY honeygrove /app/honeygrove
 
 VOLUME ["/var/honeygrove/logs", "/var/honeygrove/quarantine", "/var/honeygrove/honeytoken_files"]

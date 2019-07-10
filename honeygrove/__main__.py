@@ -16,7 +16,6 @@ def shutdownHoneyGrove():
 
 
 if __name__ == '__main__':
-
     """
     Startup module. Name needs to be like this for the automatic import of the other modules.
     """
@@ -26,15 +25,14 @@ if __name__ == '__main__':
     if not os.getuid() == 0:
         print("[-] Honeygrove must be run as root.\n[!] Starting anyway!\n[!] Some functions may not work correctly!")
 
-
     # Initialize Services
     controller = ServiceController()
-        
+
     # Initialize Broker
     brokerThread = threading.Thread(target=BrokerWatcher.broker_status_loop, args=(controller,))
     brokerThread.name = "BrokerThread"
     brokerThread.start()
-    
+
     # Start Services
     for service in Config.enabled_services:
         controller.startService(service)

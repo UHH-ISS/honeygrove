@@ -77,7 +77,6 @@ class SSHService(ServiceBaseModel):
         publicKeyPath = home + '/.ssh/id_honeygrove.pub'
 
         # Generate RSA keys if they don't exist
-
         if not (exists(privateKeyPath) and exists(publicKeyPath)):
             key = keys.rsa.generate_private_key(public_exponent=65537, key_size=4096, backend=default_backend())
             private_key = key.private_bytes(serialization.Encoding.PEM,
@@ -96,14 +95,6 @@ class SSHService(ServiceBaseModel):
 
         self._fService.privateKeys = {b'ssh-rsa': keys.Key.fromFile(privateKeyPath)}
         self._fService.publicKeys = {b'ssh-rsa': keys.Key.fromFile(publicKeyPath)}
-
-    def startService(self):
-        self._stop = False
-        self._transport = reactor.listenTCP(self._port, self._limiter)
-
-    def stopService(self):
-        self._stop = True
-        self._transport.stopListening()
 
 
 class SSHProtocol(recvline.HistoricRecvLine):

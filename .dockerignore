@@ -9,3 +9,5 @@ __pycache__/
 .gitignore
 *.md
 Dockerfile
+.idea
+*.iml

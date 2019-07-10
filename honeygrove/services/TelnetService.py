@@ -19,14 +19,6 @@ class TelnetService(ServiceBaseModel):
 
         self._limiter = Limiter(self._fService, Config.telnet.name, Config.telnet.connections_per_host)
 
-    def startService(self):
-        self._stop = False
-        self._transport = reactor.listenTCP(self._port, self._limiter)
-
-    def stopService(self):
-        self._stop = True
-        self._transport.stopListening()
-
 
 class TelnetProtocol(StatefulTelnetProtocol):
     state = "User"
