@@ -103,6 +103,7 @@ class Config:
     ssh.gnuhelp_folder = ssh.resource_folder / 'gnuhelp'
     ssh.real_shell = False
     ssh.accept_files = True
+    ssh.accept_keys = False
     ssh.connections_per_host = max_connections_per_host
 
     # Telnet service configuration
@@ -206,9 +207,9 @@ class Config:
         broker.peer = False
         broker.peer_ip = '127.0.0.1'
         broker.peer_port = 34445
-        
+
         # Optional: SSL Authentication
-        broker.ssl_ca_file = None # Path to CA file
-        broker.ssl_ca_path = None # Path to directory with CA files
-        broker.ssl_certificate = None # Own certificate
-        broker.ssl_key_file = None # Own key
+        broker.ssl_ca_file = None  # Path to CA file
+        broker.ssl_ca_path = None  # Path to directory with CA files
+        broker.ssl_certificate = None  # Own certificate
+        broker.ssl_key_file = None  # Own key
