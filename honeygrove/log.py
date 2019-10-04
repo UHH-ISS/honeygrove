@@ -182,14 +182,14 @@ def login(service: str, ip: str, port: int, successful: bool, user: str, secret:
     _log_alert(message)
 
 
-def request(service: str, ip: str, port: int, request: str, user: str = None, request_type: str = None):
+def request(service: str, ip: str, port: int, req: str, user: str = None, request_type: str = None):
     """
     Log function to be called when a request is received
 
     :param service: the concerning service
     :param ip: attacker's IP-Address
     :param port: attackers port
-    :param request: the received request
+    :param req: the received request
     :param user: the user whose session invoked the alert
     :param request_type: for HTTP if the request is a GET or a POST request
     """
@@ -198,7 +198,7 @@ def request(service: str, ip: str, port: int, request: str, user: str = None, re
     coordinates = get_coordinates(ip)
 
     ecs_event = {'category': 'warning', 'action': 'request'}
-    ecs_hg_request = {'service': service, 'original': request}
+    ecs_hg_request = {'service': service, 'original': req}
     if user:
         ecs_hg_request['user'] = user
     if request_type:
@@ -228,18 +228,18 @@ def request(service: str, ip: str, port: int, request: str, user: str = None, re
         lon = '{:.4f}'.format(coordinates[1])
 
     message = ('{} [REQUEST] {}, {}:{}, Lat: {}, Lon: {}, {}, {}, {}'
-               '').format(timestamp, service, ip, port, lat, lon, request, user, request_type)
+               '').format(timestamp, service, ip, port, lat, lon, req, user, request_type)
     _log_alert(message)
 
 
-def response(service: str, ip: str, port: int, response: str, user: str = None, status_code=None):
+def response(service: str, ip: str, port: int, resp: str, user: str = None, status_code=None):
     """
     Log function to be called when sending a response
 
     :param service: the concerning service
     :param ip: attacker's IP-Address
     :param port: attackers port
-    :param response: the response sent
+    :param resp: the response sent
     :param user: the user whose session invoked the alert
     :param status_code: the status code sent
     """
@@ -248,7 +248,7 @@ def response(service: str, ip: str, port: int, response: str, user: str = None, 
     coordinates = get_coordinates(ip)
 
     ecs_event = {'category': 'warning', 'action': 'response'}
-    ecs_hg_request = {'service': service, 'original': response}
+    ecs_hg_request = {'service': service, 'original': resp}
     if user:
         ecs_hg_request['user'] = user
     if status_code:
@@ -277,7 +277,7 @@ def response(service: str, ip: str, port: int, response: str, user: str = None, 
         lon = '{:.4f}'.format(coordinates[1])
 
     message = ('{} [RESPONSE] {}, {}:{}, Lat: {}, Lon: {}, {}, {}, {}'
-               '').format(timestamp, service, ip, port, lat, lon, response, user, status_code)
+               '').format(timestamp, service, ip, port, lat, lon, resp, user, status_code)
     _log_alert(message)
 
 

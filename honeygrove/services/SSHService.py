@@ -116,7 +116,7 @@ class SSHProtocol(recvline.HistoricRecvLine):
 
         load = self.loadLoginTime(self.userName)
         if not load:
-            # Zufällige, plausible last login time
+            # Random, plausible last login time
             tdelta = timedelta(days=randint(1, 365), seconds=randint(0, 60), minutes=randint(0, 60), hours=randint(0, 24))
             now = datetime.now()
             login = now - tdelta
@@ -526,8 +526,15 @@ class groveUserAuth(userauth.SSHUserAuthServer):
         self.method = method
 
         is_key = method == b"publickey"
-
         d = self.tryAuth(method, user, rest)
+
+        # If we don't accept keys, abort early
+        if is_key and not Config.ssh.accept_keys:
+            d.addCallback(self._cbFinishedAuth)
+            d.addErrback(self._ebMaybeBadAuth)
+            d.addErrback(self._ebBadAuth)
+            return d
+
         if is_key:
             algName, rest, blobrest = common.getNS(rest[1:], 2)
         else:
