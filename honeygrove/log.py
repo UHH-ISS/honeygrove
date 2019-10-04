@@ -13,7 +13,7 @@ if Config.use_geoip:
 ECS_SERVICE = {'id': sha256(str(Config.HPID).encode('utf-8')).hexdigest(),
                'name': str(Config.HPID).lower(),
                'type': 'honeygrove',
-               'version': '0.5.0'
+               'version': '0.5.1'
                }
 
 if Config.use_geoip:
