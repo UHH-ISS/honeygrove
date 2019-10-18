@@ -8,6 +8,7 @@ from socket import getfqdn
 if Config.use_broker:
     from honeygrove.broker import BrokerEndpoint
 if Config.use_geoip:
+    from geoip2.errors import AddressNotFoundError
     import geoip2.database
 
 ECS_SERVICE = {'id': sha256(str(Config.HPID).encode('utf-8')).hexdigest(),
@@ -76,12 +77,16 @@ def get_coordinates(ip: str):
     """
 
     if Config.use_geoip:
-        resp = GEO_READER.city(ip)
+        try:
+            resp = GEO_READER.city(ip)
+        except AddressNotFoundError:
+            return None
+
         lat = float(resp.location.latitude)
         lon = float(resp.location.longitude)
         return [lat, lon]
     else:
-        return False
+        return None
 
 
 def get_time():
