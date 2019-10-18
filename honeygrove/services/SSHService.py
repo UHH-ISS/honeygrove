@@ -552,7 +552,12 @@ class groveUserAuth(userauth.SSHUserAuthServer):
             if not rest:
                 rest = "<unsupported key type>"
         elif isinstance(rest, bytes):
-            rest = rest.decode("unicode_escape")
+            try:
+                rest = rest.decode()
+            except UnicodeError:
+                # Password is invalid utf-8
+                log.info('Password was invalid UETF-8: "{}"; username = "{}", password = "{}"'.format(rest, user, rest))
+                rest = rest.decode('replace')
 
         d.addCallback(self._cbFinishedAuth)
         d.addCallback(log.defer_login, Config.ssh.name, self.transport.transport.client[0], Config.ssh.port, True,
