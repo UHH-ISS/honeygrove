@@ -73,8 +73,9 @@ class Config:
     http = ConfigSection()
     http.name = "HTTP"
     http.port = 80
+    http.connections_per_host = max_connections_per_host
     # Modify to simulate another server
-    http.response_headers = {'Last-Modified': "Sun, 07 Aug 2016 08:02:22 GMT",
+    http.response_headers = {'Last-Modified': "Sun, 07 Aug 2019 08:02:22 GMT",
                              'Cache-Control': "no-store, no-cache, must-revalidate, post-check=0, pre-check=0",
                              'Pragma': "no-cache",
                              'Content-Type': "text/html; charset=UTF-8"}
@@ -91,10 +92,20 @@ class Config:
     def save_html_dictionary(self):
         save_object(self.http.html_dictionary_content, self.http.html_dictionary_path)
 
+    # HTTPS service configuration
+    https = ConfigSection()
+    https.name = "HTTPS"
+    https.port = 443
+    https.connections_per_host = max_connections_per_host
+    # TLS configuration
+    https.tls_key = folder.tls / 'https.key'
+    https.tls_cert = folder.tls / 'https.crt'
+
     # SSH service configuration
     ssh = ConfigSection()
     ssh.name = "SSH"
     ssh.port = 22
+    ssh.connections_per_host = max_connections_per_host
     # must start with "SSH-2.0-"
     ssh.banner = b'SSH-2.0-uhh'
     ssh.resource_folder = folder.resources / 'ssh'
@@ -104,22 +115,21 @@ class Config:
     ssh.real_shell = False
     ssh.accept_files = True
     ssh.accept_keys = False
-    ssh.connections_per_host = max_connections_per_host
 
     # Telnet service configuration
     telnet = ConfigSection()
     telnet.name = "Telnet"
     telnet.port = 23
+    telnet.connections_per_host = max_connections_per_host
     # Currently not implemented
     telnet.real_shell = False
-    telnet.connections_per_host = max_connections_per_host
 
     # FTP service configuration
     ftp = ConfigSection()
     ftp.name = "FTP"
     ftp.port = 21
-    ftp.accept_files = True
     ftp.connections_per_host = max_connections_per_host
+    ftp.accept_files = True
 
     # Email (POP3(S), SMTP(S), IMAP(S)) related configuration
     email = ConfigSection()
@@ -133,9 +143,9 @@ class Config:
     smtp = ConfigSection()
     smtp.name = "SMTP"
     smtp.port = 25
+    smtp.connections_per_host = max_connections_per_host
     # CRAM-MD5 and SCRAM-SHA-1 aren't yet implemented! (using them anyway crashes the connection)
     smtp.authentication_methods = {"PLAIN": True, "LOGIN": True, "CRAM-MD5": False, "SCRAM-SHA-1": False}
-    smtp.connections_per_host = max_connections_per_host
 
     # SMTPS (SMTP + TLS) service configuration
     smtps = ConfigSection()
@@ -159,9 +169,9 @@ class Config:
     imap = ConfigSection()
     imap.name = "IMAP"
     imap.port = 143
+    imap.connections_per_host = max_connections_per_host
     # CRAM-MD5 and SCRAM-SHA-1 aren't yet implemented! (using them anyway crashes the connection)
     imap.authentication_methods = smtp.authentication_methods
-    imap.connections_per_host = max_connections_per_host
 
     # IMAPS (IMAP + TLS) service configuration
     imaps = ConfigSection()
@@ -186,7 +196,7 @@ class Config:
 
     # List of service names that should be enabled at startup
     # Defaults to all implemented services
-    enabled_services = [http.name, ssh.name, telnet.name, ftp.name, smtp.name, smtps.name, pop3.name, pop3s.name, imap.name, imaps.name, tcpFlagSnifferName]
+    enabled_services = [http.name, https.name, ssh.name, telnet.name, ftp.name, smtp.name, smtps.name, pop3.name, pop3s.name, imap.name, imaps.name, tcpFlagSnifferName]
 
     # Services which are not bound to a single port
     noPortSpecificService = [listenServiceName, tcpFlagSnifferName]
