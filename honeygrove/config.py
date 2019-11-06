@@ -22,27 +22,34 @@ class ConfigSection:
 class Config:
 
     # General configuration
-    HPID = "HP1"
-    hp_description = {"Name": str(HPID), "Location": "Moscow, Russia", "Description": "Honeygrove instance"}
-    address = "0.0.0.0"
+    general = ConfigSection()
+    general.id = "HG1"
+    general.description = {"Name": str(general.id), "Location": "Hamburg, Germany", "Description": "Honeygrove instance #1"}
+    general.address = "0.0.0.0"
+    general.hostname = "euve256525"
+    # Default maximum connections per host per service
+    general.max_connections_per_host = 100
+    # True = use UTC, False = use System Time
+    general.use_utc = True
     # Set this to False if you do not want to use broker or broker is
     # unavailable on your machine. Currently, the management-console
     # and the EKStack can not be used without communication via Broker.
-    use_broker = False
-
+    general.use_broker = False
     # Set this to False if you do not want to use geoip or no database
     # is available on your machine.
-    use_geoip = False
+    general.use_geoip = False
+    # List of service names that should be enabled at startup
+    # (defaults to all implemented services if letf empty)
+    general.enabled_services = []
 
     # Logfile and output configuration
-    # Status: Inlcudes INFO-, HEARTBEAT-, RESPONSE- and ERROR-messages
-    # Alerts: Inlcudes LOGIN-, REQUEST-, FILE-, and SYN-messages
-    print_status = True
-    print_alerts = True
-    log_status = True
-    log_alerts = True
-    # True = use UTC, False = use System Time
-    use_utc = True
+    logging = ConfigSection()
+    # Status: Includes INFO-, HEARTBEAT-, RESPONSE- and ERROR-messages
+    logging.print_status = True
+    logging.print_alerts = True
+    # Alerts: Includes LOGIN-, REQUEST-, FILE-, and SYN-messages
+    logging.log_status = True
+    logging.log_alerts = True
 
     # Folder configuration
     # All folder are relative to `folder.base`, so it is usually sufficient to only change this
@@ -56,24 +63,29 @@ class Config:
     folder.honeytoken_files = folder.resources / 'honeytoken_files'
     folder.quarantine = folder.resources / 'quarantine'
     folder.tls = folder.resources / 'tls'
-    if use_geoip:
+    if general.use_geoip:
         folder.geo_ip = folder.resources / 'geo_ip.db'
     # Log folder (currently only a single file)
     folder.log = folder.base / 'logs' / 'log.txt'
 
-    # Ports without sepcific service
-    listenServicePorts = [r for r in range(1, 5000)]
-    listenServiceName = "LISTEN"
-    tcpFlagSnifferName = "TCPFlagSniffer"
-
-    # Default maximum connections per host per service
-    max_connections_per_host = 100
+    # Ports without specific service
+    listen = ConfigSection()
+    listen.name = "LISTEN"
+    listen.ports = [r for r in range(1, 5000)]
+    tcp_scan = ConfigSection()
+    tcp_scan.name = "TCP Scan Detector"
+    tcp_scan.ports = [r for r in range(1, 5000)]
+    # Timeframe in which ACK packets are expected to return
+    # (to distinguish between port scans and valid connection attempts)
+    tcp_scan.timeout = 5
+    # Services which are not bound to a single port
+    multiple_port_services = [listen.name, tcp_scan.name]
 
     # HTTP service configuration
     http = ConfigSection()
     http.name = "HTTP"
     http.port = 80
-    http.connections_per_host = max_connections_per_host
+    http.connections_per_host = general.max_connections_per_host
     # Modify to simulate another server
     http.response_headers = {'Last-Modified': "Sun, 07 Aug 2019 08:02:22 GMT",
                              'Cache-Control': "no-store, no-cache, must-revalidate, post-check=0, pre-check=0",
@@ -96,7 +108,7 @@ class Config:
     https = ConfigSection()
     https.name = "HTTPS"
     https.port = 443
-    https.connections_per_host = max_connections_per_host
+    https.connections_per_host = general.max_connections_per_host
     # TLS configuration
     https.tls_key = folder.tls / 'https.key'
     https.tls_cert = folder.tls / 'https.crt'
@@ -105,9 +117,9 @@ class Config:
     ssh = ConfigSection()
     ssh.name = "SSH"
     ssh.port = 22
-    ssh.connections_per_host = max_connections_per_host
+    ssh.connections_per_host = general.max_connections_per_host
     # must start with "SSH-2.0-"
-    ssh.banner = b'SSH-2.0-uhh'
+    ssh.banner = b'SSH-2.0-' + general.hostname.encode()
     ssh.resource_folder = folder.resources / 'ssh'
     ssh.database_path = ssh.resource_folder / 'database.json'
     ssh.helptext_folder = ssh.resource_folder / 'helptexts'
@@ -120,7 +132,7 @@ class Config:
     telnet = ConfigSection()
     telnet.name = "Telnet"
     telnet.port = 23
-    telnet.connections_per_host = max_connections_per_host
+    telnet.connections_per_host = general.max_connections_per_host
     # Currently not implemented
     telnet.real_shell = False
 
@@ -128,7 +140,7 @@ class Config:
     ftp = ConfigSection()
     ftp.name = "FTP"
     ftp.port = 21
-    ftp.connections_per_host = max_connections_per_host
+    ftp.connections_per_host = general.max_connections_per_host
     ftp.accept_files = True
 
     # Email (POP3(S), SMTP(S), IMAP(S)) related configuration
@@ -143,7 +155,7 @@ class Config:
     smtp = ConfigSection()
     smtp.name = "SMTP"
     smtp.port = 25
-    smtp.connections_per_host = max_connections_per_host
+    smtp.connections_per_host = general.max_connections_per_host
     # CRAM-MD5 and SCRAM-SHA-1 aren't yet implemented! (using them anyway crashes the connection)
     smtp.authentication_methods = {"PLAIN": True, "LOGIN": True, "CRAM-MD5": False, "SCRAM-SHA-1": False}
 
@@ -151,25 +163,25 @@ class Config:
     smtps = ConfigSection()
     smtps.name = "SMTPS"
     smtps.port = 587
-    smtps.connections_per_host = max_connections_per_host
+    smtps.connections_per_host = general.max_connections_per_host
 
     # POP3 service configuration
     pop3 = ConfigSection()
     pop3.name = "POP3"
     pop3.port = 110
-    pop3.connections_per_host = max_connections_per_host
+    pop3.connections_per_host = general.max_connections_per_host
 
     # POP3S (POP3 + TLS) service configuration
     pop3s = ConfigSection()
     pop3s.name = "POP3S"
     pop3s.port = 995
-    pop3s.connections_per_host = max_connections_per_host
+    pop3s.connections_per_host = general.max_connections_per_host
 
     # IMAP service configuration
     imap = ConfigSection()
     imap.name = "IMAP"
     imap.port = 143
-    imap.connections_per_host = max_connections_per_host
+    imap.connections_per_host = general.max_connections_per_host
     # CRAM-MD5 and SCRAM-SHA-1 aren't yet implemented! (using them anyway crashes the connection)
     imap.authentication_methods = smtp.authentication_methods
 
@@ -177,7 +189,13 @@ class Config:
     imaps = ConfigSection()
     imaps.name = "IMAPS"
     imaps.port = 993
-    imaps.connections_per_host = max_connections_per_host
+    imaps.connections_per_host = general.max_connections_per_host
+
+    # Enable all known services if none are explicitly configured above
+    if not general.enabled_services:
+        general.enabled_services = [http.name, https.name, ssh.name, telnet.name, ftp.name, smtp.name,
+                                    smtps.name, pop3.name, pop3s.name, imap.name, imaps.name,
+                                    tcp_scan.name]
 
     # HoneytokenDB configuration
     honeytoken = ConfigSection()
@@ -194,19 +212,8 @@ class Config:
     honeytoken.password_min = 6
     honeytoken.password_max = 24
 
-    # List of service names that should be enabled at startup
-    # Defaults to all implemented services
-    enabled_services = [http.name, https.name, ssh.name, telnet.name, ftp.name, smtp.name, smtps.name, pop3.name, pop3s.name, imap.name, imaps.name, tcpFlagSnifferName]
-
-    # Services which are not bound to a single port
-    noPortSpecificService = [listenServiceName, tcpFlagSnifferName]
-
-    # Zeitraum, in welchen ein ACK-Paket beim Verbindungsaufbau zurückkommen soll
-    # (Timeout zur Unterscheidung von Scans gegenüber einem ernsthaften Verbindungsaufbau)
-    tcpTimeout = 5
-
     # Optional: Broker configuration
-    if (use_broker):
+    if (general.use_broker):
         broker = ConfigSection()
         # Optional: IP/port to listen on (e.g. for connections from the management console)
         broker.listen = False

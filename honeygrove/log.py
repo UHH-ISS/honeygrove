@@ -5,40 +5,40 @@ from hashlib import sha256
 import json
 from socket import getfqdn
 
-if Config.use_broker:
+if Config.general.use_broker:
     from honeygrove.broker import BrokerEndpoint
-if Config.use_geoip:
+if Config.general.use_geoip:
     from geoip2.errors import AddressNotFoundError
     import geoip2.database
 
-ECS_SERVICE = {'id': sha256(str(Config.HPID).encode('utf-8')).hexdigest(),
-               'name': str(Config.HPID).lower(),
+ECS_SERVICE = {'id': sha256(str(Config.general.id).encode('utf-8')).hexdigest(),
+               'name': str(Config.general.id).lower(),
                'type': 'honeygrove',
                'version': '0.5.3'
                }
 
-if Config.use_geoip:
+if Config.general.use_geoip:
     try:
         GEO_READER = geoip2.database.Reader(str(Config.folder.geo_ip))
     except FileNotFoundError:
         print("\nGeoIP database file not found: {}\n".format(str(Config.folder.geo_ip)))
         print("\nDisabling GeoIP support!\n")
-        Config.use_geoip = False
+        Config.general.use_geoip = False
 
 PLACEHOLDER_STRING = '--'
 
 
 def _log_status(message):
-    if Config.log_status:
+    if Config.logging.log_status:
         write(message + '\n')
-    if Config.print_status:
+    if Config.logging.print_status:
         print(message)
 
 
 def _log_alert(message):
-    if Config.log_alerts:
+    if Config.logging.log_alerts:
         write(message + '\n')
-    if Config.print_alerts:
+    if Config.logging.print_alerts:
         print(message)
 
 
@@ -76,7 +76,7 @@ def get_coordinates(ip: str):
     :param ip: the address out of a log entry
     """
 
-    if Config.use_geoip:
+    if Config.general.use_geoip:
         try:
             resp = GEO_READER.city(ip)
         except AddressNotFoundError:
@@ -90,7 +90,7 @@ def get_coordinates(ip: str):
 
 
 def get_time():
-    if Config.use_utc:
+    if Config.general.use_utc:
         return datetime.utcnow()
     else:
         return datetime.now()
@@ -166,14 +166,14 @@ def login(service: str, ip: str, port: int, successful: bool, user: str, secret:
               'event': ecs_event,
               # XXX: we don't know the source port currently..
               'source': get_ecs_address_dict(ip),
-              'destination': get_ecs_address_dict(Config.address, port),
+              'destination': get_ecs_address_dict(Config.general.address, port),
               'honeygrove': ecs_hg}
 
     # Append geo coordinates of source, if available
     if coordinates:
         values['source']['geo'] = {'location': '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1])}
 
-    if Config.use_broker:
+    if Config.general.use_broker:
         BrokerEndpoint.BrokerEndpoint.sendLogs(json.dumps(values))
 
     lat = PLACEHOLDER_STRING
@@ -216,14 +216,14 @@ def request(service: str, ip: str, port: int, req: str, user: str = None, reques
               'event': ecs_event,
               # XXX: we don't know the source port currently..
               'source': get_ecs_address_dict(ip),
-              'destination': get_ecs_address_dict(Config.address, port),
+              'destination': get_ecs_address_dict(Config.general.address, port),
               'honeygrove': ecs_hg}
 
     # Append geo coordinates of source, if available
     if coordinates:
         values['source']['geo'] = {'location': '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1])}
 
-    if Config.use_broker:
+    if Config.general.use_broker:
         BrokerEndpoint.BrokerEndpoint.sendLogs(json.dumps(values))
 
     lat = PLACEHOLDER_STRING
@@ -264,7 +264,7 @@ def response(service: str, ip: str, port: int, resp: str, user: str = None, stat
     values = {'@timestamp': timestamp,
               'service': ECS_SERVICE,
               'event': ecs_event,
-              'source': get_ecs_address_dict(Config.address),
+              'source': get_ecs_address_dict(Config.general.address),
               'destination': get_ecs_address_dict(ip, port),
               'honeygrove': ecs_hg}
 
@@ -272,7 +272,7 @@ def response(service: str, ip: str, port: int, resp: str, user: str = None, stat
     if coordinates:
         values['destination']['geo'] = {'location': '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1])}
 
-    if Config.use_broker:
+    if Config.general.use_broker:
         BrokerEndpoint.BrokerEndpoint.sendLogs(json.dumps(values))
 
     lat = PLACEHOLDER_STRING
@@ -314,14 +314,14 @@ def file(service: str, ip: str, file_name: str, file_path: str = None, user: str
               'event': ecs_event,
               # XXX: we don't know the source port currently..
               'source': get_ecs_address_dict(ip),
-              'destination': get_ecs_address_dict(Config.address),
+              'destination': get_ecs_address_dict(Config.general.address),
               'honeygrove': ecs_hg}
 
     # Append geo coordinates of source, if available
     if coordinates:
         values['source']['geo'] = {'location': '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1])}
 
-    if Config.use_broker:
+    if Config.general.use_broker:
         BrokerEndpoint.BrokerEndpoint.sendLogs(json.dumps(values))
         if file_path:
             BrokerEndpoint.BrokerEndpoint.sendFile(file_path)
@@ -359,14 +359,14 @@ def scan(ip, port, time, scan_type):
               'event': ecs_event,
               # XXX: we don't know the source port currently..
               'source': get_ecs_address_dict(ip),
-              'destination': get_ecs_address_dict(Config.address, port),
+              'destination': get_ecs_address_dict(Config.general.address, port),
               'honeygrove': ecs_hg}
 
     # Append geo coordinates of source, if available
     if coordinates:
         values['source']['geo'] = {'location': '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1])}
 
-    if Config.use_broker:
+    if Config.general.use_broker:
         BrokerEndpoint.BrokerEndpoint.sendLogs(json.dumps(values))
 
     lat = PLACEHOLDER_STRING
@@ -400,14 +400,14 @@ def limit_reached(service: str, ip: str):
               'event': ecs_event,
               # XXX: we don't know the source port currently..
               'source': get_ecs_address_dict(ip),
-              'destination': get_ecs_address_dict(Config.address),
+              'destination': get_ecs_address_dict(Config.general.address),
               'honeygrove': ecs_hg}
 
     # Append geo coordinates of source, if available
     if coordinates:
         values['source']['geo'] = {'location': '{:.4f},{:.4f}'.format(coordinates[0], coordinates[1])}
 
-    if Config.use_broker:
+    if Config.general.use_broker:
         BrokerEndpoint.BrokerEndpoint.sendLogs(json.dumps(values))
 
     lat = PLACEHOLDER_STRING
@@ -427,7 +427,7 @@ def heartbeat():
 
     timestamp = format_time(get_time())
 
-    if Config.use_broker:
+    if Config.general.use_broker:
         ecs_event = {'category': 'info', 'action': 'heartbeat'}
         values = {'@timestamp': timestamp,
                   'service': ECS_SERVICE,

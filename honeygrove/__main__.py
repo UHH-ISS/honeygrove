@@ -34,7 +34,7 @@ if __name__ == '__main__':
     brokerThread.start()
 
     # Start Services
-    for service in Config.enabled_services:
+    for service in Config.general.enabled_services:
         controller.startService(service)
 
     # XXX: Why is this necessary here?

@@ -20,7 +20,7 @@ class ServiceBaseModel(ABC):
         # Only these variables should be changeable
 
         self._name = None
-        self._address = Config.address
+        self._address = Config.general.address
         self._port = None
 
         self._stop = True

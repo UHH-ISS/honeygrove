@@ -134,7 +134,7 @@ class SSHProtocol(recvline.HistoricRecvLine):
         global lastLoginTime
         # limits number of saved "user profiles" to keep an attacker from filling the memory
         if len(lastLoginTime) <= 10000:
-            if Config.use_utc:
+            if Config.general.use_utc:
                 lastLoginTime[username] = str(datetime.utcnow().ctime())
             else:
                 lastLoginTime[username] = str(datetime.now().ctime())
@@ -164,7 +164,7 @@ class SSHProtocol(recvline.HistoricRecvLine):
         """
         Show prompt at start of line.
         """
-        self.terminal.write(self.userName + "@" + Config.machine_name + ":" + self._parser.get_formatted_path() + "$ ")
+        self.terminal.write(self.userName + "@" + Config.general.hostname + ":" + self._parser.get_formatted_path() + "$ ")
 
     def getCommandFunc(self, cmd):
         """

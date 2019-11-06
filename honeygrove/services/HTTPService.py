@@ -27,7 +27,6 @@ class HTTPService(ServiceBaseModel):
     forbiddenStatus = "HTTP/1.1 403 Forbidden"
     notFoundStatus = "HTTP/1.1 404 Not Found"
     htdb = HoneytokenDataBase("HTTP")
-    port = ""
     html_dictionary = Config.http.html_dictionary_content
     supportedSites = []
 
@@ -40,7 +39,6 @@ class HTTPService(ServiceBaseModel):
 
         self.protocol = HTTPProtocol
         self._fService.protocol = self.protocol
-
 
     def startService(self):
         try:
@@ -227,8 +225,3 @@ class HTTPAvatar(avatar.ConchUser):
             return True
         else:
             return False
-
-
-if __name__ == '__main__':
-    service = HTTPService()
-    service.startService()

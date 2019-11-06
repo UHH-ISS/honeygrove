@@ -1,7 +1,7 @@
 from honeygrove import log
 from honeygrove.config import Config
 from honeygrove.services import ServiceBaseModel
-from honeygrove.tests.testresources import serviceControllerTestPkg  # Actually used
+# from honeygrove.tests.testresources import serviceControllerTestPkg  # Actually used
 
 import threading
 
@@ -22,7 +22,7 @@ class ServiceController():
 
         self.serviceDict = dict([(service._name, service) for service in self.serviceList])
 
-        self.listen = self.serviceDict[Config.listenServiceName]
+        self.listen = self.serviceDict[Config.listen.name]
         self.runningServicesDict = dict([])
 
     def startService(self, name):
@@ -36,7 +36,7 @@ class ServiceController():
             address += ":{}".format(service._port)
         log.info("{}: Starting on {}".format(name, address))
         if name not in self.runningServicesDict:
-            if name not in Config.noPortSpecificService:
+            if name not in Config.multiple_port_services:
                 self.listen.stopOnPort(service._port)
             service.startService()
             self.runningServicesDict[name] = service

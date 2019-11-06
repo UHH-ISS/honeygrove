@@ -3,7 +3,7 @@ from honeygrove.config import Config
 from honeygrove.services.ServiceBaseModel import Limiter, ServiceBaseModel
 
 from twisted.conch.telnet import TelnetTransport, StatefulTelnetProtocol
-from twisted.internet import reactor, protocol
+from twisted.internet import protocol
 
 import time
 
@@ -21,12 +21,13 @@ class TelnetService(ServiceBaseModel):
 
 
 class TelnetProtocol(StatefulTelnetProtocol):
+    # This is required as we are stateful and this gets set to "Password" after on_username returns
     state = "User"
 
     def on_new_connection(self):
         response = "Username: "
         self.transport.write(response.encode("UTF-8"))
-        self.peerOfAttacker = self.transport.getPeer().host
+        self.peer = self.transport.getPeer().host
 
     def on_username(self, line):
         self.username = line.decode("UTF-8")
@@ -37,7 +38,7 @@ class TelnetProtocol(StatefulTelnetProtocol):
     def on_password(self, line):
         self.password = line.decode("UTF-8")
 
-        log.login(Config.telnet.name, self.peerOfAttacker, Config.telnet.port, False, self.username, self.password, "")
+        log.login(Config.telnet.name, self.peer, Config.telnet.port, False, self.username, self.password, "")
 
         time.sleep(2.0)
 

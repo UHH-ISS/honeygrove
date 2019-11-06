@@ -8,7 +8,7 @@ import select
 import time
 from xml.etree import ElementTree as ET
 
-if Config.use_broker:
+if Config.general.use_broker:
     from honeygrove.broker.BrokerEndpoint import BrokerEndpoint
 
 
@@ -17,7 +17,7 @@ class BrokerWatcher():
     @staticmethod
     def broker_status_loop(controller):
         # Only if broker is enabled
-        if not Config.use_broker:
+        if not Config.general.use_broker:
             return
 
         # Initialize
@@ -71,7 +71,7 @@ class ManagementHandler:
         :return: Honeypot's answer as JSON
         """
         topic, datagrams = msg
-        hp_id = str(Config.HPID)
+        hp_id = str(Config.general.id)
 
         for data in datagrams:  # zweifach-geschachtelte Liste aus Strings im JSON Format: [['{"type": "ping"}']]
             print("[!] In Message: ", data)

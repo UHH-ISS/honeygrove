@@ -7,11 +7,11 @@ import struct
 import threading
 import time
 
-SYN_FLAG = 0b10
-ACK_FLAG = 0b10000
-NULL_FLAG = 0b0
-FIN_FLAG = 0b1
-XMAS_FLAG = 0b101001
+SYN_FLAG    = 0b10
+ACK_FLAG    = 0b10000
+NULL_FLAG   = 0b0
+FIN_FLAG    = 0b1
+XMAS_FLAG   = 0b101001
 
 
 class TCPDataStruct():
@@ -32,7 +32,7 @@ class TCPFlagSniffer(ServiceBaseModel):
         Root priv. are needed!
         """
         super(TCPFlagSniffer, self).__init__()
-        self._name = Config.tcpFlagSnifferName
+        self._name = Config.tcp_scan.name
         self.synConnections = dict([])
         self.finConnections = dict([])
         self.xmasConnections = dict([])
@@ -56,8 +56,8 @@ class TCPFlagSniffer(ServiceBaseModel):
         self.startThread = threading.Thread(target=self.startTCPSniffer, args=())
         self.startThread.name = "START-TCPFlagSniffer-Thread"
 
-        self.synScannThread = threading.Thread(target=self.scanOpenSynConnections, args=())
-        self.synScannThread.name = "SynScan-Thread"
+        self.synScanThread = threading.Thread(target=self.scanOpenSynConnections, args=())
+        self.synScanThread.name = "SynScan-Thread"
 
     def startService(self):
         """
@@ -67,7 +67,7 @@ class TCPFlagSniffer(ServiceBaseModel):
         if self.rootStatus:
             self._stop = False
             self.startThread.start()
-            self.synScannThread.start()
+            self.synScanThread.start()
 
     def startTCPSniffer(self):
         """
@@ -146,17 +146,17 @@ class TCPFlagSniffer(ServiceBaseModel):
         while not self._stop:
             with self.synConnectionsLock:
                 for _, item in self.synConnections.copy().items():
-                    if (time.time() - item.inTime) > Config.tcpTimeout:
+                    if (time.time() - item.inTime) > Config.tcp_scan.timeout:
                         log.scan(item.sourceIP, item.destPort, item.timeStamp, 'syn')
                         self.synConnections.pop(str(item.sourceIP) + str(item.destPort), None)
 
                 for _, item in self.finConnections.copy().items():
-                    if (time.time() - item.inTime) > Config.tcpTimeout:
+                    if (time.time() - item.inTime) > Config.tcp_scan.timeout:
                         log.scan(item.sourceIP, item.destPort, item.timeStamp, 'fin')
                         self.finConnections.pop(str(item.sourceIP) + str(item.destPort), None)
 
                 for _, item in self.xmasConnections.copy().items():
-                    if (time.time() - item.inTime) > Config.tcpTimeout:
+                    if (time.time() - item.inTime) > Config.tcp_scan.timeout:
                         log.scan(item.sourceIP, item.destPort, item.timeStamp, 'xmas')
                         self.xmasConnections.pop(str(item.sourceIP) + str(item.destPort), None)
 

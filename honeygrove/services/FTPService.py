@@ -509,8 +509,3 @@ class FTPProtocol(FTP):
                 return self.ftp_RNTO(*params)
             else:
                 return BAD_CMD_SEQ, "RNTO required after RNFR"
-
-
-if __name__ == '__main__':
-    service = FTPService()
-    service.startService()

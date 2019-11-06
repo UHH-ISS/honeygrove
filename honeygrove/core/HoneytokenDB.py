@@ -20,10 +20,8 @@ import tempfile
 class HoneytokenDataBase():
     """
         Honeytoken Database.
-        Chredchecker used by all Services.
+        Credchecker used by all Services.
     """
-
-    allServices = 'SSH,HTTP,FTP'
 
     scopeField = 0
     usernameField = 1
@@ -139,7 +137,6 @@ class HoneytokenDataBase():
         return res
 
     def write_to_database(self, user, pw, services):
-
         if type(user) is bytes:
             user = user.decode()
         if type(pw) is bytes:
@@ -153,7 +150,6 @@ class HoneytokenDataBase():
             log.err("Honeytoken DB write exception: {}".format(e))
 
     def get_user(self, username):
-
         by = type(username) is bytes
         for (s, u, p, k) in self.load_credentials():
             if by:
@@ -180,7 +176,7 @@ class HoneytokenDataBase():
                 hash1 = hashlib.sha1(hashbau).hexdigest()
                 i = 0
                 for x in range(0, 39):
-                    i = i+(int(hash1[x], 16))
+                    i = i + int(hash1[x], 16)
                 if (i % 10 <= randomAcceptProbability * 10 - 1):
                     return True
                 else:
@@ -193,7 +189,6 @@ class HoneytokenDataBase():
             return False
 
     def requestAvatarId(self, c):
-
         try:
             # try user authentification
             u, p, k = self.get_user(c.username)
