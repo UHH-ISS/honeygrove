@@ -79,7 +79,10 @@ class TCPFlagSniffer(ServiceBaseModel):
             packet = packet[0]
 
             flags, destPort, sourceAddress = self.getTCPPacketInformation(packet=packet)
-            # print(flags, destPort, sourceAddress)
+
+            # Ignore outgoing scans. Not perfect if address in unset but better than nothing
+            if sourceAddress == Config.general.address:
+                continue
 
             if flags == SYN_FLAG:
                 with self.synConnectionsLock:
