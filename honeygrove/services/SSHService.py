@@ -454,7 +454,8 @@ class SSHSession(session.SSHSession):
 
         ip = transport.session.avatar.conn.transport.transport.client[0]
         port = transport.session.avatar.conn.transport.transport.server._realPortNumber
-        log.request("SSH", ip, port, "Request shell", transport.session.avatar.username.decode())
+        # FIXME: check which ips and ports belong here
+        log.request("SSH", ip, port, "<unknown>", -1, "Request shell", transport.session.avatar.username.decode())
 
     def getPty(self, terminal, windowSize, attrs):
         """
@@ -475,7 +476,8 @@ class SSHSession(session.SSHSession):
         """
         ip = pp.session.avatar.conn.transport.transport.client[0]
         port = pp.session.avatar.conn.transport.transport.server._realPortNumber
-        log.request("SSH", ip, port, "execCommand " + cmd.decode(), pp.session.avatar.username.decode())
+        # FIXME: figure out which ips and ports belong here
+        log.request("SSH", ip, port, "<unknown>", -1, "execCommand " + cmd.decode(), pp.session.avatar.username.decode())
         pp.session.conn.transport.sendDisconnect(7, b"Command Execution is not supported.")
 
     def windowChanged(self, *args):

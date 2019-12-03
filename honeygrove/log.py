@@ -187,20 +187,22 @@ def login(service: str, ip: str, port: int, successful: bool, user: str, secret:
     _log_alert(message)
 
 
-def request(service: str, ip: str, port: int, req: str, user: str = None, request_type: str = None):
+def request(service: str, remote_ip: str, remote_port: int, local_ip: str, local_port: int, req: str, user: str = None, request_type: str = None):
     """
     Log function to be called when a request is received
 
     :param service: the concerning service
-    :param ip: attacker's IP-Address
-    :param port: attackers port
+    :param remote_ip: attacker's IP-Address
+    :param remote_port: attackers port
+    :param local_ip: local IP that was accessed
+    :param local_port: local port that was accessed
     :param req: the received request
     :param user: the user whose session invoked the alert
     :param request_type: for HTTP if the request is a GET or a POST request
     """
 
     timestamp = format_time(get_time())
-    coordinates = get_coordinates(ip)
+    coordinates = get_coordinates(remote_ip)
 
     ecs_event = {'category': 'warning', 'action': 'request'}
     ecs_hg_request = {'service': service, 'original': req}
@@ -214,9 +216,8 @@ def request(service: str, ip: str, port: int, req: str, user: str = None, reques
     values = {'@timestamp': timestamp,
               'service': ECS_SERVICE,
               'event': ecs_event,
-              # XXX: we don't know the source port currently..
-              'source': get_ecs_address_dict(ip),
-              'destination': get_ecs_address_dict(Config.general.address, port),
+              'source': get_ecs_address_dict(remote_ip, remote_port),
+              'destination': get_ecs_address_dict(local_ip, local_port),
               'honeygrove': ecs_hg}
 
     # Append geo coordinates of source, if available
@@ -232,25 +233,27 @@ def request(service: str, ip: str, port: int, req: str, user: str = None, reques
         lat = '{:.4f}'.format(coordinates[0])
         lon = '{:.4f}'.format(coordinates[1])
 
-    message = ('{} [REQUEST] {}, {}:{}, Lat: {}, Lon: {}, {}, {}, {}'
-               '').format(timestamp, service, ip, port, lat, lon, req, user, request_type)
+    message = ('{} [REQUEST] {}, {}:{}->{}:{}, Lat: {}, Lon: {}, {}, {}, {}'
+               '').format(timestamp, service, remote_ip, remote_port, local_ip, local_port, lat, lon, req, user, request_type)
     _log_alert(message)
 
 
-def response(service: str, ip: str, port: int, resp: str, user: str = None, status_code=None):
+def response(service: str, remote_ip: str, remote_port: int, local_ip: str, local_port: int, resp: str, user: str = None, status_code=None):
     """
     Log function to be called when sending a response
 
     :param service: the concerning service
-    :param ip: attacker's IP-Address
-    :param port: attackers port
+    :param remote_ip: attacker's IP-Address
+    :param remote_port: attackers port
+    :param local_ip: local IP that was accessed
+    :param local_port: local port that was accessed
     :param resp: the response sent
     :param user: the user whose session invoked the alert
     :param status_code: the status code sent
     """
 
     timestamp = format_time(get_time())
-    coordinates = get_coordinates(ip)
+    coordinates = get_coordinates(remote_ip)
 
     ecs_event = {'category': 'warning', 'action': 'response'}
     ecs_hg_request = {'service': service, 'original': resp}
@@ -264,8 +267,8 @@ def response(service: str, ip: str, port: int, resp: str, user: str = None, stat
     values = {'@timestamp': timestamp,
               'service': ECS_SERVICE,
               'event': ecs_event,
-              'source': get_ecs_address_dict(Config.general.address),
-              'destination': get_ecs_address_dict(ip, port),
+              'source': get_ecs_address_dict(local_ip, local_port),
+              'destination': get_ecs_address_dict(remote_ip, remote_port),
               'honeygrove': ecs_hg}
 
     # Append geo coordinates of source, if available
@@ -281,8 +284,8 @@ def response(service: str, ip: str, port: int, resp: str, user: str = None, stat
         lat = '{:.4f}'.format(coordinates[0])
         lon = '{:.4f}'.format(coordinates[1])
 
-    message = ('{} [RESPONSE] {}, {}:{}, Lat: {}, Lon: {}, {}, {}, {}'
-               '').format(timestamp, service, ip, port, lat, lon, resp, user, status_code)
+    message = ('{} [RESPONSE] {}, {}:{}->{}:{}, Lat: {}, Lon: {}, {}, {}, {}'
+               '').format(timestamp, service, local_ip, local_port, remote_ip, remote_port, lat, lon, resp, user, status_code)
     _log_alert(message)
 
 

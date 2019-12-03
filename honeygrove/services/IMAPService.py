@@ -203,6 +203,9 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
     def dataReceived(self, rawData):
         self.resetTimeout()
 
+        local = self.transport.getHost()
+        remote = self.transport.getPeer()
+
         # problem: at least Thunderbird pushes sometimes two commands so quickly they are received by twisted as one line
         # solution: put received data in buffer and fetch single lines from there
 
@@ -228,7 +231,7 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
                 self.dataBuffer = ""
 
             if (not self.state["appendCleanUp"] and not self.state["appendData"]):
-                log.request(self.name, self.peerOfAttacker, Config.imap.port, line, self.username)
+                log.request(self.name, remote.host, remote.port, local.host, local.ip, line, self.username)
             # ignore one (maybe optional) empty line after append command
             if(self.state["appendCleanUp"]):
                 if (line != ""):
@@ -248,7 +251,7 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
                     mail = self.appendBuffer
                     self.saveEmail(self.appendMailbox, self.appendFlaglist, mail)
                     response = self.appendTag + " OK APPEND completed\r\n"
-                    log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "OK")
+                    log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "OK")
                     self.transport.write(response.encode("UTF-8"))
                 else:  # wait for another part of the mail
                     self.appendBuffer += self.dataBuffer
@@ -256,11 +259,11 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
                     self.dataBuffer = ""
             elif(len(line) > self.maxCommandLength):
                 response = "* BAD Command line too long\r\n"
-                log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "BAD (too long)")
+                log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "BAD (too long)")
                 self.transport.write(response.encode("UTF-8"))
             elif(len(line) == 0):
                 response = "* BAD Empty command line\r\n"
-                log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "BAD (too short)")
+                log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "BAD (too short)")
                 self.transport.write(response.encode("UTF-8"))
             elif(re.match("^[A-Za-z\d]+ .+$", line, re.IGNORECASE)):
                 # provides tag value for following answers in all cases
@@ -269,23 +272,23 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
                 # "command-any" (Valid in all states)
                 if(re.match("^"+tag+" CAPABILITY$", line, re.IGNORECASE)):
                     response = "* CAPABILITY IMAP4rev1 LOGIN LOGOUT NOOP LIST LSUB UID SELECT\r\n"+tag+" OK CAPABILITY completed\r\n"
-                    log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "OK")
+                    log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "OK")
                     self.transport.write(response.encode("UTF-8"))
                 elif(re.match("^"+tag+" LOGOUT$", line, re.IGNORECASE)):
                     self.state["connected"] = False
                     response = "* BYE IMAP4rev1 Server logging out\r\n"+tag+" OK LOGOUT completed\r\n"
-                    log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "OK")
+                    log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "OK")
                     self.transport.write(response.encode("UTF-8"))
                     # close connection
                     self.transport.loseConnection()
                 elif(re.match("^"+tag+" NOOP$", line, re.IGNORECASE)):
                     response = tag+" OK NOOP completed\r\n"
-                    log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "OK")
+                    log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "OK")
                     self.transport.write(response.encode("UTF-8"))
                 elif(re.match("^"+tag+" ((CAPABILITY)|(LOGOUT)|(NOOP)) .*$", line, re.IGNORECASE)):
                     # unified error message for several commands
                     response = "* BAD Command argument error\r\n"
-                    log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "BAD (syntax)")
+                    log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "BAD (syntax)")
                     self.transport.write(response.encode("UTF-8"))
 
                 # "command-nonauth" (Valid only when in Not Authenticated state)
@@ -297,26 +300,26 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
                         self.password = self.stripPadding(arguments.group("password"))
 
                         if (True):
-                            log.login(self.name, self.peerOfAttacker, Config.imap.port, True, self.username, self.password, "")
+                            log.login(self.name, remote.host, local.port, True, self.username, self.password, "")
                             self.setTimeout(self.timeoutPostAuth)
                             self.stateRFC = IMAPState.Auth
                             response = tag+" OK LOGIN completed\r\n"
-                            log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "OK")
+                            log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "OK")
                         else:
-                            log.login(self.name, self.peerOfAttacker, Config.imap.port, False, self.username, self.password, "")
+                            log.login(self.name, remote.host, local.port, False, self.username, self.password, "")
                             response = tag+" NO Invalid credentials\r\n"
-                            log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "NO (credentials")
+                            log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "NO (credentials")
                     else:
                         response = tag+" BAD Command received in invalid state.\r\n"
-                        log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "BAD (sequence)")
+                        log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "BAD (sequence)")
                     self.transport.write(response.encode("UTF-8"))
                 elif(re.match("^"+tag+" LOGIN .*$", line, re.IGNORECASE)):
                     if (self.stateRFC == IMAPState.NotAuth):
                         response = "* BAD Command argument error\r\n"
-                        log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "BAD (syntax)")
+                        log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "BAD (syntax)")
                     else:
                         response = tag+" BAD Command received in invalid state.\r\n"
-                        log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "BAD (sequence")
+                        log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "BAD (sequence")
                     self.transport.write(response.encode("UTF-8"))
 
                     # TODO: implement AUTHENTICATE command (provides SASL auth (GSSAPI etc.))
@@ -338,10 +341,10 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
                             if (mailboxName in self.mailboxes):
                                 response += "* LIST (\\HasNoChildren) \".\" \""+mailboxName+"\"\r\n"
                             response += tag+" OK LIST Completed\r\n"
-                        log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "OK")
+                        log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "OK")
                     else:
                         response = tag+" BAD Command received in invalid state.\r\n"
-                        log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "BAD (sequence)")
+                        log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "BAD (sequence)")
                     self.transport.write(response.encode("UTF-8"))
 
                 elif(re.match("^"+tag+" LSUB (?P<mailbox>\S+) (?P<listmailbox>\S+)$", line, re.IGNORECASE)):
@@ -360,10 +363,10 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
                             if (mailboxName in self.mailboxes):
                                 response += "* LSUB (\\HasNoChildren) \".\" \""+mailboxName+"\"\r\n"
                             response += tag+" OK LSUB Completed\r\n"
-                        log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "OK")
+                        log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "OK")
                     else:
                         response = tag+" BAD Command received in invalid state.\r\n"
-                        log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "BAD (sequence)")
+                        log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "BAD (sequence)")
                     self.transport.write(response.encode("UTF-8"))
 
                 elif(re.match("^"+tag+" SELECT (?P<mailbox>\S+)$", line, re.IGNORECASE)):
@@ -374,13 +377,13 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
                             self.stateRFC = IMAPState.Selected
                             self.selectedMailbox = mailbox
                             response = "* "+str(self.mailboxes[mailbox])+" EXISTS\r\n* 0 RECENT\r\n"+tag+" OK SELECT completed\r\n"
-                            log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "OK")
+                            log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "OK")
                         else:
                             response = tag+" NO Mailbox not found\r\n"
-                            log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "NO (mailbox not found)")
+                            log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "NO (mailbox not found)")
                     else:
                         response = tag+" BAD Command received in invalid state.\r\n"
-                        log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "BAD (sequence)")
+                        log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "BAD (sequence)")
                     self.transport.write(response.encode("UTF-8"))
 
                 elif(re.match("^"+tag+" STATUS (?P<mailbox>\S+) \((?P<statusatt>\S+( \S+)*)\)$", line, re.IGNORECASE)):
@@ -410,13 +413,13 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
 
                             response = "* STATUS "+mailbox+" ("+statusatt+")\r\n"
                             response += tag + " OK STATUS completed\r\n"
-                            log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "OK")
+                            log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "OK")
                         else:
                             response = "* NO STATUS failure: no status for that name\r\n"
-                            log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "NO (mailbox not found)")
+                            log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "NO (mailbox not found)")
                     else:
                         response = tag+" BAD Command received in invalid state.\r\n"
-                        log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "BAD (sequence)")
+                        log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "BAD (sequence)")
                     self.transport.write(response.encode("UTF-8"))
 
                 elif(re.match("^"+tag+" APPEND (?P<mailbox>\S+) \((?P<flaglist>\S+( \S+)*)?\)(?P<datetime> .+)? \{(?P<literal>\d+)\}$", line, re.IGNORECASE)):
@@ -439,21 +442,21 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
                             self.transport.write(response.encode("UTF-8"))
                         else:
                             response = "* NO APPEND error: can't append to that mailbox, error in flags or date/time or message text\r\n"
-                            log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "NO (storage limitation)")
+                            log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "NO (storage limitation)")
                             self.transport.write(response.encode("UTF-8"))
                     else:
                         response = tag+" BAD Command received in invalid state.\r\n"
-                        log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "BAD (sequence)")
+                        log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "BAD (sequence)")
                         self.transport.write(response.encode("UTF-8"))
 
                 elif(re.match("^"+tag+" (LIST|LSUB|SELECT|STATUS|APPEND) .*$", line, re.IGNORECASE)):
                     # unified error message for several commands
                     if (self.stateRFC == IMAPState.Auth or self.stateRFC == IMAPState.Selected):
                         response = "* BAD Command argument error\r\n"
-                        log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "BAD (syntax)")
+                        log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "BAD (syntax)")
                     else:
                         response = tag+" BAD Command received in invalid state.\r\n"
-                        log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "BAD (sequence)")
+                        log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "BAD (sequence)")
                     self.transport.write(response.encode("UTF-8"))
 
                 # "command-select" (Valid only when in Selected state)
@@ -462,19 +465,19 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
                         # TODO: delete accordingly flagged mails
                         self.stateRFC = IMAPState.Auth
                         response = tag+" OK CLOSE completed\r\n"
-                        log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "OK")
+                        log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "OK")
                     else:
                         response = tag+" BAD Command received in invalid state.\r\n"
-                        log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "BAD (sequence)")
+                        log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "BAD (sequence)")
                     self.transport.write(response.encode("UTF-8"))
 
                 elif(re.match("^"+tag+"CLOSE .*$", line, re.IGNORECASE)):
                     if (self.stateRFC == IMAPState.Selected):
                         response = "* BAD Command argument error\r\n"
-                        log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "BAD (syntax)")
+                        log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "BAD (syntax)")
                     else:
                         response = tag+" BAD Command received in invalid state.\r\n"
-                        log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "BAD (sequence)")
+                        log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "BAD (sequence)")
                     self.transport.write(response.encode("UTF-8"))
 
                 elif(re.match("^"+tag+" UID FETCH (?P<sequenceset>\S+) (?P<entries>.+)$", line, re.IGNORECASE)):
@@ -513,34 +516,34 @@ class IMAPProtocol(Protocol, policies.TimeoutMixin):
                                         response += "\r\n)\r\n"
                                 c += 1
                         response += tag+" OK FETCH complete\r\n"
-                        log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "OK")
+                        log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "OK")
 
                     else:
                         response = tag+" BAD Command received in invalid state.\r\n"
-                        log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "BAD (sequence)")
+                        log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "BAD (sequence)")
                     self.transport.write(response.encode("UTF-8"))
 
                 elif(re.match("^"+tag+" UID FETCH .+$", line, re.IGNORECASE)):
                     response = "* BAD Command argument error\r\n"
-                    log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "BAD (syntax)")
+                    log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "BAD (syntax)")
                     self.transport.write(response.encode("UTF-8"))
 
                     # temporary workaround to avoid the client to throw an error after uploading the mail
                 elif(re.match("^"+tag+" UID SEARCH *$", line, re.IGNORECASE)):
                     if (self.stateRFC == IMAPState.Selected):
                         response = "* SEARCH\r\n"+tag+" OK SEARCH completed\r\n"
-                        log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "OK")
+                        log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "OK")
                     else:
                         response = tag+" BAD Command received in invalid state.\r\n"
-                        log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "BAD (sequence)")
+                        log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "BAD (sequence)")
                     self.transport.write(response.encode("UTF-8"))
 
                 else:
                     response = "* BAD Command unknown\r\n"
-                    log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "BAD (command)")
+                    log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "BAD (command)")
                     self.transport.write(response.encode("UTF-8"))
 
             else:
                 response = "* BAD Syntax error\r\n"
-                log.response(self.name, self.peerOfAttacker, Config.imap.port, "", self.username, "BAD (syntax)")
+                log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "BAD (syntax)")
                 self.transport.write(response.encode("UTF-8"))

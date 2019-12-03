@@ -76,7 +76,6 @@ class HTTPProtocol(Protocol):
     def __init__(self):
         self.state = None
 
-        self.peerOfAttacker = ""
         self.page = ""
         self.path = Config.http.resource_folder
         self.attackingSite = ""
@@ -87,12 +86,13 @@ class HTTPProtocol(Protocol):
 
     def connectionMade(self):
         # Add connection to dictionary
-        self.factory.clients[self] = ("<" + str(self.transport.getPeer().host) + ":"
-                                      + str(self.transport.getPeer().port) + ">")
-        self.peerOfAttacker = self.transport.getPeer().host
+        peer = self.transport.getPeer()
+        self.factory.clients[self] = ("<" + str(peer.host) + ":" + str(peer.port) + ">")
 
     def dataReceived(self, data):
 
+        local = self.transport.getHost()
+        remote = self.transport.getPeer()
         data = data.decode('utf-8')
 
         self.requestType = data.split(' ', 1)[0]
@@ -128,7 +128,7 @@ class HTTPProtocol(Protocol):
 
         elif self.requestType == "GET" and self.page in HTTPService.supportedSites:
 
-            log.request("HTTP", self.peerOfAttacker, HTTPService.port, self.page, "", "GET")
+            log.request("HTTP", remote.host, remote.port, local.host, local.port, self.page, "", "GET")
 
             message = HTTPService.okStatus + "\n"
             for k in HTTPService.responseHeadersOkStatus.keys():
@@ -139,7 +139,7 @@ class HTTPProtocol(Protocol):
 
             self.transport.write(message.encode('UTF-8'))
             if self.page in HTTPService.supportedSites:
-                log.response("HTTP", self.peerOfAttacker, HTTPService.port, self.page, "", "200 OK")
+                log.response("HTTP", remote.host, remote.port, local.host, local.port, self.page, "", "200 OK")
 
             self.transport.loseConnection()
 
@@ -159,14 +159,15 @@ class HTTPProtocol(Protocol):
             else:
                 password_string = data[password_index:data.find("&")]
 
-            log.request("HTTP", self.peerOfAttacker, HTTPService.port, self.page, login_string, "POST")
+            log.request("HTTP", remote.host, remote.port, local.host, local.port, self.page, "", "POST")
             result = HTTPService.htdb.requestAvatarId(HTTPAvatar(login_string, password_string))
             if isinstance(result, Deferred):
                 if isinstance(result.result, failure.Failure):  # Failure
                     result.addErrback(self.errorBack)
-                    log.response("HTTP", self.peerOfAttacker, HTTPService.port, "", login_string, "403 FORBIDDEN")
-                    log.login("HTTP", self.peerOfAttacker, HTTPService.port, False, login_string, password_string,
-                              str(HTTPService.htdb.getActual(login_string, password_string)))
+                    log.response("HTTP", remote.host, remote.port, local.host, local.port, self.page, login_string, "403 FORBIDDEN")
+                    # FIXME: Add remote port and local host
+                    log.login("HTTP", remote.host, local.port, False, login_string, password_string,
+                              str(HTTPService.htdb.try_get_tokens(login_string, password_string)))
                 else:  # Success
                     message = HTTPService.okStatus + "\n"
                     for k in HTTPService.responseHeadersOkStatus.keys():
@@ -177,9 +178,10 @@ class HTTPProtocol(Protocol):
 
                     self.transport.write(message.encode('UTF-8'))
                     self.page = "wp-admin_content.html"
-                    log.response("HTTP", self.peerOfAttacker, HTTPService.port, self.page, login_string, "200 OK")
-                    log.login("HTTP", self.peerOfAttacker, HTTPService.port, True, login_string, password_string,
-                              str(HTTPService.htdb.getActual(login_string, password_string)))
+                    log.response("HTTP", remote.host, remote.port, local.host, local.port, self.page, login_string, "200 OK")
+                    # FIXME: Add remote port and local host
+                    log.login("HTTP", remote.host, local.port, True, login_string, password_string,
+                              str(HTTPService.htdb.try_get_tokens(login_string, password_string)))
                     self.transport.loseConnection()
         else:
             message = HTTPService.notFoundStatus + "\n"
@@ -190,9 +192,9 @@ class HTTPProtocol(Protocol):
                 message = message + "\n" + file.read()
 
             self.transport.write(message.encode('UTF-8'))
-            log.request("HTTP", self.peerOfAttacker, HTTPService.port, self.page, "", "GET")
+            log.request("HTTP", remote.host, remote.port, local.host, local.port, self.page, "", "GET")
             self.page = "404_login.html"
-            log.response("HTTP", self.peerOfAttacker, HTTPService.port, self.page, "", "404 Not Found")
+            log.response("HTTP", remote.host, remote.port, local.host, local.port, self.page, login_string, "404 NOT FOUND")
             self.transport.loseConnection()
 
     def connectionLost(self, reason):

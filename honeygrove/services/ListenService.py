@@ -99,4 +99,7 @@ class ListenProtocol(Protocol):
         Called when the attacker sends data.
         :param data: The received data
         """
-        log.request(Config.listenServiceName, self.transport.getPeer().host, self.transport.getHost().port, data.decode())
+
+        local = self.transport.getHost()
+        remote = self.transport.getPeer()
+        log.request(Config.listenServiceName, remote.host, remote.port, local.host, local.port, data.decode())

@@ -90,6 +90,10 @@ class SMTPProtocol(Protocol, policies.TimeoutMixin):
 
     def dataReceived(self, rawData):
         self.resetTimeout()
+
+        local = self.transport.getHost()
+        remote = self.transport.getPeer()
+
         # TODO: Verifizieren, dass möglichst alle 503-Fälle ("Bad sequence of commands") abgedeckt sind
         if (rawData.startswith(b'\xff') or rawData.startswith(b'\x04')):
             # ignore Ctrl+C/D/Z etc.
@@ -107,7 +111,7 @@ class SMTPProtocol(Protocol, policies.TimeoutMixin):
             # restrict maximum input lenght (doesn't affect mail transmission)
             line = line[:4094]
             if not self.state["data"] and not self.state["authLOGIN"] and not self.state["authLOGINuser"]:
-                log.request(self.name, self.peerOfAttacker, Config.smtp.port, line, self.username)
+                log.request(self.name, remote.host, remote.port, local.host, local.port, line, self.username)
 
             # moved this block to the top:
             # if self.state["data"] gets verified after commands, a mail body containing these valid commands executes them
@@ -118,7 +122,7 @@ class SMTPProtocol(Protocol, policies.TimeoutMixin):
                     self.state["data"] = False
                     self.state["msg"] = True
                     response = "250 OK\r\n"
-                    log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "250 OK")
+                    log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "250 OK")
                     self.transport.write(response.encode("UTF-8"))
 
             elif re.match('^RSET( .*)?$', line, re.IGNORECASE):
@@ -130,12 +134,12 @@ class SMTPProtocol(Protocol, policies.TimeoutMixin):
                 self.username = ""
                 self.password = ""
                 response = "250 OK\r\n"
-                log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "250 OK")
+                log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "250 OK")
                 self.transport.write(response.encode("UTF-8"))
 
             elif re.match('^NOOP( .*)?$', line, re.IGNORECASE):
                 response = "250 OK\r\n"
-                log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "250 OK")
+                log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "250 OK")
                 self.transport.write(response.encode("UTF-8"))
 
             elif re.match('^QUIT( .*)?$', line, re.IGNORECASE):
@@ -143,13 +147,13 @@ class SMTPProtocol(Protocol, policies.TimeoutMixin):
                 if (line == "QUIT"):
                     self.state["connected"] = False
                     response = "221 Service closing transmission channel\r\n"
-                    log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "221 OK (closing)")
+                    log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "221 OK (closing)")
                     self.transport.write(response.encode("UTF-8"))
                     # close connection
                     self.transport.loseConnection()
                 else:
                     response = "501 Syntax error in parameters or arguments\r\n"
-                    log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "501 (syntax)")
+                    log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "501 (syntax)")
                     self.transport.write(response.encode("UTF-8"))
 
             elif self.state["authLOGIN"]:  # doesn't start with anything recognisable
@@ -168,40 +172,40 @@ class SMTPProtocol(Protocol, policies.TimeoutMixin):
                 self.state["authLOGINuser"] = False
                 # TODO: implement honeytokendb check
                 if False:
-                    log.login(self.name, self.peerOfAttacker, Config.smtp.port, True, self.username, self.password, "")
+                    log.login(self.name, remote.host, local.port, True, self.username, self.password, "")
                     self.state["auth"] = True
                     self.setTimeout(self.timeoutPostAuth)
                     response = "235 OK\r\n"
-                    log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "235 OK")
+                    log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "235 OK")
                 else:
-                    log.login(self.name, self.peerOfAttacker, Config.smtp.port, False, self.username, self.password, "")
+                    log.login(self.name, remote.host, local.port, False, self.username, self.password, "")
                     response = "535 SMTP Authentication unsuccessful/Bad username or password\r\n"
-                    log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "535 (credentials)")
+                    log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "535 (credentials)")
                 self.transport.write(response.encode("UTF-8"))
 
             elif re.match('^HELP( .*)?$', line, re.IGNORECASE):
                 # don't react to arguments (exactly like e.g. smtp.outlook.com)
                 response = "214 This server supports the following commands:\r\n214 HELO EHLO RCPT DATA MAIL QUIT HELP AUTH VRFY RSET NOOP\r\n"
-                log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "214 OK")
+                log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "214 OK")
                 self.transport.write(response.encode("UTF-8"))
 
             elif re.match('^(HELO|EHLO)( .*)?$', line, re.IGNORECASE):
                 self.state["hello"] = True
                 if (self.AuthMethods != ""):
                     response = "250 AUTH"+self.AuthMethods+"\r\n"
-                    log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "250 OK")
+                    log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "250 OK")
                 else:
                     # authentication completed without authentication
                     self.state["auth"] = True
                     self.setTimeout(self.timeoutPostAuth)
                     response = "250 OK\r\n"
-                    log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "250 OK")
+                    log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "250 OK")
                 self.transport.write(response.encode("UTF-8"))
 
             elif re.match("^AUTH( .*)?$", line, re.IGNORECASE):
                 if (line == "AUTH"):
                     response = "501 Syntax error in parameters or arguments\r\n"
-                    log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "501 (syntax")
+                    log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "501 (syntax")
                 else:
                     if self.state["hello"]:
                         if re.match("^AUTH PLAIN \S*$", line, re.IGNORECASE):
@@ -216,48 +220,48 @@ class SMTPProtocol(Protocol, policies.TimeoutMixin):
                                     self.state["auth"] = True
                                     self.setTimeout(self.timeoutPostAuth)
                                     response = "235 OK\r\n"
-                                    log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "235 OK")
+                                    log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "235 OK")
                                 else:
                                     response = "535 SMTP Authentication unsuccessful/Bad username or password\r\n"
-                                    log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "535 (credentials)")
+                                    log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "535 (credentials)")
                             else:
                                 response = "535 SMTP Authentication unsuccessful/Bad username or password\r\n"
-                                log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "535 (unsupported)")
+                                log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "535 (unsupported)")
                         elif line == "AUTH LOGIN":
                             if ("LOGIN" in self.AuthMethods):
                                 self.state["authLOGIN"] = True
                                 response = "334 VXNlcm5hbWU6\r\n"  # "334 Username:"
                             else:
                                 response = "535 SMTP Authentication unsuccessful/Bad username or password\r\n"
-                                log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "535 (unsupported)")
+                                log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "535 (unsupported)")
                         elif line == "AUTH CRAM-MD5":
                             # TODO: implement CRAM-MD5 or disable this code path
                             if ("CRAM-MD5" in self.AuthMethods):
                                 print("CRAM-MD5 not yet implemented")
                                 response = "504 Command parameter not implemented\r\n"
-                                log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "504 (not implemented)")
+                                log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "504 (not implemented)")
                                 self.transport.write(response.encode("UTF-8"))
                                 self.transport.loseConnection()
                             else:
                                 response = "535 SMTP Authentication unsuccessful/Bad username or password\r\n"
-                                log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "535 (unsupported)")
+                                log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "535 (unsupported)")
                         elif line == "AUTH SCRAM-SHA-1":
                             # TODO: implement SCRAM-SHA-1 or disable this code path
                             if "SCRAM-SHA-1" in self.AuthMethods:
                                 print("SCRAM-SHA-1 not yet implemented")
                                 response = "504 Command parameter not implemented\r\n"
-                                log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "504 (not implemented)")
+                                log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "504 (not implemented)")
                                 self.transport.write(response.encode("UTF-8"))
                                 self.transport.loseConnection()
                             else:
                                 response = "535 SMTP Authentication unsuccessful/Bad username or password\r\n"
-                                log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "535 (unsupported)")
+                                log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "535 (unsupported)")
                         else:
                             response = "501 Syntax error in parameters or arguments\r\n"
-                            log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "501 (syntax)")
+                            log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "501 (syntax)")
                     else:
                         response = "503 Bad sequence of commands\r\n"  # "Send hello first"
-                        log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "503 (sequence)")
+                        log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "503 (sequence)")
                 self.transport.write(response.encode("UTF-8"))
 
             elif re.match("^MAIL FROM:(.*)$", line, re.IGNORECASE):
@@ -267,17 +271,17 @@ class SMTPProtocol(Protocol, policies.TimeoutMixin):
                         self.state["mailfrom"] = True
                         self.mailFrom = re.match("^MAIL FROM:[ ]?<(.*)>$", line, re.IGNORECASE).groups()[0] # use "<(.*@.*\..*?)>" to check basic adress syntax
                         response = "250 OK\r\n"
-                        log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "250 OK")
+                        log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "250 OK")
                     elif self.state["hello"]:
                         response = "535 SMTP Authentication unsuccessful/Bad username or password\r\n"
-                        log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "535 (credentials)")
+                        log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "535 (credentials)")
                     else:
                         response = "503 Bad sequence of commands\r\n"  # "Send hello first"
-                        log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "503 (sequence)")
+                        log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "503 (sequence)")
                 else:
                     # no email adress given etc.
                     response = "501 Syntax error in parameters or arguments\r\n"
-                    log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "501 (syntax)")
+                    log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "501 (syntax)")
                 self.transport.write(response.encode("UTF-8"))
 
             elif re.match("^RCPT TO:(.*)$", line, re.IGNORECASE):
@@ -287,17 +291,17 @@ class SMTPProtocol(Protocol, policies.TimeoutMixin):
                         self.state["mailto"] = True
                         self.mailTo = re.match("^RCPT TO:[ ]?<(.*)>$", line, re.IGNORECASE).groups()[0]  # use "<(.*@.*\..*?)>" to check basic adress syntax # use "<(.*@.*\..*?)>" to check basic adress syntax
                         response = "250 OK\r\n"
-                        log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "250 OK")
+                        log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "250 OK")
                     elif self.state["hello"]:
                         response = "535 SMTP Authentication unsuccessful/Bad username or password\r\n"
-                        log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "535 (credentials)")
+                        log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "535 (credentials)")
                     else:
                         response = "503 Bad sequence of commands\r\n"  # "Send hello first"
-                        log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "503 (sequence)")
+                        log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "503 (sequence)")
                 else:
                     # no email adress given etc.
                     response = "501 Syntax error in parameters or arguments\r\n"
-                    log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "501 (syntax)")
+                    log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "501 (syntax)")
                 self.transport.write(response.encode("UTF-8"))
 
             elif re.match("^DATA( .*)?$", line, re.IGNORECASE):
@@ -307,29 +311,29 @@ class SMTPProtocol(Protocol, policies.TimeoutMixin):
                         response = "354 Start mail input\r\n"
                     elif self.state["auth"]:
                         response = "503 Bad sequence of commands\r\n"  # "Send hello first"
-                        log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "503 (sequence)")
+                        log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "503 (sequence)")
                     elif self.state["hello"]:
                         response = "535 SMTP Authentication unsuccessful/Bad username or password\r\n"
-                        log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "535 (credentials)")
+                        log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "535 (credentials)")
                     else:
                         response = "503 Bad sequence of commands\r\n"  # "Send hello first"
-                        log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "503 (sequence)")
+                        log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "503 (sequence)")
                 else:
                     response = "501 Syntax error in parameters or arguments\r\n"
-                    log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "501 (syntax)")
+                    log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "501 (syntax)")
                 self.transport.write(response.encode("UTF-8"))
 
             elif re.match("^VRFY( .*)?$", line, re.IGNORECASE):
                 response = "252 Cannot VRFY user\r\n"
-                log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "252 OK")
+                log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "252 OK")
                 self.transport.write(response.encode("UTF-8"))
 
             elif re.match("^SIZE( .*)?$", line, re.IGNORECASE):
                 response = "502 Command not implemented\r\n"
-                log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "502 (not implemented)")
+                log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "502 (not implemented)")
                 self.transport.write(response.encode("UTF-8"))
 
             else:
                 response = "500 Unrecognized command \'"+line+"\'\r\n"
-                log.response(self.name, self.peerOfAttacker, Config.smtp.port, "", self.username, "500 (command)")
+                log.response(self.name, remote.host, remote.port, local.host, local.port, "", self.username, "500 (command)")
                 self.transport.write(response.encode("UTF-8"))
