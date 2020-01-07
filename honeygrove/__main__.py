@@ -4,9 +4,9 @@ from honeygrove.core.HoneyAdapter import BrokerWatcher
 from honeygrove.core.ServiceController import ServiceController
 from honeygrove.services.SSHService import load_database, save_database
 
+import atexit
 import os
 import threading
-import atexit
 
 
 def shutdown():

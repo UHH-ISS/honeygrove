@@ -136,37 +136,41 @@ def defer_login(result, *args):
     return result
 
 
-def login(service: str, ip: str, port: int, successful: bool, user: str, secret: str = None, valid_for=None):
+def login(service: str, local_port: int, remote_ip: str, remote_port: int,
+          secret_type: str, successful: bool, user: str, secret: str = None, honeytoken=None):
     """
     Log function to be called when someone attempts to login
 
-    :param service: the concerning service
-    :param ip: attacker's IP-Address
-    :param port: attackers port
-    :param successful: if the attempt was successful
-    :param user: the username of the attempt
-    :param secret: the password or key of the attempt
-    :param valid_for: the services where the login would have actually been valid (used for tracking honeytoken usage)
+    :param service: the service that received the login
+    :param local_port: the local port the service was listening on
+    :param remote_ip: source ip of the host that tried to login
+    :param remote_port: source port of the host that tried to login
+    :param secret_type: type of the credential that was used (e.g. password or public key)
+    :param successful: was the login attempt successful
+    :param user: the username of the login attempt
+    :param secret: (optional) the password or key of the login attempt
+    :param honeytoken: (optional) the honeytoken that matched the login attempt
     """
 
     timestamp = format_time(get_time())
-    coordinates = get_coordinates(ip)
+    coordinates = get_coordinates(remote_ip)
 
     if not secret:
         secret = PLACEHOLDER_STRING
-    if not valid_for:
-        secret = PLACEHOLDER_STRING
+    if not honeytoken:
+        honeytoken = PLACEHOLDER_STRING
 
     ecs_event = {'category': 'alert', 'action': 'login'}
-    ecs_hg_login = {'service': service, 'username': user, 'password': secret, 'successful': successful}
+    ecs_hg_login = {'service': service, 'secret_type': secret_type, 'successful': successful,
+                    'username': user, 'secret': secret}
     ecs_hg = {'login': ecs_hg_login}
 
     values = {'@timestamp': timestamp,
               'service': ECS_SERVICE,
               'event': ecs_event,
               # XXX: we don't know the source port currently..
-              'source': get_ecs_address_dict(ip),
-              'destination': get_ecs_address_dict(Config.general.address, port),
+              'source': get_ecs_address_dict(remote_ip, port=remote_port),
+              'destination': get_ecs_address_dict(Config.general.address, local_port),
               'honeygrove': ecs_hg}
 
     # Append geo coordinates of source, if available
@@ -183,11 +187,12 @@ def login(service: str, ip: str, port: int, successful: bool, user: str, secret:
         lon = '{:.4f}'.format(coordinates[1])
 
     message = ('{} [LOGIN] {}, {}:{}, Lat: {}, Lon: {}, {}, {}, {}, {}'
-               '').format(timestamp, service, ip, port, lat, lon, successful, user, secret, valid_for)
+               '').format(timestamp, service, remote_ip, remote_port, lat, lon, successful, user, secret, honeytoken)
     _log_alert(message)
 
 
-def request(service: str, remote_ip: str, remote_port: int, local_ip: str, local_port: int, req: str, user: str = None, request_type: str = None):
+def request(service: str, remote_ip: str, remote_port: int, local_ip: str, local_port: int,
+            req: str, user: str = None, request_type: str = None):
     """
     Log function to be called when a request is received
 
@@ -238,7 +243,8 @@ def request(service: str, remote_ip: str, remote_port: int, local_ip: str, local
     _log_alert(message)
 
 
-def response(service: str, remote_ip: str, remote_port: int, local_ip: str, local_port: int, resp: str, user: str = None, status_code=None):
+def response(service: str, remote_ip: str, remote_port: int, local_ip: str, local_port: int,
+             resp: str, user: str = None, status_code=None):
     """
     Log function to be called when sending a response
 

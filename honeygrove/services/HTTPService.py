@@ -1,6 +1,6 @@
 from honeygrove import log
 from honeygrove.config import Config
-from honeygrove.core.HoneytokenDB import HoneytokenDataBase
+from honeygrove.core.HoneytokenDatabase import HoneytokenDatabase
 from honeygrove.services.ServiceBaseModel import Limiter, ServiceBaseModel
 
 from twisted.conch import avatar
@@ -26,7 +26,7 @@ class HTTPService(ServiceBaseModel):
     okStatus = "HTTP/1.1 200 OK"
     forbiddenStatus = "HTTP/1.1 403 Forbidden"
     notFoundStatus = "HTTP/1.1 404 Not Found"
-    htdb = HoneytokenDataBase("HTTP")
+    htdb = HoneytokenDatabase("HTTP")
     html_dictionary = Config.http.html_dictionary_content
     supportedSites = []
 

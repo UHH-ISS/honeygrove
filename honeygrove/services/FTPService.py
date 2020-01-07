@@ -1,7 +1,7 @@
 from honeygrove import log as hg_log
 from honeygrove.config import Config
 from honeygrove.core.FilesystemParser import FilesystemParser
-from honeygrove.core.HoneytokenDB import HoneytokenDataBase
+from honeygrove.core.HoneytokenDatabase import HoneytokenDatabase
 from honeygrove.services.ServiceBaseModel import Limiter, ServiceBaseModel
 
 from datetime import datetime as dt
@@ -17,7 +17,7 @@ from twisted.protocols.ftp import _FileWriter as FW
 # Disable flake8 to hide start-import related imports
 class FTPService(ServiceBaseModel):
 
-    credchecker = HoneytokenDataBase("FTP")
+    credchecker = HoneytokenDatabase("FTP")
     # Make name and port accessible for logging in FTPProtocol
     _name = Config.ftp.name
     _port = Config.ftp.port

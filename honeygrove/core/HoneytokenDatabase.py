@@ -4,7 +4,7 @@ from honeygrove.config import Config
 import twisted.conch.error as concherror
 from twisted.conch.ssh import keys
 from twisted.cred import credentials, error
-from twisted.cred.checkers import ICredentialsChecker
+from twisted.cred.checkers import ICredentialsChecker, FilePasswordDB
 from twisted.internet import defer
 from twisted.python import failure
 from zope.interface import implementer
@@ -17,19 +17,13 @@ import tempfile
 
 
 @implementer(ICredentialsChecker)
-class HoneytokenDataBase():
+class HoneytokenDatabase():
     """
         Honeytoken Database.
         Credchecker used by all Services.
     """
 
-    scopeField = 0
-    usernameField = 1
-    passwordField = 2
-    publicKeyField = 3
-
-    filepath = str(Config.honeytoken.database_file)
-    sep = ':'
+    sep = '\t'
 
     credentialInterfaces = (credentials.IUsernamePassword,
                             credentials.IUsernameHashedPassword,
@@ -38,10 +32,12 @@ class HoneytokenDataBase():
     def __init__(self, servicename):
         """
         @type servicename: str
-        @param servicename: The name of the service which is using this instance of HoneytokenDB.
+        @param servicename: The name of the service which is using this database instance.
 
         """
         self.servicename = servicename
+        self.filepath = str(Config.honeytoken.database_folder / "database-{}.txt".format(servicename))
+        open(self.filepath, 'w')
         self.temp_copy_path = self.create_temporary_copy(self.filepath)
 
     def create_temporary_copy(self, path):
@@ -57,7 +53,7 @@ class HoneytokenDataBase():
             return None
         return keys.Key.fromString(data=raw_key).toString("OPENSSH").decode()
 
-    def try_get_tokens(self, user, data, is_key=False):
+    def try_get_token(self, user, data, is_key=False):
         res = []
 
         if is_key:
@@ -125,14 +121,14 @@ class HoneytokenDataBase():
             parts = line.split(self.sep)
 
             if len(parts) == 4:
-                res.append((parts[self.scopeField].split(','),
-                            parts[self.usernameField],
-                            parts[self.passwordField],
-                            parts[self.publicKeyField]))
+                res.append((parts[self.index_scope].split(','),
+                            parts[self.index_username],
+                            parts[self.index_password],
+                            parts[self.index_publickey]))
             if len(parts) == 3:
                 res.append((parts[self.scopeField].split(','),
-                            parts[self.usernameField],
-                            parts[self.passwordField],
+                            parts[self.index_username],
+                            parts[self.index_password],
                             ''))
         return res
 
@@ -188,7 +184,10 @@ class HoneytokenDataBase():
         else:
             return False
 
-    def requestAvatarId(self, c):
+    def on_login(self, c):
+        print("HoneytokenDatabase.requestAvatarId: returning succeed")
+        return defer.succeed(c.username)
+        print("should not be hit")
         try:
             # try user authentification
             u, p, k = self.get_user(c.username)
@@ -226,3 +225,6 @@ class HoneytokenDataBase():
             return defer.fail(error.UnauthorizedLogin())  # don't allow login with empty passwords
 
         return defer.maybeDeferred(c.checkPassword, p).addCallback(self.password_match, u)
+
+    # Rebind methods for twisted
+    requestAvatarId = on_login

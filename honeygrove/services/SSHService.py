@@ -1,7 +1,7 @@
 from honeygrove import log
 from honeygrove.config import Config
 from honeygrove.core.FilesystemParser import FilesystemParser
-from honeygrove.core.HoneytokenDB import HoneytokenDataBase
+from honeygrove.core.HoneytokenDatabase import HoneytokenDatabase
 from honeygrove.services.ServiceBaseModel import Limiter, ServiceBaseModel
 
 from cryptography.hazmat.backends import default_backend
@@ -50,7 +50,7 @@ def save_database():
 
 
 class SSHService(ServiceBaseModel):
-    honeytokendb = HoneytokenDataBase(servicename=Config.ssh.name)
+    honeytokendb = HoneytokenDatabase(servicename=Config.ssh.name)
 
     def __init__(self):
         super(SSHService, self).__init__()
@@ -58,8 +58,9 @@ class SSHService(ServiceBaseModel):
         self._name = Config.ssh.name
         self._port = Config.ssh.port
 
+        # Create a custom portal with the honeytoken database as credential backend
         p = Portal(SSHRealm())
-        p.registerChecker(SSHService.honeytokendb)
+        p.registerChecker(self.honeytokendb)
 
         self._fService = factory.SSHFactory()
         self._fService.services[b'ssh-userauth'] = groveUserAuth
@@ -105,16 +106,20 @@ class SSHProtocol(recvline.HistoricRecvLine):
         """
         super(SSHProtocol, self).connectionMade()
 
+        # Service related
+        self.service_name = Config.ssh.name
+        self.local_ip = Config.general.address
+        self.local_port = Config.ssh.port
+        self.log = log
+
+        # Connection related
         self.user = self.terminal.transport.session.avatar
-        self.userName = self.user.username.decode()
-        self.name = Config.ssh.name
-        self.port = Config.ssh.port
+        self.remote = self.user.conn.transport.transport.client
+
         self._parser = FilesystemParser(Config.folder.filesystem)
-        self.userIP = self.user.conn.transport.transport.client[0]
-        self.l = log
         self.current_dir = expanduser("~")
 
-        load = self.loadLoginTime(self.userName)
+        load = self.loadLoginTime(self.user.username)
         if not load:
             # Random, plausible last login time
             tdelta = timedelta(days=randint(1, 365), seconds=randint(0, 60), minutes=randint(0, 60), hours=randint(0, 24))
@@ -124,7 +129,7 @@ class SSHProtocol(recvline.HistoricRecvLine):
         else:
             loginStr = load
 
-        self.saveLoginTime(self.userName)
+        self.saveLoginTime(self.user.username)
         self.terminal.write("Last login: " + loginStr)
         self.terminal.nextLine()
 
@@ -158,13 +163,14 @@ class SSHProtocol(recvline.HistoricRecvLine):
             self.terminal.nextLine()
         if not log:
             log = lines
-        self.l.response(self.name, self.userIP, self.port, log, self.userName)
+        self.log.response(self.service_name, self.remote[0], self.remote[1],
+                          self.local_ip, self.local_port, log, self.user.username)
 
     def showPrompt(self):
         """
         Show prompt at start of line.
         """
-        self.terminal.write(self.userName + "@" + Config.general.hostname + ":" + self._parser.get_formatted_path() + "$ ")
+        self.terminal.write(self.user.username + "@" + Config.general.hostname + ":" + self._parser.get_formatted_path() + "$ ")
 
     def getCommandFunc(self, cmd):
         """
@@ -220,7 +226,8 @@ class SSHProtocol(recvline.HistoricRecvLine):
             line = line.decode()
 
             # log call, we received a request
-            self.l.request(self.name, self.userIP, self.port, line, self.userName)
+            self.log.request(self.service_name, self.remote[0], self.remote[1],
+                             self.local_ip, self.local_port, line, self.user.username)
 
             res = None
 
@@ -258,7 +265,7 @@ class SSHProtocol(recvline.HistoricRecvLine):
                     try:
                         res = func(*args)
                     except Exception as e:
-                        self.l.err(str(e))
+                        self.log.err(str(e))
                 else:
                     res = cmd + ": command not found"
 
@@ -307,7 +314,7 @@ class SSHProtocol(recvline.HistoricRecvLine):
         """
         prints the username
         """
-        return self.userName
+        return self.user.username
 
     def ssh_exit(self):
         """
@@ -431,7 +438,7 @@ class SSHProtocol(recvline.HistoricRecvLine):
         if Config.ssh.accept_files:
             request.urlretrieve(url, Config.folder.quarantine / filename)
             filepath = Config.folder.quarantine / filename
-        self.l.file(self.name, self.userIP, filename, filepath, self.userName)
+        self.log.file(self.name, self.userIP, filename, filepath, self.user.username)
 
     def ssh_ll(self, *args):
         """
@@ -442,6 +449,9 @@ class SSHProtocol(recvline.HistoricRecvLine):
 
 
 class SSHSession(session.SSHSession):
+    local_ip = Config.general.address
+    local_port = Config.ssh.port
+
     def openShell(self, transport):
         """
         wire the protocol to the transport channel
@@ -452,10 +462,9 @@ class SSHSession(session.SSHSession):
         serverProtocol.makeConnection(transport)
         transport.makeConnection(session.wrapProtocol(serverProtocol))
 
-        ip = transport.session.avatar.conn.transport.transport.client[0]
-        port = transport.session.avatar.conn.transport.transport.server._realPortNumber
-        # FIXME: check which ips and ports belong here
-        log.request("SSH", ip, port, "<unknown>", -1, "Request shell", transport.session.avatar.username.decode())
+        remote = transport.session.avatar.conn.transport.transport.client
+        log.request("SSH", remote[0], remote[1], self.local_ip, self.local_port,
+                    "<open shell>", transport.session.avatar.username)
 
     def getPty(self, terminal, windowSize, attrs):
         """
@@ -474,10 +483,10 @@ class SSHSession(session.SSHSession):
         :param pp: the transport protocol
         :param cmd: the command the client wants executed
         """
-        ip = pp.session.avatar.conn.transport.transport.client[0]
-        port = pp.session.avatar.conn.transport.transport.server._realPortNumber
-        # FIXME: figure out which ips and ports belong here
-        log.request("SSH", ip, port, "<unknown>", -1, "execCommand " + cmd.decode(), pp.session.avatar.username.decode())
+
+        remote = pp.session.conn.transport.transport.client
+        log.request("SSH", remote[0], remote[1], self.local_ip, self.local_port,
+                    "<exec '{}'>".format(cmd.decode()), pp.session.avatar.username)
         pp.session.conn.transport.sendDisconnect(7, b"Command Execution is not supported.")
 
     def windowChanged(self, *args):
@@ -518,55 +527,73 @@ class SSHAvatar(avatar.ConchUser):
 class groveUserAuth(userauth.SSHUserAuthServer):
     def ssh_USERAUTH_REQUEST(self, packet):
         """
-        Literally taken from Twisted and modified to enable detection of login attempts
+        Base taken from twisted and modified to track login attempts
         """
-        user, nextService, method, rest = common.getNS(packet, 3)
-        if user != self.user or nextService != self.nextService:
+
+        # Parse login packet
+        user, next_service, secret_type, secret = common.getNS(packet, 3)
+
+        # User should always be decodable, but we catch it just in case
+        try:
+            user = user.decode()
+        except UnicodeError:
+            # User is invalid utf-8
+            log.info('User was invalid UTF-8: "{}"'.format(user))
+            user = user.decode('replace')
+
+        # Store remote information for later
+        remote_ip, remote_port = self.transport.transport.client
+
+        # Check we are in the correct session?
+        if user != self.user or next_service != self.nextService:
             self.authenticatedWith = []  # clear auth state
+
+        # Stome some state for twisted internals
         self.user = user
-        self.nextService = nextService
-        self.method = method
+        self.nextService = next_service
+        self.method = secret_type
 
-        is_key = method == b"publickey"
-        d = self.tryAuth(method, user, rest)
+        # Start point for deferred
+        d = self.tryAuth(secret_type, user, secret)
 
-        # If we don't accept keys, abort early
-        if is_key and not Config.ssh.accept_keys:
+        # Currently we only care about password authentication (and only log the rest)
+        if secret_type != b'password':
+            if secret_type == b'publickey':
+                # Extract key from `secret`
+                # TODO: decode key and log it
+                algorithm, secret, blobrest = common.getNS(secret[1:], 2)
+
             d.addCallback(self._cbFinishedAuth)
+            d.addErrback(log.defer_login, Config.ssh.name, Config.ssh.port, remote_ip, remote_port,
+                         secret_type, False, user, secret)
             d.addErrback(self._ebMaybeBadAuth)
             d.addErrback(self._ebBadAuth)
             return d
 
-        if is_key:
-            algName, rest, blobrest = common.getNS(rest[1:], 2)
-        else:
-            rest = rest[5:]
-
-        user = user.decode()
-
-        # Try to get tokens from the database
-        honeytoken = str(SSHService.honeytokendb.try_get_tokens(user, rest, is_key))
-
-        # We need to decode the key to log it in the Callback and Errback
-        if is_key:
-            rest = SSHService.honeytokendb.try_decode_key(rest)
-            # This might fail if the key type is unsupported, so we log that
-            if not rest:
-                rest = "<unsupported key type>"
-        elif isinstance(rest, bytes):
+        # Extract password from `secret`
+        secret = secret[5:]
+        if isinstance(secret, bytes):
             try:
-                rest = rest.decode()
+                secret = secret.decode()
             except UnicodeError:
                 # Password is invalid utf-8
-                log.info('Password was invalid UETF-8: "{}"; username = "{}", password = "{}"'.format(rest, user, rest))
-                rest = rest.decode('replace')
+                log.info('Password was invalid UTF-8: "{}"; username = "{}", password = "{}"'
+                         ''.format(secret, user, secret))
+                secret = secret.decode('replace')
 
+        # Do we know a honeytoken for this credential pair?
+        honeytoken = SSHService.honeytokendb.try_get_token(user, secret)
+
+        # Callbacks and Errbacks
+        #
+        # If the login suceeds (via HoneytokenDatabase) then we expect to find a honeytoken above
+        # and we pass it to the Callback. If the login does not succeed, than we should not find a
+        # honeytoken and thus we do not pass `None` to the Errback.
         d.addCallback(self._cbFinishedAuth)
-        d.addCallback(log.defer_login, Config.ssh.name, self.transport.transport.client[0], Config.ssh.port, True,
-                      user, rest, honeytoken)
-
-        d.addErrback(log.defer_login, Config.ssh.name, self.transport.transport.client[0], Config.ssh.port, False,
-                     user, rest, honeytoken)
+        d.addCallback(log.defer_login, Config.ssh.name, Config.ssh.port, remote_ip, remote_port,
+                      secret_type, True, user, secret, honeytoken)
+        d.addErrback(log.defer_login, Config.ssh.name, Config.ssh.port, remote_ip, remote_port,
+                     secret_type, False, user, secret)
         d.addErrback(self._ebMaybeBadAuth)
         d.addErrback(self._ebBadAuth)
 

@@ -126,7 +126,6 @@ class Config:
     ssh.gnuhelp_folder = ssh.resource_folder / 'gnuhelp'
     ssh.real_shell = False
     ssh.accept_files = True
-    ssh.accept_keys = False
 
     # Telnet service configuration
     telnet = ConfigSection()
@@ -199,7 +198,10 @@ class Config:
 
     # HoneytokenDB configuration
     honeytoken = ConfigSection()
-    honeytoken.database_file = folder.resources / 'honeytokendb' / 'database.txt'
+    honeytoken.database_folder = folder.resources / 'honeytokendb'
+    # Honeytoken strategy to use.
+    # Choose one of: "hash" "complexity" "foo" "bar"
+    honeytoken.strategy = 'hash'
     honeytoken.generating = {"SSH": ["SSH", "FTP", "HTTP"], "HTTP": ["HTTP", "SSH"], "FTP": ["FTP"]}
     honeytoken.probabilities = {"SSH": 0.5, "FTP": 0.1, "HTTP": 0.9, "Telnet": 0.8}
     # True: password acceptance via hash, False: random acceptance
