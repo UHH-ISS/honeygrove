@@ -1,5 +1,6 @@
 from honeygrove import log
 from honeygrove.config import Config
+from honeygrove.core.Credential import Credential
 from honeygrove.core.FilesystemParser import FilesystemParser
 from honeygrove.core.HoneytokenDatabase import HoneytokenDatabase
 from honeygrove.services.ServiceBaseModel import Limiter, ServiceBaseModel
@@ -7,11 +8,11 @@ from honeygrove.services.ServiceBaseModel import Limiter, ServiceBaseModel
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 
-from twisted.conch import recvline, avatar, insults, error
+from twisted.conch import avatar, error, insults, interfaces, recvline
 from twisted.conch.ssh import factory, keys, session, userauth, common, transport
 from twisted.cred.portal import Portal
-from twisted.internet import reactor
-from twisted.python import components, failure
+from twisted.internet import defer
+from twisted.python import components
 
 from datetime import datetime, timedelta
 import json
@@ -525,61 +526,72 @@ class SSHAvatar(avatar.ConchUser):
 
 
 class groveUserAuth(userauth.SSHUserAuthServer):
+
+    def _decode(self, value, title):
+        try:
+            return value.decode()
+        except UnicodeError:
+            # value is invalid utf-8
+            log.info('{} was invalid UTF-8: "{}"'.format(title, value))
+            return value.decode('replace')
+
+    def auth_password(self, ip, username, password):
+        c = Credential(ip, username, password)
+        return self.portal.login(c, None, interfaces.IConchUser).addErrback(self._ebPassword)
+
+    def tryAuth(self, auth_type, ip, username, secret):
+        auth_type = self._decode(auth_type, "Auth type")
+        auth_type = auth_type.replace('-', '_')
+        f = getattr(self, 'auth_%s' % (auth_type,), None)
+        if f:
+            ret = f(ip, username, secret)
+            if not ret:
+                return defer.fail(
+                        error.ConchError('%s return None instead of a Deferred' % (auth_type, )))
+            else:
+                return ret
+        return defer.fail(error.ConchError('bad auth type: %s' % (auth_type,)))
+
     def ssh_USERAUTH_REQUEST(self, packet):
         """
         Base taken from twisted and modified to track login attempts
         """
 
         # Parse login packet
-        user, next_service, secret_type, secret = common.getNS(packet, 3)
+        user, next_service, auth_type, secret = common.getNS(packet, 3)
 
-        # User should always be decodable, but we catch it just in case
-        try:
-            user = user.decode()
-        except UnicodeError:
-            # User is invalid utf-8
-            log.info('User was invalid UTF-8: "{}"'.format(user))
-            user = user.decode('replace')
+        # Decode username and secret
+        user = self._decode(user, "User")
+        secret = self._decode(secret[5:], "Secret")
 
         # Store remote information for later
         remote_ip, remote_port = self.transport.transport.client
 
-        # Check we are in the correct session?
+        # Check we are in the correct session? FIXME: figure out why eaxctly we need this
         if user != self.user or next_service != self.nextService:
             self.authenticatedWith = []  # clear auth state
 
-        # Stome some state for twisted internals
+        # Store some state for twisted internals
         self.user = user
         self.nextService = next_service
-        self.method = secret_type
+        self.method = auth_type
 
         # Start point for deferred
-        d = self.tryAuth(secret_type, user, secret)
+        d = self.tryAuth(auth_type, remote_ip, user, secret)
 
         # Currently we only care about password authentication (and only log the rest)
-        if secret_type != b'password':
-            if secret_type == b'publickey':
+        if auth_type != b'password':
+            if auth_type == b'publickey':
                 # Extract key from `secret`
                 # TODO: decode key and log it
                 algorithm, secret, blobrest = common.getNS(secret[1:], 2)
 
             d.addCallback(self._cbFinishedAuth)
             d.addErrback(log.defer_login, Config.ssh.name, Config.ssh.port, remote_ip, remote_port,
-                         secret_type, False, user, secret)
+                         auth_type, False, user, secret)
             d.addErrback(self._ebMaybeBadAuth)
             d.addErrback(self._ebBadAuth)
             return d
-
-        # Extract password from `secret`
-        secret = secret[5:]
-        if isinstance(secret, bytes):
-            try:
-                secret = secret.decode()
-            except UnicodeError:
-                # Password is invalid utf-8
-                log.info('Password was invalid UTF-8: "{}"; username = "{}", password = "{}"'
-                         ''.format(secret, user, secret))
-                secret = secret.decode('replace')
 
         # Do we know a honeytoken for this credential pair?
         honeytoken = SSHService.honeytokendb.try_get_token(user, secret)
@@ -591,9 +603,9 @@ class groveUserAuth(userauth.SSHUserAuthServer):
         # honeytoken and thus we do not pass `None` to the Errback.
         d.addCallback(self._cbFinishedAuth)
         d.addCallback(log.defer_login, Config.ssh.name, Config.ssh.port, remote_ip, remote_port,
-                      secret_type, True, user, secret, honeytoken)
+                      auth_type, True, user, secret, honeytoken)
         d.addErrback(log.defer_login, Config.ssh.name, Config.ssh.port, remote_ip, remote_port,
-                     secret_type, False, user, secret)
+                     auth_type, False, user, secret)
         d.addErrback(self._ebMaybeBadAuth)
         d.addErrback(self._ebBadAuth)
 

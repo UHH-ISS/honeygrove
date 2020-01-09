@@ -1,12 +1,12 @@
 from honeygrove import log
 from honeygrove.config import Config
+from honeygrove.core.Credential import Credential
+from honeygrove.core.SessionDatabase import SessionDatabase
 
-import twisted.conch.error as concherror
 from twisted.conch.ssh import keys
 from twisted.cred import credentials, error
 from twisted.cred.checkers import ICredentialsChecker, FilePasswordDB
 from twisted.internet import defer
-from twisted.python import failure
 from zope.interface import implementer
 
 import hashlib
@@ -33,7 +33,8 @@ class HoneytokenDatabase():
         """
         self.servicename = servicename
         self.filepath = str(Config.honeytoken.database_folder / "database-{}.txt".format(servicename))
-        self.db = FilePasswordDB(self.filepath, delim=self.delimiter, cache=True)
+        self.token_db = FilePasswordDB(self.filepath, delim=self.delimiter, cache=True)
+        self.session_db = SessionDatabase()
 
         self.strategy = Config.honeytoken.strategy
 
@@ -54,7 +55,7 @@ class HoneytokenDatabase():
             secret = secret.decode()
 
         try:
-            u, s = self.db.getUser(user)
+            u, s = self.token_db.getUser(user)
             return (u, s)
         except KeyError:
             return None
@@ -82,11 +83,31 @@ class HoneytokenDatabase():
         else:
             return False
 
+    def strategy_hash(self, creds):
+        randomAcceptProbability = 0
+        if self.servicename in Config.honeytoken.probabilities.keys():
+            randomAcceptProbability = Config.honeytoken.probabilities[self.servicename]
+
+        if hasattr(creds, 'password') and self.hash_accept(creds.username, creds.password, randomAcceptProbability):
+            if self.servicename in Config.honeytoken.generating.keys():
+                # FIXME: Do we need to know the IP here?
+                self.add_token(creds.username, creds.password)
+                return defer.succeed(creds.username)
+
+        # Keys should not reach the database, as we abort before this, but better make sure
+        return defer.fail(error.UnauthorizedLogin("Invalid Password or Public Key"))
+
     def on_login(self, c):
         # Always suceed for now
-        print("HoneytokenDatabase.requestAvatarId: returning succeed")
-        return defer.succeed(c.username)
+        print("HoneytokenDatabase.requestAvatarId: returning succeed for {}".format(c))
+        session_result = None
 
+        if isinstance(c, Credential):
+            session_result = self.session_db.on_login(c)
+            return defer.succeed(c.username)
+
+        if session_result:
+            pass
         try:
             # Does this credential match a honeytoken?
             user, secret = self.try_get_token(c.username)
@@ -95,18 +116,7 @@ class HoneytokenDatabase():
         except KeyError:
             # If not, react according to self.strategy
             if self.strategy == 'hash':
-                randomAcceptProbability = 0
-                if self.servicename in Config.honeytoken.probabilities.keys():
-                    randomAcceptProbability = Config.honeytoken.probabilities[self.servicename]
-
-                if hasattr(c, 'password') and self.hash_accept(c.username, c.password, randomAcceptProbability):
-                    if self.servicename in Config.honeytoken.generating.keys():
-                        # FIXME: Do we need to know the IP here?
-                        self.add_token(c.username, c.password)
-                        return defer.succeed(c.username)
-
-                # Keys should not reach the database, as we abort before this, but better make sure
-                return defer.fail(error.UnauthorizedLogin("Invalid Password or Public Key"))
+                return self.strategy_hash(c)
             elif self.strategy == 'v1':
                 pass
 
