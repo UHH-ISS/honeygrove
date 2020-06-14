@@ -100,6 +100,15 @@ def format_time(intime):
     return intime.isoformat()
 
 
+def dont(message: str):
+    """
+    Log function to just absorb a message
+
+    :param message: the message text
+    """
+    pass
+
+
 def info(message: str):
     """
     Log function for administrative messages
@@ -109,6 +118,54 @@ def info(message: str):
 
     timestamp = format_time(get_time())
     message = '{} [INFO] {}'.format(timestamp, message)
+    _log_status(message)
+
+
+def undefined(message: str):
+    """
+    Log function for undefined messages
+
+    :param message: the message text
+    """
+
+    timestamp = format_time(get_time())
+    message = '{} [UNDEFINED] {}'.format(timestamp, message)
+    _log_status(message)
+
+
+def event(message: str):
+    """
+    Log function for all basic event messages
+
+    :param message: the message text
+    """
+
+    timestamp = format_time(get_time())
+    message = '{} [EVENT] {}'.format(timestamp, message)
+    _log_status(message)
+
+
+def connect(message: str):
+    """
+    Log function for connect messages
+
+    :param message: the message text
+    """
+
+    timestamp = format_time(get_time())
+    message = '{} [CONNECTED] {}'.format(timestamp, message)
+    _log_status(message)
+
+
+def disconnect(message: str):
+    """
+    Log function for disconnect messages
+
+    :param message: the message text
+    """
+
+    timestamp = format_time(get_time())
+    message = '{} [DISCONNECTED] {}'.format(timestamp, message)
     _log_status(message)
 
 
@@ -239,7 +296,8 @@ def request(service: str, remote_ip: str, remote_port: int, local_ip: str, local
         lon = '{:.4f}'.format(coordinates[1])
 
     message = ('{} [REQUEST] {}, {}:{}->{}:{}, Lat: {}, Lon: {}, {}, {}, {}'
-               '').format(timestamp, service, remote_ip, remote_port, local_ip, local_port, lat, lon, req, user, request_type)
+               '').format(timestamp, service, remote_ip, remote_port, local_ip, local_port, lat, lon, req, user,
+                          request_type)
     _log_alert(message)
 
 
@@ -291,7 +349,8 @@ def response(service: str, remote_ip: str, remote_port: int, local_ip: str, loca
         lon = '{:.4f}'.format(coordinates[1])
 
     message = ('{} [RESPONSE] {}, {}:{}->{}:{}, Lat: {}, Lon: {}, {}, {}, {}'
-               '').format(timestamp, service, local_ip, local_port, remote_ip, remote_port, lat, lon, resp, user, status_code)
+               '').format(timestamp, service, local_ip, local_port, remote_ip, remote_port, lat, lon, resp, user,
+                          status_code)
     _log_alert(message)
 
 
