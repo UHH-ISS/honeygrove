@@ -209,10 +209,12 @@ class Config:
     s7comm.connections_per_host = general.max_connections_per_host
 
     # Enable all known services if none are explicitly configured above
+    # if not general.enabled_services:
+    #     general.enabled_services = [http.name, https.name, ssh.name, telnet.name, ftp.name, smtp.name,
+    #                                 smtps.name, pop3.name, pop3s.name, imap.name, imaps.name, tcp_scan.name,
+    #                                 modbus.name, s7comm.name]
     if not general.enabled_services:
-        general.enabled_services = [http.name, https.name, ssh.name, telnet.name, ftp.name, smtp.name,
-                                    smtps.name, pop3.name, pop3s.name, imap.name, imaps.name, tcp_scan.name,
-                                    modbus.name, s7comm.name]
+        general.enabled_services = [modbus.name, s7comm.name]
 
     # HoneytokenDB configuration
     honeytoken = ConfigSection()
