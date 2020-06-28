@@ -214,7 +214,7 @@ class Config:
     #                                 smtps.name, pop3.name, pop3s.name, imap.name, imaps.name, tcp_scan.name,
     #                                 modbus.name, s7comm.name]
     if not general.enabled_services:
-        general.enabled_services = [modbus.name, s7comm.name]
+        general.enabled_services = [tcp_scan.name, modbus.name, s7comm.name]
 
     # HoneytokenDB configuration
     honeytoken = ConfigSection()
