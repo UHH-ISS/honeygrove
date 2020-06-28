@@ -218,9 +218,10 @@ class Server(object):
             }
             event_output = switcher.get(event.EvtCode, 0)
 
+            log.info(event.EvtSender)
             #print(self.get_status())
             #log.info("S7comm, callback event: " + self.event_text(event))
-            split_ip = str(ipaddress.IPv4Address(event.EvtSender)).split(".")
+            split_ip = str(ipaddress.ip_address(event.EvtSender)).split(".")
             client_ip = split_ip[3] + "." + split_ip[2] + "." + split_ip[1] + "." + split_ip[0]
             #log.info("S7comm,, IPv4Address:" + split_ip[3] + "." + split_ip[2] + "." + split_ip[1] + "." + split_ip[0])
             event_text = self.event_text(event)
