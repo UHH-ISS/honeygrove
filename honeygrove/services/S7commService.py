@@ -4,6 +4,8 @@ Snap7 server used for mimicking a siemens 7 server.
 import ctypes
 import ipaddress
 import re
+import struct
+import socket
 
 import snap7.snap7types
 from snap7 import six
@@ -218,7 +220,7 @@ class Server(object):
             }
             event_output = switcher.get(event.EvtCode, 0)
 
-            log.info(event.EvtSender)
+            log.info(socket.inet_ntoa(struct.pack("!I", event.EvtSender)))
             #print(self.get_status())
             #log.info("S7comm, callback event: " + self.event_text(event))
             split_ip = str(ipaddress.ip_address(event.EvtSender)).split(".")
