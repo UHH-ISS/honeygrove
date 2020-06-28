@@ -220,7 +220,7 @@ class Server(object):
             }
             event_output = switcher.get(event.EvtCode, 0)
 
-            log.info(socket.inet_ntoa(struct.pack("!I", event.EvtSender)))
+            log.info(socket.inet_ntoa(struct.pack("=i", event.EvtSender)))
             #print(self.get_status())
             #log.info("S7comm, callback event: " + self.event_text(event))
             split_ip = str(ipaddress.ip_address(event.EvtSender)).split(".")
