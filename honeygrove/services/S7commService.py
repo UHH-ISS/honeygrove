@@ -2,10 +2,9 @@
 Snap7 server used for mimicking a siemens 7 server.
 """
 import ctypes
-import ipaddress
 import re
-import struct
 import socket
+import struct
 
 import snap7.snap7types
 from snap7 import six
@@ -16,6 +15,11 @@ from honeygrove.config import Config
 from honeygrove.services.ServiceBaseModel import Limiter, ServiceBaseModel
 
 
+def shutdown_s7():
+    if global_server is not None:
+        global_server.stop()
+
+
 class S7commService(ServiceBaseModel):
     def __init__(self):
         super(S7commService, self).__init__()
@@ -24,6 +28,9 @@ class S7commService(ServiceBaseModel):
         self._port = Config.s7comm.port
         self._limiter = Limiter(self._fService, Config.s7comm.name, Config.s7comm.connections_per_host)
         self.server = Server()
+
+        global global_server
+        global_server = self.server
 
     def startService(self):
         try:
@@ -284,7 +291,7 @@ class Server(object):
         """
         destroy the server.
         """
-        log.info("S7comm, destroying server")
+        #log.info("S7comm, destroying server")
         if self.library:
             self.library.Srv_Destroy(ctypes.byref(self.pointer))
 

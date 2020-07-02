@@ -1,3 +1,6 @@
+targetIP = '195.37.209.23'
+targetIP= '192.168.0.9'
+
 import snap7
 
 client = snap7.client.Client()
@@ -9,7 +12,7 @@ client.disconnect()
 from snap7.util import *
 plc = snap7.client.Client()
 plc.set_connection_type(0xFD)
-plc.connect('192.168.0.9', 0, 1, 102)
+plc.connect(targetIP, 0, 1, 102)
 print(plc.get_cpu_state())
 print(plc.get_cpu_info().ModuleTypeName)
 print(plc.get_cpu_info().SerialNumber)
@@ -29,10 +32,10 @@ print("Area=PA, [0,4]={}".format(get_real(float2, 0)))
 print("Area=PE, [0,4]={}".format(get_real(float3, 0)))
 
 plc2 = snap7.client.Client()
-plc2.connect('192.168.0.9', 0, 1, 102)
+plc2.connect(targetIP, 0, 1, 102)
 
 plc3 = snap7.client.Client()
-plc3.connect('192.168.0.9', 0, 1, 102)
+plc3.connect(targetIP, 0, 1, 102)
 
 plc.disconnect()
 plc3.disconnect()

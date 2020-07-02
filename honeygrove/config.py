@@ -198,9 +198,10 @@ class Config:
     modbus.vendor_name = "Siemens"
     modbus.product_code = "S935"
     modbus.vendor_url = ""
-    modbus.product_name = "UHH Server"
-    modbus.model_name = "UHH Server"
+    modbus.product_name = "UHH Factory Server"
+    modbus.model_name = "UHH Factory Server"
     modbus.major_minor_revision = "4.2.4"
+    modbus.user_application_name = "Volkswagen Industrial Robot Test"
 
     # S7comm service configuration
     s7comm = ConfigSection()

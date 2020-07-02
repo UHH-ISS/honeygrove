@@ -3,15 +3,16 @@ from honeygrove.config import Config
 from honeygrove.core.HoneyAdapter import BrokerWatcher
 from honeygrove.core.ServiceController import ServiceController
 from honeygrove.services.SSHService import load_database, save_database
+from honeygrove.services.S7commService import shutdown_s7
 
 import atexit
 import os
 import threading
 
-
 def shutdown():
     log.info("Shutting down")
     save_database()
+    shutdown_s7()
     quit()
 
 
