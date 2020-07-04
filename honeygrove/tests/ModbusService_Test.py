@@ -3,7 +3,7 @@ targetIP= '192.168.0.9'
 
 from pymodbus.client.sync import ModbusTcpClient
 
-client = ModbusTcpClient('192.168.0.9', 502)
+client = ModbusTcpClient(targetIP, 502)
 result = client.read_coils(1,10,unit=1)
 print(result.bits[0])
 result = client.read_coils(1,10,unit=2)

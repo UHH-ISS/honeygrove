@@ -4,8 +4,6 @@ Implementation of a Threaded Modbus Server
 """
 
 import struct
-from binascii import b2a_base64
-from binascii import b2a_hex
 
 from pymodbus.bit_read_message import *
 from pymodbus.bit_write_message import *
@@ -27,6 +25,7 @@ from pymodbus.exceptions import ParameterException
 from pymodbus.file_message import *
 from pymodbus.framer import ModbusFramer, SOCKET_FRAME_HEADER
 from pymodbus.interfaces import IModbusDecoder
+from pymodbus.interfaces import IModbusSlaveContext
 from pymodbus.internal.ptwisted import InstallManagementConsole
 from pymodbus.mei_message import *
 from pymodbus.other_message import *
@@ -120,6 +119,11 @@ class ModbusService(ServiceBaseModel):
         # ----------------------------------------------------------------------- #
 
         slaves = {
+            0x00: ModbusSlaveContext(
+                di=CustomModbusSequentialDataBlock(0, [17] * 100),
+                co=CustomModbusSequentialDataBlock(0, [1] * 100),
+                hr=CustomModbusSequentialDataBlock(0, [17] * 100),
+                ir=CustomModbusSequentialDataBlock(0, [17] * 100)),
             0x01: ModbusSlaveContext(
                 di=CustomModbusSequentialDataBlock(0, [17] * 100),
                 co=CustomModbusSequentialDataBlock(0, [0] * 100),
@@ -130,7 +134,26 @@ class ModbusService(ServiceBaseModel):
                 co=CustomModbusSparseDataBlock({0x00: 0, 0x05: 1}),
                 hr=CustomModbusSequentialDataBlock(0, [17] * 100),
                 ir=CustomModbusSequentialDataBlock.create()),
-            0x03: ModbusSlaveContext(...)
+            0x03: ModbusSlaveContext(
+                di=CustomModbusSequentialDataBlock(0, [13] * 1),
+                co=CustomModbusSequentialDataBlock(0, [1] * 23),
+                hr=CustomModbusSequentialDataBlock(0, [65] * 18),
+                ir=CustomModbusSequentialDataBlock(0, [178] * 56)),
+            0x04: ModbusSlaveContext(
+                di=CustomModbusSequentialDataBlock(6, [17] * 100),
+                co=CustomModbusSequentialDataBlock(2, [0] * 100),
+                hr=CustomModbusSequentialDataBlock(45, [17] * 100),
+                ir=CustomModbusSequentialDataBlock(33, [17] * 100)),
+            0x05: ModbusSlaveContext(
+                di=CustomModbusSequentialDataBlock(0, [42] * 100),
+                co=CustomModbusSequentialDataBlock(0, [1] * 100),
+                hr=CustomModbusSequentialDataBlock(0, [76] * 100),
+                ir=CustomModbusSequentialDataBlock(0, [32] * 100)),
+            0xFF: ModbusSlaveContext(
+                di=CustomModbusSequentialDataBlock(0, [17] * 100),
+                co=CustomModbusSequentialDataBlock(0, [1] * 100),
+                hr=CustomModbusSequentialDataBlock(0, [17] * 100),
+                ir=CustomModbusSequentialDataBlock(0, [17] * 100))
         }
 
         context = ModbusServerContext(slaves=slaves, single=False)
