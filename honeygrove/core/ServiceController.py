@@ -55,6 +55,8 @@ class ServiceController():
             self.runningServicesDict.pop(name)
             if name not in Config.noPortSpecificService:
                 self.listen.startOnPort(self.serviceDict[name]._port)
+            reactor.callFromThread(reactor.stop)
             return True
         else:
+            reactor.callFromThread(reactor.stop)
             return False

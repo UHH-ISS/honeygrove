@@ -19,7 +19,6 @@ def shutdown_s7():
     if global_server is not None:
         global_server.stop()
 
-
 class S7commService(ServiceBaseModel):
     def __init__(self):
         super(S7commService, self).__init__()
@@ -40,17 +39,24 @@ class S7commService(ServiceBaseModel):
             globaldata = (snap7.snap7types.wordlen_to_ctypes[snap7.snap7types.S7WLByte] * size)()
             outputs = (snap7.snap7types.wordlen_to_ctypes[snap7.snap7types.S7WLByte] * size)()
             inputs = (snap7.snap7types.wordlen_to_ctypes[snap7.snap7types.S7WLByte] * size)()
-
             self.server.register_area(snap7.snap7types.srvAreaPA, 0, outputs)
             self.server.register_area(snap7.snap7types.srvAreaMK, 0, globaldata)
             self.server.register_area(snap7.snap7types.srvAreaPE, 0, inputs)
-
             snap7.util.set_real(outputs, 0, 1.234)  # srvAreaPA
             snap7.util.set_real(globaldata, 0, 2.234)  # srvAreaMK
             snap7.util.set_real(inputs, 0, 3.234)  # srvAreaPE
 
-            self.server.start(self._port)
+            # size = 100
+            # DBdata = (snap7.snap7types.wordlen_to_ctypes[snap7.snap7types.S7WLByte] * size)()
+            # PAdata = (snap7.snap7types.wordlen_to_ctypes[snap7.snap7types.S7WLByte] * size)()
+            # TMdata = (snap7.snap7types.wordlen_to_ctypes[snap7.snap7types.S7WLByte] * size)()
+            # CTdata = (snap7.snap7types.wordlen_to_ctypes[snap7.snap7types.S7WLByte] * size)()
+            # self.server.register_area(snap7.snap7types.srvAreaDB, 1, DBdata)
+            # self.server.register_area(snap7.snap7types.srvAreaPA, 1, PAdata)
+            # self.server.register_area(snap7.snap7types.srvAreaTM, 1, TMdata)
+            # self.server.register_area(snap7.snap7types.srvAreaCT, 1, CTdata)
 
+            self.server.start(self._port)
 
         except Exception as e:
             self._stop = True
@@ -226,20 +232,8 @@ class Server(object):
                 0x40000000: "evcReserved_40000000"
             }
             event_output = switcher.get(event.EvtCode, 0)
-
-
-            #################
             # IP CONVERSION #
-            #################
             client_ip = socket.inet_ntoa(struct.pack("=i", event.EvtSender))
-            #print(self.get_status())
-            #log.info("S7comm, callback event: " + self.event_text(event))
-            #split_ip = str(ipaddress.ip_address(event.EvtSender)).split(".")
-            #client_ip = split_ip[3] + "." + split_ip[2] + "." + split_ip[1] + "." + split_ip[0]
-            #log.info("S7comm,, IPv4Address:" + split_ip[3] + "." + split_ip[2] + "." + split_ip[1] + "." + split_ip[0])
-
-
-
             event_text = self.event_text(event)
             event_text_filtered = re.sub("(?:[\\d]{4}-[\\d]{2}-[\\d]{2})|"
                                "(?:[\\d]{2}:[\\d]{2}:[\\d]{2})|"
@@ -398,7 +392,7 @@ class Server(object):
     def get_param(self, number):
         """Reads an internal Server object parameter.
         """
-        #log.info("S7comm, retreiving param number %s" % number)
+        log.info("S7comm, retreiving param number %s" % number)
         value = ctypes.c_int()
         code = self.library.Srv_GetParam(self.pointer, number,
                                          ctypes.byref(value))

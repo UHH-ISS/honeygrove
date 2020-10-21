@@ -217,6 +217,8 @@ class Config:
     if not general.enabled_services:
         general.enabled_services = [modbus.name, s7comm.name]
 
+    noPortSpecificService = []
+
     # HoneytokenDB configuration
     honeytoken = ConfigSection()
     honeytoken.database_folder = folder.resources / 'honeytokendb'

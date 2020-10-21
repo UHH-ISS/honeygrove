@@ -5,5 +5,4 @@ bcrypt >= "3.1"
 pyOpenSSL >= "19.0"
 geoip2 >= "2.9"
 pymodbus >= "2.3.0"
-easymodbus >= '0.1'
 python-snap7 >= '0.11'

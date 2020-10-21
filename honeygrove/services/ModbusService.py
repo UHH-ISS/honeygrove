@@ -25,7 +25,6 @@ from pymodbus.exceptions import ParameterException
 from pymodbus.file_message import *
 from pymodbus.framer import ModbusFramer, SOCKET_FRAME_HEADER
 from pymodbus.interfaces import IModbusDecoder
-from pymodbus.interfaces import IModbusSlaveContext
 from pymodbus.internal.ptwisted import InstallManagementConsole
 from pymodbus.mei_message import *
 from pymodbus.other_message import *
@@ -175,12 +174,11 @@ class ModbusService(ServiceBaseModel):
         # ----------------------------------------------------------------------- #
         # run the server
         # ----------------------------------------------------------------------- #
-        StartTcpServer(context, identity=identity, address=(self._address, self._port), transport=self._transport)
+        StartTcpServer(self, context, identity=identity, address=(self._address, self._port), transport=self._transport)
 
     def stopService(self):
         log.event("Modbus, stopping server")
         self._transport.stopListening()
-        self._transport.stop()
 
 
 # --------------------------------------------------------------------------- #
@@ -332,7 +330,7 @@ def _is_main_thread():
     return True
 
 
-def StartTcpServer(context, transport, identity=None, address=None,
+def StartTcpServer(self, context, transport, identity=None, address=None,
                    console=False, defer_reactor_run=False, custom_functions=[],
                    **kwargs):
     """
@@ -356,7 +354,7 @@ def StartTcpServer(context, transport, identity=None, address=None,
     if console:
         InstallManagementConsole({'factory': factory})
     # log.event("Modbus, Starting Modbus TCP Server on %s:%s" % address)
-    transport = reactor.listenTCP(address[1], factory, interface=address[0])
+    self._transport = reactor.listenTCP(address[1], factory, interface=address[0])
     if not defer_reactor_run:
         reactor.run(installSignalHandlers=_is_main_thread())
 
