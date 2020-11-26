@@ -20,6 +20,7 @@ Honeygrove currently requires **Python 3.5+** and was tested on Ubuntu 16.4, Deb
   $ pip3 install --upgrade -r requirements.txt
   ```
 * Optional: Install [`broker`](https://github.com/zeek/broker) and the python bindings to communicate with a CIM
+* Optional: Install [`Snap7`](http://snap7.sourceforge.net/) to make use of the Siemens S7 protocol
 * Create the honeygrove main directory and some required subdirectories
   ```shell
   $ mkdir -p /var/honeygrove/{logs,resources/{quarantine,honeytoken_files}}
