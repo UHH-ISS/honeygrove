@@ -1,3 +1,4 @@
+# FIXME: rework this
 targetIP = '195.37.209.23'
 targetIP= '192.168.0.9'
 
