@@ -193,11 +193,32 @@ class Config:
     imaps.port = 993
     imaps.connections_per_host = general.max_connections_per_host
 
+    # Modbus service configuration
+    modbus = ConfigSection()
+    modbus.name = "Modbus"
+    modbus.port = 502
+    modbus.connections_per_host = general.max_connections_per_host
+    modbus.vendor_name = "Siemens"
+    modbus.product_code = "S935"
+    modbus.vendor_url = ""
+    modbus.product_name = "UHH Factory Server"
+    modbus.model_name = "UHH Factory Server"
+    modbus.major_minor_revision = "4.2.4"
+    modbus.user_application_name = "Volkswagen Industrial Robot Test"
+
+    # S7comm service configuration
+    s7comm = ConfigSection()
+    s7comm.name = "S7comm"
+    s7comm.port = 102
+    s7comm.connections_per_host = general.max_connections_per_host
+
     # Enable all known services if none are explicitly configured above
     if not general.enabled_services:
-        general.enabled_services = [http.name, https.name, ssh.name, telnet.name, ftp.name, smtp.name,
-                                    smtps.name, pop3.name, pop3s.name, imap.name, imaps.name,
-                                    tcp_scan.name]
+         general.enabled_services = [http.name, https.name, ssh.name, telnet.name, ftp.name, smtp.name,
+                                     smtps.name, pop3.name, pop3s.name, imap.name, imaps.name, tcp_scan.name,
+                                     modbus.name, s7comm.name]
+
+    noPortSpecificService = []
 
     # HoneytokenDB configuration
     honeytoken = ConfigSection()
