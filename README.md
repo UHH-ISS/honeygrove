@@ -4,7 +4,9 @@ Honeygrove is a modular honeypot based on Python that builds upon [Broker](https
 
 ## System Requirements
 
-Honeygrove currently requires **Python 3.5+** and was tested on Ubuntu 16.4, Debian 9.1 and ArchLinux. However it should work on other distributions that provide a compatible Python distribution. If Broker is not available, the honeypot itself can be used without it. Currently there is no possibility to communicate with the management-console or the monitoring stack without Broker.
+Honeygrove currently requires **Python 3.5+** and was tested on Ubuntu 16.4, Debian 9.1 and ArchLinux. However it should work on other distributions that provide a compatible Python distribution. 
+If the [`broker`](https://github.com/zeek/broker) communication library is not available, the honeypot itself can be used without it. Currently there is no possibility to communicate with the management-console or the monitoring stack without Broker.
+If Honeygrove is configured to use the Siemens S7 protocol, the [`Snap7`](http://snap7.sourceforge.net/) needs to be installed on the system.
 
 
 ## Quickstart Guide
