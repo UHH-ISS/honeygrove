@@ -243,7 +243,10 @@ def login(service: str, local_port: int, remote_ip: str, remote_port: int,
         lat = '{:.4f}'.format(coordinates[0])
         lon = '{:.4f}'.format(coordinates[1])
 
-    message = ('{} [LOGIN] {}, {}:{}, Lat: {}, Lon: {}, {}, {}, {}, {}'
+    if Config.general.output_json:
+      message = json.dumps(values)
+    else:
+      message = ('{} [LOGIN] {}, {}:{}, Lat: {}, Lon: {}, {}, {}, {}, {}'
                '').format(timestamp, service, remote_ip, remote_port, lat, lon, successful, user, secret, honeytoken)
     _log_alert(message)
 
@@ -295,9 +298,12 @@ def request(service: str, remote_ip: str, remote_port: int, local_ip: str, local
         lat = '{:.4f}'.format(coordinates[0])
         lon = '{:.4f}'.format(coordinates[1])
 
-    message = ('{} [REQUEST] {}, {}:{}->{}:{}, Lat: {}, Lon: {}, {}, {}, {}'
-               '').format(timestamp, service, remote_ip, remote_port, local_ip, local_port, lat, lon, req, user,
-                          request_type)
+    if Config.general.output_json:
+      message = json.dumps(values)
+    else:
+      message = ('{} [REQUEST] {}, {}:{}->{}:{}, Lat: {}, Lon: {}, {}, {}, {}'
+                 '').format(timestamp, service, remote_ip, remote_port, local_ip, local_port, lat, lon, req, user, request_type)
+
     _log_alert(message)
 
 
@@ -348,9 +354,12 @@ def response(service: str, remote_ip: str, remote_port: int, local_ip: str, loca
         lat = '{:.4f}'.format(coordinates[0])
         lon = '{:.4f}'.format(coordinates[1])
 
-    message = ('{} [RESPONSE] {}, {}:{}->{}:{}, Lat: {}, Lon: {}, {}, {}, {}'
-               '').format(timestamp, service, local_ip, local_port, remote_ip, remote_port, lat, lon, resp, user,
-                          status_code)
+    if Config.general.output_json:
+      message = json.dumps(values)
+    else:
+      message = ('{} [RESPONSE] {}, {}:{}->{}:{}, Lat: {}, Lon: {}, {}, {}, {}'
+                 '').format(timestamp, service, local_ip, local_port, remote_ip, remote_port, lat, lon, resp, user, status_code)
+
     _log_alert(message)
 
 
@@ -400,8 +409,12 @@ def file(service: str, ip: str, file_name: str, file_path: str = None, user: str
         lat = '{:.4f}'.format(coordinates[0])
         lon = '{:.4f}'.format(coordinates[1])
 
-    message = ('{} [FILE] {}, {}, Lat: {}, Lon: {}, {}, {}'
-               '').format(timestamp, service, ip, lat, lon, file_name, user)
+    if Config.general.output_json:
+      message = json.dumps(values)
+    else:
+      message = ('{} [FILE] {}, {}, Lat: {}, Lon: {}, {}, {}'
+                 '').format(timestamp, service, ip, lat, lon, file_name, user)
+
     _log_alert(message)
 
 
@@ -443,8 +456,12 @@ def scan(ip, port, time, scan_type):
         lat = '{:.4f}'.format(coordinates[0])
         lon = '{:.4f}'.format(coordinates[1])
 
-    message = ('{} [{}-SCAN] {}:{}, Lat: {}, Lon: {}'
-               '').format(timestamp, scan_type, ip, port, lat, lon)
+    if Config.general.output_json:
+      message = json.dumps(values)
+    else:
+      message = ('{} [{}-SCAN] {}:{}, Lat: {}, Lon: {}'
+                 '').format(timestamp, scan_type, ip, port, lat, lon)
+
     _log_alert(message)
 
 
@@ -484,7 +501,11 @@ def limit_reached(service: str, ip: str):
         lat = '{:.4f}'.format(coordinates[0])
         lon = '{:.4f}'.format(coordinates[1])
 
-    message = '{} [LIMIT REACHED] {}, {}, Lat: {}, Lon: {}'.format(timestamp, service, ip, lat, lon)
+    if Config.general.output_json:
+      message = json.dumps(values)
+    else:
+      message = '{} [LIMIT REACHED] {}, {}, Lat: {}, Lon: {}'.format(timestamp, service, ip, lat, lon)
+
     _log_alert(message)
 
 

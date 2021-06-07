@@ -1,3 +1,5 @@
+# FIXME: Ideally this would work. However broker upstream does not properly integrate with pip so we can't rely on this yet
+#broker >= "1.3"
 twisted >= "18.9"
 service_identity >= "18.1"
 cryptography >= "2.5"

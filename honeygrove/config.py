@@ -35,6 +35,9 @@ class Config:
     # unavailable on your machine. Currently, the management-console
     # and the EKStack can not be used without communication via Broker.
     general.use_broker = False
+    # Set this to True if you want your output as parsable json format
+    # for example to forward with logstash
+    general.output_json = False
     # Set this to False if you do not want to use geoip or no database
     # is available on your machine.
     general.use_geoip = False
