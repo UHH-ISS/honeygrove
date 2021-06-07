@@ -6,8 +6,7 @@ import re
 import socket
 import struct
 
-import snap7.snap7types
-from snap7 import six
+from snap7 import types
 from snap7.common import check_error, load_library, ipv4
 
 from honeygrove import log
@@ -36,25 +35,25 @@ class S7commService(ServiceBaseModel):
             self._stop = False
 
             size = 10
-            globaldata = (snap7.snap7types.wordlen_to_ctypes[snap7.snap7types.S7WLByte] * size)()
-            outputs = (snap7.snap7types.wordlen_to_ctypes[snap7.snap7types.S7WLByte] * size)()
-            inputs = (snap7.snap7types.wordlen_to_ctypes[snap7.snap7types.S7WLByte] * size)()
-            self.server.register_area(snap7.snap7types.srvAreaPA, 0, outputs)
-            self.server.register_area(snap7.snap7types.srvAreaMK, 0, globaldata)
-            self.server.register_area(snap7.snap7types.srvAreaPE, 0, inputs)
+            globaldata = (types.wordlen_to_ctypes[types.S7WLByte] * size)()
+            outputs = (types.wordlen_to_ctypes[types.S7WLByte] * size)()
+            inputs = (types.wordlen_to_ctypes[types.S7WLByte] * size)()
+            self.server.register_area(types.srvAreaPA, 0, outputs)
+            self.server.register_area(types.srvAreaMK, 0, globaldata)
+            self.server.register_area(types.srvAreaPE, 0, inputs)
             snap7.util.set_real(outputs, 0, 1.234)  # srvAreaPA
             snap7.util.set_real(globaldata, 0, 2.234)  # srvAreaMK
             snap7.util.set_real(inputs, 0, 3.234)  # srvAreaPE
 
             # size = 100
-            # DBdata = (snap7.snap7types.wordlen_to_ctypes[snap7.snap7types.S7WLByte] * size)()
-            # PAdata = (snap7.snap7types.wordlen_to_ctypes[snap7.snap7types.S7WLByte] * size)()
-            # TMdata = (snap7.snap7types.wordlen_to_ctypes[snap7.snap7types.S7WLByte] * size)()
-            # CTdata = (snap7.snap7types.wordlen_to_ctypes[snap7.snap7types.S7WLByte] * size)()
-            # self.server.register_area(snap7.snap7types.srvAreaDB, 1, DBdata)
-            # self.server.register_area(snap7.snap7types.srvAreaPA, 1, PAdata)
-            # self.server.register_area(snap7.snap7types.srvAreaTM, 1, TMdata)
-            # self.server.register_area(snap7.snap7types.srvAreaCT, 1, CTdata)
+            # DBdata = (types.wordlen_to_ctypes[types.S7WLByte] * size)()
+            # PAdata = (types.wordlen_to_ctypes[types.S7WLByte] * size)()
+            # TMdata = (types.wordlen_to_ctypes[types.S7WLByte] * size)()
+            # CTdata = (types.wordlen_to_ctypes[types.S7WLByte] * size)()
+            # self.server.register_area(types.srvAreaDB, 1, DBdata)
+            # self.server.register_area(types.srvAreaPA, 1, PAdata)
+            # self.server.register_area(types.srvAreaTM, 1, TMdata)
+            # self.server.register_area(types.srvAreaCT, 1, CTdata)
 
             self.server.start(self._port)
 
@@ -114,18 +113,15 @@ class Server(object):
         error = self.library.Srv_EventText(ctypes.byref(event),
                                            ctypes.byref(text), len_)
         check_error(error)
-        if six.PY2:
-            return text.value
-        else:
-            return text.value.decode('ascii')
+        return text.value.decode('ascii')
 
     def create(self):
         """
         create the server.
         """
         #log.info("creating server")
-        self.library.Srv_Create.restype = snap7.snap7types.S7Object
-        self.pointer = snap7.snap7types.S7Object(self.library.Srv_Create())
+        self.library.Srv_Create.restype = types.S7Object
+        self.pointer = types.S7Object(self.library.Srv_Create())
 
     @error_wrap
     def register_area(self, area_code, index, userdata):
@@ -145,7 +141,7 @@ class Server(object):
         """
         #log.info("setting event callback")
         callback_wrap = ctypes.CFUNCTYPE(None, ctypes.c_void_p,
-                                         ctypes.POINTER(snap7.snap7types.SrvEvent),
+                                         ctypes.POINTER(types.SrvEvent),
                                          ctypes.c_int)
 
         def wrapper(usrptr, pevent, size):
@@ -173,7 +169,7 @@ class Server(object):
         """
         #log.info("setting read event callback")
         callback_wrapper = ctypes.CFUNCTYPE(None, ctypes.c_void_p,
-                                            ctypes.POINTER(snap7.snap7types.SrvEvent),
+                                            ctypes.POINTER(types.SrvEvent),
                                             ctypes.c_int)
 
         def wrapper(usrptr, pevent, size):
@@ -269,7 +265,7 @@ class Server(object):
         """
         if tcpport != 102:
             #log.info("S7comm, setting server TCP port to %s" % tcpport)
-            self.set_param(snap7.snap7types.LocalPort, tcpport)
+            self.set_param(types.LocalPort, tcpport)
         #log.info("S7comm, starting server on 0.0.0.0:%s" % tcpport)
         return self.library.Srv_Start(self.pointer)
 
@@ -305,8 +301,8 @@ class Server(object):
         log.info("S7comm, status server %s cpu %s clients %s" %
                      (server_status.value, cpu_status.value,
                       clients_count.value))
-        return snap7.snap7types.server_statuses[server_status.value], \
-               snap7.snap7types.cpu_statuses[cpu_status.value], \
+        return types.server_statuses[server_status.value], \
+               types.cpu_statuses[cpu_status.value], \
                clients_count.value
 
     def get_client_amount_connected(self):
@@ -347,7 +343,7 @@ class Server(object):
         """
         if tcpport != 102:
             #log.info("S7comm, setting server TCP port to %s" % tcpport)
-            self.set_param(snap7.snap7types.LocalPort, tcpport)
+            self.set_param(types.LocalPort, tcpport)
         assert re.match(ipv4, ip), '%s is invalid ipv4' % ip
         #log.info("S7comm, starting server to %s:102" % ip)
         return self.library.Srv_Start(self.pointer, ip)
@@ -371,7 +367,7 @@ class Server(object):
     def set_cpu_status(self, status):
         """Sets the Virtual CPU status.
         """
-        assert status in snap7.snap7types.cpu_statuses, 'unknown cpu state %s' % status
+        assert status in types.cpu_statuses, 'unknown cpu state %s' % status
         #log.info("S7comm, setting cpu status to %s" % status)
         return self.library.Srv_SetCpuStatus(self.pointer, status)
 
@@ -379,7 +375,7 @@ class Server(object):
         """Extracts an event (if available) from the Events queue.
         """
         #log.info("S7comm, checking event queue")
-        event = snap7.snap7types.SrvEvent()
+        event = types.SrvEvent()
         ready = ctypes.c_int32()
         code = self.library.Srv_PickEvent(self.pointer, ctypes.byref(event),
                                           ctypes.byref(ready))
@@ -403,7 +399,7 @@ class Server(object):
         """Reads the specified filter mask.
         """
         #log.info("S7comm, retrieving mask kind %s" % kind)
-        mask = snap7.snap7types.longword()
+        mask = types.longword()
         code = self.library.Srv_GetMask(self.pointer, kind, ctypes.byref(mask))
         check_error(code)
         return mask
